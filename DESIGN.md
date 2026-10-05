@@ -45,7 +45,7 @@ Fiecare unitate are: atac, apărare, viață, moral, viteză, cost de recrutare,
 
 ## 3. Harta de campanie
 
-- **~20 de provincii** desenate pe o hartă stilizată a Carpaților (munți, păduri, câmpii, râuri, mlaștini).
+- **~20 de provincii** pe o **hartă fixă**, desenată de mână, stilizată a Carpaților (munți, păduri, câmpii, râuri, mlaștini).
 - Fiecare provincie are: **proprietar**, **oraș/așezare**, **3 sloturi de clădiri**, **ordine publică**, **tip de teren**.
 - Jocul e pe ture. **O tură = un anotimp** (primăvară → vară → toamnă → iarnă).
   - Iarna: armatele în afara orașelor pierd oameni (în afară de Strigoi, care devin mai puternici).
@@ -155,11 +155,16 @@ tests/                 # teste pentru reguli și AI
 
 ---
 
-## 11. Întrebări deschise (de hotărât împreună)
+## 11. Decizii luate
 
-1. **Numele jocului:** „Legendele Carpaților”? Alte idei: „Coroana Zmeilor”, „Ținutul Ielelor”, „Hora Războiului”.
-2. **Facțiunile:** sunt bune cele patru? Le schimbăm sau adăugăm una (Uriașii? Solomonarii, care controlează vremea)?
-3. **Harta:** vrem o hartă fixă desenată de mână sau una generată aleator la fiecare joc?
-4. **Victoria:** e bună „Inima Munților” ca obiectiv central?
-5. **Durata:** cam câte ture să dureze o partidă? (Propunere: 60–100 de ture, adică 15–25 de ani în joc.)
-6. **Limba jocului:** doar română sau și engleză?
+| Întrebare | Decizie |
+|---|---|
+| Harta | **Fixă**, desenată de mână (`data/map.json`), aceeași în fiecare partidă |
+| Victoria | **Da**: cucerire (14/20 provincii) **sau** Inima Munților + capitala timp de 8 ture |
+| Limba jocului | **Engleză** (textele din joc). Documentația poate rămâne în română |
+
+### Încă deschise (până se hotărăște altceva, folosim varianta propusă)
+
+1. **Numele jocului:** provizoriu „Legendele Carpaților”, în engleză *Legends of the Carpathians*.
+2. **Facțiunile:** cele patru propuse (Voievodatul, Zmeii, Ielele, Strigoii) + Haiducii ca rebeli.
+3. **Durata:** 60–100 de ture.

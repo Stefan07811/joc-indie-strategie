@@ -1,0 +1,47 @@
+{
+  "voievodat": {
+    "name": "The Voivodeship",
+    "adjective": "Voivodal",
+    "color": [184, 46, 52],
+    "capital": "targoviste",
+    "playable": true,
+    "terrain_mastery": [],
+    "description": "Men of the valleys. Strong walls, steady coin, and churches whose bells unsettle the creatures of the night."
+  },
+  "zmei": {
+    "name": "The Zmei",
+    "adjective": "Zmeu",
+    "color": [222, 150, 36],
+    "capital": "retezat",
+    "playable": true,
+    "terrain_mastery": ["mountains"],
+    "description": "Dragon-kin of the high peaks. Few in number, terrible in battle, and greedy beyond measure."
+  },
+  "iele": {
+    "name": "The Iele",
+    "adjective": "Iele",
+    "color": [152, 98, 206],
+    "capital": "maramures",
+    "playable": true,
+    "terrain_mastery": ["forest"],
+    "description": "Fairies of the deep woods. Swift and unseen among the trees, their endless dance drives intruders mad."
+  },
+  "strigoi": {
+    "name": "The Strigoi",
+    "adjective": "Strigoi",
+    "color": [92, 168, 120],
+    "capital": "black_marsh",
+    "playable": true,
+    "terrain_mastery": ["marsh"],
+    "description": "The restless dead of the marshes. Cheap, countless and slow, and stronger with every grave they open."
+  },
+  "haiduci": {
+    "name": "Haiduc Rebels",
+    "adjective": "Haiduc",
+    "color": [118, 106, 94],
+    "capital": null,
+    "playable": false,
+    "terrain_mastery": ["forest"],
+    "description": "Outlaws of the forests who rise wherever lords rule badly."
+  }
+}

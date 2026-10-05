@@ -128,7 +128,7 @@ Fiecare facțiune are o „personalitate” (Zmeii: lacomi și agresivi; Ielele:
 
 ```
 legendele/
-  main.py              # pornire
+  __main__.py          # pornire: python -m legendele
   game/                # logica (fără pygame)
     state.py           # starea campaniei
     province.py, army.py, faction.py, battle.py, economy.py, diplomacy.py
@@ -145,7 +145,7 @@ tests/                 # teste pentru reguli și AI
 
 | Etapă | Ce conține | Rezultat |
 |---|---|---|
-| **M1 — Harta** | Hartă cu provincii, selecție, armate care se mișcă, ture | Te poți plimba pe hartă |
+| **M1 — Harta** ✅ | Hartă cu provincii, selecție, armate care se mișcă, ture | Te poți plimba pe hartă |
 | **M2 — Război** | Bătălii automate, cucerire, asedii simple, condiții de victorie | Prima partidă jucabilă cap-coadă (2 facțiuni) |
 | **M3 — Economie** | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
 | **M4 — Legende** | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |

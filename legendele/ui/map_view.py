@@ -214,14 +214,14 @@ class MapView:
         theme.text(surface, p.name, (p.x, p.y - 8), 18, theme.PARCHMENT, anchor="center", shadow=theme.INK)
         if reach and p.id in reach:
             # gold: a free march; red: a battle, a siege or an assault awaits
-            color = theme.DANGER if game.defended(attacker, p.id) else theme.HIGHLIGHT
+            color = theme.DANGER if game.looks_defended(attacker, p.id) else theme.HIGHLIGHT
             badge = (p.x, p.y + 52)
             pygame.draw.circle(surface, theme.INK, badge, 10)
             pygame.draw.circle(surface, color, badge, 10, 2)
             theme.text(surface, str(reach[p.id].cost), (badge[0] + 1, badge[1] + 1), 18, color, anchor="center")
 
     def _draw_armies(self, surface, pid, selected_army):
-        armies = self.game.armies_in(pid)
+        armies = self.game.armies_seen(self.game.player, pid)
         p = self.game.provinces[pid]
         for i, army in enumerate(armies):
             color = theme.faction_color(self.game, army.faction)

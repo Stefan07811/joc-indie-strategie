@@ -4,14 +4,14 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, economy
+from . import battle, economy, legends
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
 SEASONS = ("Spring", "Summer", "Autumn", "Winter")
 HEAL_RATE = 0.1  # share of full strength regiments recover each season on friendly ground
 SIEGE_ATTRITION = 0.15  # share of full strength a besieged garrison loses each season
-REBELS = "haiduci"
+REBELS = legends.REBELS
 
 
 class MoveError(ValueError):
@@ -34,6 +34,7 @@ class Province:
     buildings: list[str] = field(default_factory=list)
     construction: dict | None = None  # {"building": id, "turns_left": n}
     recruits: list[str] = field(default_factory=list)  # unit ids arriving next season
+    captured_round: int | None = None  # when it last changed hands (fresh conquests are restless)
 
 
 @dataclass
@@ -108,6 +109,8 @@ class Game:
     spectate: bool = False  # AI-only games (simulations): the war goes on after the player falls
     _next_army_id: int = 1
     _generals_named: dict[str, int] = field(default_factory=dict)
+    abduct_ready: dict[str, int] = field(default_factory=dict)  # round from which a faction may abduct again
+    rebels: object = field(default_factory=legends.RebelAI)
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None):
@@ -209,6 +212,15 @@ class Game:
         p = self.provinces[pid]
         return self.has_enemy_army(fid, pid) or (p.owner != fid and bool(p.garrison))
 
+    def armies_seen(self, viewer, pid):
+        """The armies in `pid` that faction `viewer` can see (the Fae hide in forests)."""
+        return [a for a in self.armies_in(pid) if legends.visible_to(self, viewer, a)]
+
+    def looks_defended(self, fid, pid):
+        """Like defended(), but only counting what `fid` can see."""
+        p = self.provinces[pid]
+        return any(a.faction != fid for a in self.armies_seen(fid, pid)) or (p.owner != fid and bool(p.garrison))
+
     def passable(self, fid, pid):
         """Armies may march on through their own provinces as long as no enemy stands there.
         Entering any other province ends the march (to capture, fight or besiege)."""
@@ -266,17 +278,19 @@ class Game:
             defense *= battle.WALLS_DEFENSE
         return Side(
             faction=fid, regiments=regiments, leader=leader, defense_mult=defense,
-            attack_mult=mult * (battle.GENERAL_BONUS if leader else 1.0),
+            attack_mult=mult * (battle.GENERAL_BONUS if leader else 1.0) * legends.attack_modifier(self, fid, pid),
             resolve_bonus=battle.WALLS_RESOLVE if walls else 0.0,
             creature=self.data.factions[fid]["creature"],
+            walls=walls, ambush_ground=defending and p.terrain == "forest",
         )
 
     def _attackers(self, armies, pid):
         regiments = [r for a in armies for r in a.regiments]
         return self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False)
 
-    def _field_defenders(self, fid, pid):
-        enemies = [a for a in self.armies_in(pid) if a.faction != fid]
+    def _field_defenders(self, fid, pid, seen_by=None):
+        enemies = [a for a in self.armies_in(pid) if a.faction != fid
+                   and (seen_by is None or legends.visible_to(self, seen_by, a))]
         if not enemies:
             return None, []
         regiments = [r for a in enemies for r in a.regiments]
@@ -286,12 +300,12 @@ class Game:
         p = self.provinces[pid]
         return self._side(p.owner or REBELS, p.garrison, None, pid, defending=True, walls=p.walls)
 
-    def forecast(self, army, pid):
+    def forecast(self, army, pid, seen_only=False):
         """Predicted result of `army` marching into / assaulting `pid`: (wins?, share of army left),
-        or None if no fight would happen."""
+        or None if no fight would happen. With `seen_only`, hidden enemies are left out of the sums."""
         attackers = self._attackers([army], pid)
         if pid != army.province:
-            defenders, _ = self._field_defenders(army.faction, pid)
+            defenders, _ = self._field_defenders(army.faction, pid, army.faction if seen_only else None)
             if defenders:
                 return battle.predict(attackers, defenders, self.data.units)
             if self.provinces[pid].owner == army.faction:
@@ -346,11 +360,25 @@ class Game:
         self._record_battle(result)
         self._drop_if_destroyed(army)
         if result.attacker_won:
+            legends.raise_dead(self, result, army=army)
             self._capture(p, army.faction)  # a broken garrison has nowhere to run: it surrenders
         else:
+            legends.raise_dead(self, result, garrison_of=p.id)
             p.besieged_by = None
             if army.id in self.armies:
                 self._retreat(army, None)
+        self._check_end()
+        return self.events[start:]
+
+    def abduct(self, army_id):
+        """Dragonkin only: carry off a rival heir from a capital next to (or at) this army."""
+        if self.over:
+            raise MoveError("the war is over")
+        start = len(self.events)
+        try:
+            legends.abduct(self, self.armies[army_id])
+        except ValueError as e:
+            raise MoveError(str(e)) from None
         self._check_end()
         return self.events[start:]
 
@@ -408,9 +436,13 @@ class Game:
             for a in [army, *enemy_armies]:
                 self._drop_if_destroyed(a)
             if not result.attacker_won:
+                survivors = [a for a in enemy_armies if a.id in self.armies]
+                if survivors:
+                    legends.raise_dead(self, result, army=survivors[0])
                 if army.id in self.armies:
                     self._retreat(army, origin)
                 return
+            legends.raise_dead(self, result, army=army)
             for a in enemy_armies:
                 if a.id in self.armies:
                     self._retreat(a, None)
@@ -465,6 +497,13 @@ class Game:
         p.besieged_by = None
         p.construction = None  # half-built work and recruits in training are lost; finished buildings stay
         p.recruits = []
+        p.captured_round = self.round
+        if fid == REBELS:
+            # the Outlaws hold the province as free land: their army becomes its garrison
+            p.owner = None
+            for rebels in [a for a in self.armies_in(p.id) if a.faction == REBELS]:
+                p.garrison += rebels.regiments
+                del self.armies[rebels.id]
         self._event(Captured(p.id, fid, previous),
                     f"{self.faction_name(fid)} take {p.name}" + (f" from {self.faction_name(previous, True)}." if previous else "."))
 
@@ -505,6 +544,9 @@ class Game:
             self.ai_turn(fid)
             if self.over:
                 return
+        self.rebels.take_turn(self)
+        if self.over:
+            return
         self._new_round()
 
     def ai_turn(self, fid):
@@ -528,6 +570,9 @@ class Game:
                 for r in army.regiments:
                     r.hp -= self.data.units[r.unit]["hp"] * self.rules["winter_attrition"]
                 self._bury(army, "freezes to death in the snow")
+        legends.hora(self)
+        legends.healers(self)
+        legends.rebellions(self)
         self._check_end()
         if not self.winner:
             self._count_heart()

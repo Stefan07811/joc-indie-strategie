@@ -20,8 +20,13 @@ GENERAL_BONUS = 1.1
 HOME_TERRAIN_BONUS = 1.15
 WALLS_DEFENSE = 1.5
 WALLS_RESOLVE = 0.2  # garrisons behind walls hold out longer before breaking
-FIRST_ROUND = {"ranged": 1.5, "charge": 1.5}
+FIRST_ROUND = {"ranged": 1.5, "charge": 1.5, "frenzy": 1.5, "mace_throw": 1.3}
+FOREST_AMBUSH = 1.5
 BANE_OF_CREATURES = 1.3
+LIFE_DRAIN = 1 / 3
+HERO_ATTACK, HERO_RESOLVE = 1.1, 0.1
+DREAD, MAX_DREAD = 0.05, 3  # each Dread Wraith makes the enemy break this much sooner
+DANCE, MAX_DANCE = 0.04, 4  # each Dancing Fae weakens the enemy's blows this much
 
 
 @dataclass
@@ -43,6 +48,8 @@ class Side:
     attack_mult: float = 1.0
     resolve_bonus: float = 0.0
     creature: bool = False  # Monster Hunters strike creatures harder
+    walls: bool = False  # defending behind walls (Flying Fire ignores them)
+    ambush_ground: bool = False  # defending a forest (Forest Ambush)
 
 
 @dataclass
@@ -104,13 +111,22 @@ def resolve(attacker, defender, units, rng=None, province="", kind="field"):
     sides = (attacker, defender)
     start_hp = [sum(r.hp for r in s.regiments) for s in sides]
     start_n = [len(s.regiments) for s in sides]
-    limits = [break_point(attacker.regiments, units), break_point(defender.regiments, units, defender.resolve_bonus)]
+    counts = [_abilities(s, units) for s in sides]
+    attack_mods, limits = [], []
+    for i, s in enumerate(sides):
+        mine, theirs = counts[i], counts[1 - i]
+        hero = "hero" in mine
+        attack_mods.append((HERO_ATTACK if hero else 1.0) * (1 - DANCE * min(MAX_DANCE, theirs.get("enchanting_dance", 0))))
+        bonus = s.resolve_bonus + (HERO_RESOLVE if hero else 0.0) - DREAD * min(MAX_DREAD, theirs.get("dread", 0))
+        limits.append(break_point(s.regiments, units, bonus))
     broken = None
     rounds = 0
     for rounds in range(1, MAX_ROUNDS + 1):
-        damage = [_strikes(sides[i], sides[1 - i], units, rng, rounds) for i in (0, 1)]
+        damage = [_strikes(sides[i], sides[1 - i], units, rng, rounds, attack_mods[i]) for i in (0, 1)]
         for i in (0, 1):
-            _apply(sides[1 - i], damage[i])
+            _apply(sides[1 - i], damage[i][0])
+        for i in (0, 1):
+            _heal(sides[i], damage[i][1], units)
         lost = [1 - sum(r.hp for r in s.regiments) / start_hp[i] if start_hp[i] else 1 for i, s in enumerate(sides)]
         over = [lost[i] >= limits[i] or not sides[i].regiments for i in (0, 1)]
         if over[0] or over[1]:
@@ -153,25 +169,49 @@ class _Average:
         return max(seq, key=lambda r: r.hp)
 
 
-def _strikes(side, enemy, units, rng, round_no):
-    hits = {}
+def _abilities(side, units):
+    counts = {}
+    for r in side.regiments:
+        ability = units[r.unit]["ability"]
+        if ability:
+            counts[ability] = counts.get(ability, 0) + 1
+    return counts
+
+
+def _strikes(side, enemy, units, rng, round_no, attack_mod):
+    """Every regiment of `side` strikes once. Returns (damage per target id, healing per own regiment id)."""
+    hits, heals = {}, {}
     if not enemy.regiments:
-        return hits
+        return hits, heals
     for r in side.regiments:
         u = units[r.unit]
+        ability = u["ability"]
         target = rng.choice(enemy.regiments)
         t = units[target.unit]
-        attack = u["attack"] * side.attack_mult
+        attack = u["attack"] * side.attack_mult * attack_mod
         if round_no == 1:
-            attack *= FIRST_ROUND.get(u["ability"], 1.0)
-        if u["ability"] == "bane_of_creatures" and enemy.creature:
+            attack *= FIRST_ROUND.get(ability, 1.0)
+            if ability == "forest_ambush" and side.ambush_ground:
+                attack *= FOREST_AMBUSH
+        if ability == "bane_of_creatures" and enemy.creature:
             attack *= BANE_OF_CREATURES
-        defense = t["defense"] * enemy.defense_mult
+        defense_mult = enemy.defense_mult
+        if ability == "flying_fire" and enemy.walls:
+            defense_mult /= WALLS_DEFENSE
+        defense = t["defense"] * defense_mult
         vigour = 0.5 + 0.5 * r.hp / u["hp"]
         roll = 0.8 + 0.4 * rng.random()
         dmg = DAMAGE_PER_ATTACK * attack * ARMOUR / (ARMOUR + defense) * vigour * roll
         hits[id(target)] = hits.get(id(target), 0) + dmg
-    return hits
+        if ability == "life_drain":
+            heals[id(r)] = heals.get(id(r), 0) + dmg * LIFE_DRAIN
+    return hits, heals
+
+
+def _heal(side, heals, units):
+    for r in side.regiments:
+        if id(r) in heals:
+            r.hp = min(units[r.unit]["hp"], r.hp + heals[id(r)])
 
 
 def _apply(side, hits):

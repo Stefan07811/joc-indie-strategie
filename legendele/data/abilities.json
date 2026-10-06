@@ -1,0 +1,58 @@
+{
+  "ranged": {
+    "name": "Ranged",
+    "description": "Opening volley: strikes 50% harder in the first round."
+  },
+  "charge": {
+    "name": "Charge",
+    "description": "Strikes 50% harder in the first round."
+  },
+  "frenzy": {
+    "name": "Frenzy",
+    "description": "Strikes 50% harder in the first round."
+  },
+  "mace_throw": {
+    "name": "Mace Throw",
+    "description": "Strikes 30% harder in the first round."
+  },
+  "bane_of_creatures": {
+    "name": "Monster Bane",
+    "description": "Strikes creatures 30% harder."
+  },
+  "forest_ambush": {
+    "name": "Forest Ambush",
+    "description": "Strikes 50% harder in the first round when defending a forest."
+  },
+  "flying_fire": {
+    "name": "Flying Fire",
+    "description": "Walls give no protection against it."
+  },
+  "life_drain": {
+    "name": "Life Drain",
+    "description": "Heals itself for a third of the damage it deals."
+  },
+  "dread": {
+    "name": "Dread",
+    "description": "The enemy breaks sooner (stacks up to three times)."
+  },
+  "enchanting_dance": {
+    "name": "Enchanting Dance",
+    "description": "The enemy strikes 4% weaker (stacks up to four times)."
+  },
+  "heal": {
+    "name": "Healing",
+    "description": "The whole army recovers 5% more each season, even abroad (up to 15%)."
+  },
+  "fearless": {
+    "name": "Fearless",
+    "description": "Fights almost to the last."
+  },
+  "scout": {
+    "name": "Scout",
+    "description": "Quick and cheap."
+  },
+  "hero": {
+    "name": "Hero",
+    "description": "Unique. Their army strikes 10% harder and holds longer."
+  }
+}

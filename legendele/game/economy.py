@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from . import legends
+
 
 @dataclass
 class Treasury:
@@ -15,10 +17,11 @@ class Balance:
     upkeep: int  # gold paid to the armies
     food_made: int  # this season, after the season's multiplier
     food_eaten: int
+    interest: int = 0  # the Dragonkin hoard
 
     @property
     def gold(self):
-        return self.tax - self.upkeep
+        return self.tax + self.interest - self.upkeep
 
     @property
     def food(self):
@@ -57,7 +60,8 @@ def balance(game, fid, season=None):
     upkeep = sum(game.data.units[r.unit]["upkeep"] for r in regiments)
     eaten = sum(appetite(game, r.unit) for r in regiments)
     tax = round(tax * game.data.factions[fid]["income_mult"])
-    return Balance(tax, upkeep, round(food * game.data.map["seasons"][season]["food"]), eaten)
+    return Balance(tax, upkeep, round(food * game.data.map["seasons"][season]["food"]), eaten,
+                   legends.interest(game, fid))
 
 
 # --- what may be built or recruited, and why not ------------------------------------------
@@ -78,6 +82,8 @@ def building_blocker(game, fid, pid, bid):
         return reason
     p = game.provinces[pid]
     b = game.data.buildings[bid]
+    if b.get("faction", fid) != fid:
+        return "Not one of yours"
     if bid in p.buildings:
         return "Already built"
     if p.construction:

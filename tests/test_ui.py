@@ -188,3 +188,44 @@ def test_winter_map_draws(app):
     app.start_campaign("strigoi", seed=10)
     app.scene.game.round = 3
     app.scene.draw(app.screen)
+
+
+def test_abduct_button_and_report(app):
+    app.start_campaign("zmei", seed=4)
+    game = app.scene.game
+    army = game.add_army("zmei", "arges", "Cinderjaw", ["pui_de_zmeu"])
+    app.scene.selected_army = army.id
+    app.scene.draw(app.screen)
+    assert app.scene.panel.abduct_rect is not None
+    click(app, app.scene.panel.abduct_rect.center)
+    assert app.scene.reports and type(app.scene.reports[0]).__name__ == "Abduction"
+    close_reports(app)
+    if army.id in game.armies:
+        app.scene.selected_army = army.id
+        app.scene.draw(app.screen)
+        assert app.scene.panel.abduct_rect is None  # on cooldown
+
+
+def test_hidden_fae_are_not_drawn(app):
+    app.start_campaign("voievodat", seed=1)
+    app.scene.draw(app.screen)
+    game = app.scene.game
+    drawn = {aid for _, aid in app.scene.map.army_rects}
+    fae = next(a for a in game.armies_of("iele") if a.province == "maramures")
+    assert fae.id not in drawn
+    assert all(aid in drawn for aid in (a.id for a in game.armies_of("voievodat")))
+
+
+def test_rebellion_shows_a_report_and_order_in_the_panel(app):
+    app.start_campaign("voievodat", seed=1)
+    game = app.scene.game
+    p = game.provinces["arges"]
+    p.captured_round, p.garrison = 0, []
+    rebels = game.add_army("haiduci", "arges", "Pintea", ["haiduc_brigands"])
+    from legendele.game import Rebellion
+    app.scene._report([Rebellion("arges", "voievodat")])
+    app.scene.draw(app.screen)
+    close_reports(app)
+    app.scene.selected_province = "arges"
+    app.scene.draw(app.screen)
+    assert rebels.id in game.armies

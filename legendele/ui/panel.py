@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import economy
+from ..game import economy, legends
 from . import theme
 
 PAD = 16
@@ -17,6 +17,7 @@ class Panel:
         self.assault_rect = None  # set while the selected army can storm walls
         self.merge_rect = None  # set while the selected army has comrades to absorb
         self.manage_rect = None  # set while one of our provinces is shown
+        self.abduct_rect = None  # set while a Dragonkin army can carry off an heir
 
     def draw(self, surface, *, province=None, army=None, target=None, mouse=(0, 0)):
         game = self.game
@@ -25,7 +26,7 @@ class Panel:
         pygame.draw.line(surface, theme.PANEL_LINE, rect.topleft, rect.bottomleft, 3)
         x, y = rect.x + PAD, rect.y + PAD
         width = rect.width - 2 * PAD
-        self.assault_rect = self.merge_rect = self.manage_rect = None
+        self.assault_rect = self.merge_rect = self.manage_rect = self.abduct_rect = None
 
         theme.text(surface, game.date, (x, y), 30, theme.GOLD)
         y += 30
@@ -112,7 +113,7 @@ class Panel:
             besieger = game.armies[p.besieged_by]
             theme.text(surface, f"Besieged by {besieger.general}", (x, y), 18, theme.DANGER)
             y += 20
-        for a in game.armies_in(p.id):
+        for a in game.armies_seen(game.player, p.id):
             theme.text(surface, f"• {a.general} ({len(a.regiments)} regiments)", (x, y), 18,
                        theme.faction_color(game, a.faction))
             y += 19
@@ -134,10 +135,23 @@ class Panel:
         for line in lines:
             theme.text(surface, line, (x, y), 18)
             y += 19
+        y = self._order(surface, p, x, y, width)
         self.manage_rect = pygame.Rect(x, y + 4, width, 32)
         theme.button(surface, self.manage_rect, "Manage province  (M)", self.manage_rect.collidepoint(mouse),
                      enabled=not game.over)
         return y + 42
+
+    def _order(self, surface, p, x, y, width):
+        order, parts = legends.public_order(self.game, p)
+        mood, color = (("Content", theme.GOOD) if order >= 3 else ("Uneasy", theme.HIGHLIGHT) if order >= 0
+                       else ("Rebellious!", theme.DANGER))
+        theme.text(surface, f"Order {order:+}  ·  {mood}", (x, y), 18, color)
+        y += 19
+        detail = ", ".join(f"{name} {points:+}" for name, points in parts)
+        for line in theme.wrap(detail, 16, width):
+            theme.text(surface, line, (x, y), 16, theme.TEXT_DIM)
+            y += 17
+        return y
 
     def _army(self, surface, army, x, y, width, target, mouse):
         game = self.game
@@ -151,6 +165,13 @@ class Panel:
             theme.text(surface, f"Movement left: {army.moves_left} / {game.data.map['army_moves']}", (x, y), 18)
             y += 22
         y = self._regiments(surface, None, army.regiments, x, y, width)
+        abilities = sorted({game.data.abilities[a]["name"] for a in
+                            (game.data.units[r.unit]["ability"] for r in army.regiments) if a})
+        for line in theme.wrap("Abilities: " + ", ".join(abilities), 16, width) if abilities else ():
+            theme.text(surface, line, (x, y), 16, theme.TEXT_DIM)
+            y += 17
+        if mine and legends.traits(game, army.faction).get("abduction"):
+            y = self._abduction(surface, army, x, y + 2, width, mouse)
         comrades = [a for a in game.armies_in(army.province) if a.faction == army.faction and a.id != army.id]
         if mine and comrades and len(army.regiments) < game.rules["max_regiments"]:
             self.merge_rect = pygame.Rect(x, y, width, 30)
@@ -171,10 +192,26 @@ class Panel:
             theme.button(surface, self.assault_rect, "Assault the walls",
                          self.assault_rect.collidepoint(mouse), enabled=army.moves_left > 0 and not game.over)
             y += 40
-            y = self._forecast(surface, game.forecast(army, army.province), x, y)
+            y = self._forecast(surface, game.forecast(army, army.province, seen_only=True), x, y)
         elif mine and target is not None:
-            y = self._forecast(surface, game.forecast(army, target), x, y, game.provinces[target].name)
+            y = self._forecast(surface, game.forecast(army, target, seen_only=True), x, y,
+                               game.provinces[target].name)
         return y + 6
+
+    def _abduction(self, surface, army, x, y, width, mouse):
+        game = self.game
+        pid, reason = legends.abduction_target(game, army)
+        if reason:
+            for line in theme.wrap(f"Abduct an heir: {reason[0].lower()}{reason[1:]}.", 16, width):
+                theme.text(surface, line, (x, y), 16, theme.TEXT_DIM)
+                y += 17
+            return y + 3
+        chance = round(legends.abduction_chance(game, army, pid) * 100)
+        theme.text(surface, f"The heir of {game.provinces[pid].name} is within reach.", (x, y), 16, theme.GOLD)
+        self.abduct_rect = pygame.Rect(x, y + 18, width, 30)
+        theme.button(surface, self.abduct_rect, f"Abduct the heir  ({chance}%)",
+                     self.abduct_rect.collidepoint(mouse), enabled=not game.over)
+        return y + 54
 
     def _forecast(self, surface, forecast, x, y, place=None):
         if forecast is None:

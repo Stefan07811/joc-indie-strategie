@@ -24,7 +24,7 @@ class FactionSelect:
         width, gap = 280, 20
         left = (theme.WINDOW_SIZE[0] - (4 * width + 3 * gap)) // 2
         for i, fid in enumerate(self._playable()):
-            self.cards.append((pygame.Rect(left + i * (width + gap), 250, width, 300), fid))
+            self.cards.append((pygame.Rect(left + i * (width + gap), 220, width, 400), fid))
 
     def _playable(self):
         return [f for f, d in self.app.data.factions.items() if d["playable"]]
@@ -45,8 +45,8 @@ class FactionSelect:
         shade.fill((20, 14, 10, 170))
         surface.blit(shade, (0, 0))
         cx = theme.WINDOW_SIZE[0] // 2
-        theme.text(surface, TITLE, (cx, 120), 72, theme.GOLD, anchor="center", shadow=theme.INK)
-        theme.text(surface, "Choose the legend you will lead", (cx, 180), 28, theme.PARCHMENT, anchor="center")
+        theme.text(surface, TITLE, (cx, 100), 72, theme.GOLD, anchor="center", shadow=theme.INK)
+        theme.text(surface, "Choose the legend you will lead", (cx, 160), 28, theme.PARCHMENT, anchor="center")
         mouse = pygame.mouse.get_pos()
         for rect, fid in self.cards:
             f = data.factions[fid]
@@ -61,6 +61,10 @@ class FactionSelect:
             for line in theme.wrap(f["description"], 19, rect.width - 32):
                 theme.text(surface, line, (rect.x + 16, y), 19)
                 y += 20
+            y += 10
+            for line in theme.wrap(f["legend"], 18, rect.width - 32):
+                theme.text(surface, line, (rect.x + 16, y), 18, theme.GOLD)
+                y += 19
             mastery = ", ".join(data.terrain[t]["name"] for t in f["terrain_mastery"]) or "none (strong cities)"
             theme.text(surface, f"At home in: {mastery}", (rect.x + 16, rect.bottom - 52), 18, theme.TEXT_DIM)
             theme.text(surface, f"Capital: {next(p['name'] for p in data.provinces if p['id'] == f['capital'])}",
@@ -103,6 +107,9 @@ class Campaign:
                 self.end_turn()
             elif self.panel.assault_rect and self.panel.assault_rect.collidepoint(event.pos):
                 self.assault()
+            elif self.panel.abduct_rect and self.panel.abduct_rect.collidepoint(event.pos):
+                army_id = self.selected_army
+                self._act(lambda: self.game.abduct(army_id))
             elif self.panel.merge_rect and self.panel.merge_rect.collidepoint(event.pos):
                 self.game.merge(self.selected_army)
             elif self.panel.manage_rect and self.panel.manage_rect.collidepoint(event.pos):

@@ -4,6 +4,8 @@ Joc indie de strategie în stilul Total War, inspirat din folclorul românesc. P
 dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii), **The Fae Court** (Ielele)
 și **The Revenants** (Strigoii). Textele din joc sunt în engleză.
 
+![Alegerea legendei](docs/menu.png)
+
 ![Harta campaniei](docs/screenshot.png)
 
 ![Raport de bătălie](docs/battle_report.png)
@@ -32,7 +34,7 @@ python -m legendele
 | Deselectezi | clic dreapta sau `Esc` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M3 (economia)
+## Stadiul actual: etapa M4 (legendele)
 
 **Harta și mișcarea**
 - Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
@@ -78,8 +80,30 @@ python -m legendele
 - **Lipsuri:** fără hrană armatele flămânzesc, iar cu tezaurul pe minus soldații dezertează.
 - **AI-ul** construiește, recrutează fără să intre pe minus și vânează facțiunea care ține Inima Munților.
 
-**Ce urmează (M4):** mecanicile speciale ale fiecărei facțiuni (Hora, ridicarea morților, comoara
-Dragonkin, bisericile), clădiri specifice și răscoalele Outlaws.
+**Legendele (M4)**
+
+Fiecare facțiune are o putere a ei. Pe ecranul de start o vezi scrisă cu auriu.
+
+| Facțiune | Puterea |
+|---|---|
+| **The Principality** | **Church** (doar ei o pot construi): +2 ordine, iar creaturile care luptă în provincie lovesc cu 20% mai slab. Au +25% venit și se simt acasă pe câmpie. |
+| **The Dragonkin** | **Comoara**: tezaurul aduce dobândă (5%, maximum 15 aur, +15 cu fiecare **Dragon Hoard**). **Răpirea**: o armată aflată lângă capitala unui rival îi poate fura moștenitorul, pentru 150 de aur răscumpărare (o dată la 6 anotimpuri; dacă eșuează, armata pierde oameni). |
+| **The Fae Court** | **Hora**: armatele dușmane aflate pe pământul lor pierd 4% din oameni în fiecare anotimp (dublu lângă un **Fairy Ring**). În păduri armatele lor nu se văd decât dacă ai o armată aproape. |
+| **The Revenants** | **Ridicarea morților**: după fiecare victorie, o parte din morții ambelor tabere se ridică drept Risen Dead (+1 lângă o **Crypt**). Nu simt frigul și iarna lovesc cu 15% mai tare. |
+
+**Abilitățile unităților** contează acum în luptă: Ranged, Charge, Frenzy, Monster Bane, Forest Ambush,
+Flying Fire (zidurile nu apără de foc), Life Drain (vampirii se vindecă), Dread, Enchanting Dance,
+Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
+
+**Ordinea publică și Outlaws**
+- Fiecare provincie are o **ordine**, afișată în panou împreună cu motivele. Ordinea crește cu trupele staționate,
+  cu clădirile (Church, Fairy Ring, Crypt, Dragon Hoard, Stone Walls) și în capitală.
+  Scade în provinciile proaspăt cucerite, când e foamete și când tezaurul e pe minus.
+- Sub zero, provincia se poate **răscula**: apar Outlaws care atacă garnizoana. Dacă câștigă,
+  provincia redevine liberă (neutră), iar rebelii îi devin garnizoană.
+- Concluzia: după o cucerire, lasă trupe în provincie câteva anotimpuri.
+
+**Ce urmează (M5):** un AI mai isteț, cu personalități, și diplomație (pace, alianțe).
 
 ## Pentru dezvoltare
 
@@ -97,9 +121,9 @@ python tools/fair_costs.py            # cât valorează fiecare unitate în lupt
 
 ```
 legendele/
-  game/        regulile jocului (fără pygame): date, stare, mișcare, ture, AI
+  game/        regulile jocului (fără pygame): date, stare, bătălii, economie, legende, AI
   ui/          ecranele pygame: alegerea facțiunii, harta, panoul lateral
-  data/        JSON: factions.json, units.json, buildings.json, map.json
+  data/        JSON: factions.json, units.json, buildings.json, abilities.json, map.json
   assets/      sprite-uri opționale (vezi assets/README.md)
   mapshape.py  forma provinciilor, calculată din punctele din map.json
 tools/

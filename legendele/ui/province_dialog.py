@@ -87,6 +87,8 @@ class ProvinceDialog:
         for bid, b in game.data.buildings.items():
             if bid in p.buildings or (p.construction and p.construction["building"] == bid):
                 continue
+            if b.get("faction", game.player) != game.player:
+                continue  # another legend's wonder
             reason = economy.building_blocker(game, game.player, p.id, bid)
             rect = pygame.Rect(x, y, COLUMN, 46)
             self._row(surface, rect, f"{b['name']}", f"{b['cost']} gold · {b['turns']} season"
@@ -108,6 +110,8 @@ class ProvinceDialog:
             reason = economy.unit_blocker(game, game.player, p.id, uid)
             rect = pygame.Rect(x, y, COLUMN, 42)
             stats = f"A{u['attack']} D{u['defense']} HP{u['hp']} · upkeep {u['upkeep']} · food {economy.appetite(game, uid)}"
+            if u["ability"] and u["ability"] != "hero":
+                stats += f" · {game.data.abilities[u['ability']]['name']}"
             self._row(surface, rect, u["name"] + ("  (hero)" if u["ability"] == "hero" else ""), f"{u['cost']} gold",
                       stats, reason, mouse)
             if reason is None:

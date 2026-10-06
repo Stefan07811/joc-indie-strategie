@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import Battle, Captured, Eliminated, Victory
+from ..game import Abduction, Battle, Captured, Eliminated, Rebellion, Victory
 from . import theme
 
 BOX = pygame.Rect(0, 0, 560, 340)
@@ -15,6 +15,10 @@ def concerns_player(game, event):
         return game.player in (event.result.attacker.faction, event.result.defender.faction)
     if isinstance(event, Captured):
         return event.previous == game.player
+    if isinstance(event, Rebellion):
+        return event.faction == game.player
+    if isinstance(event, Abduction):
+        return game.player in (event.faction, event.victim)
     return isinstance(event, (Eliminated, Victory))
 
 
@@ -69,14 +73,32 @@ def _battle(surface, game, assets, result):
         pygame.draw.rect(surface, theme.DANGER, bar)
         pygame.draw.rect(surface, theme.GOOD, (bar.x, bar.y, round(bar.width * share), bar.height))
         theme.text(surface, f"{round(share * 100)}% strength left", (x, y + 18), 17, theme.TEXT_DIM)
-    theme.text(surface, f"The fighting lasted {result.rounds} rounds.", (BOX.centerx, BOX.bottom - 52), 18,
-               theme.TEXT_DIM, anchor="center")
+    footer = [f"The fighting lasted {result.rounds} round{'s' if result.rounds != 1 else ''}.", *result.notes]
+    for i, line in enumerate(reversed(footer)):
+        theme.text(surface, line, (BOX.centerx, BOX.bottom - 52 - 20 * i), 18,
+                   theme.GOLD if line in result.notes else theme.TEXT_DIM, anchor="center")
 
 
 def _notice(surface, game, event):
     if isinstance(event, Captured):
         title, color = f"{game.provinces[event.province].name} has fallen", theme.DANGER
         body = f"{game.faction_name(event.faction)} have taken it from us."
+    elif isinstance(event, Rebellion):
+        title, color = f"{game.provinces[event.province].name} rises up!", theme.DANGER
+        body = ("Unpaid, hungry or freshly conquered, the people have had enough: Outlaws take up arms. "
+                "Keep troops in restless provinces and build to calm them.")
+    elif isinstance(event, Abduction):
+        place = game.provinces[event.province].name
+        if event.faction == game.player:
+            title, color = (("The heir is ours!", theme.GOOD) if event.success
+                            else ("The abduction failed", theme.DANGER))
+            body = (f"{game.faction_name(event.victim)} paid {event.ransom} gold to get their heir back from {place}."
+                    if event.success else f"The guards of {place} fought us off.")
+        else:
+            title, color = (("Our heir has been taken!", theme.DANGER) if event.success
+                            else ("A Dragonkin raid was driven off", theme.GOOD))
+            body = (f"The Dragonkin carried off the heir from {place}. We paid {event.ransom} gold in ransom."
+                    if event.success else f"The guards of {place} drove the Dragonkin away.")
     elif isinstance(event, Eliminated):
         mine = event.faction == game.player
         title, color = ("Your realm is lost" if mine else f"{game.faction_name(event.faction)} are no more",

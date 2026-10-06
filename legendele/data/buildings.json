@@ -3,5 +3,10 @@
   "market":   { "name": "Market",      "cost": 150, "turns": 1, "gold": 12, "food": 0, "description": "+12 gold each season." },
   "mine":     { "name": "Mine",        "cost": 180, "turns": 2, "gold": 15, "food": 0, "terrain": ["hills", "mountains"], "description": "+15 gold each season. Hills and mountains only." },
   "barracks": { "name": "Barracks",    "cost": 200, "turns": 2, "gold": 0,  "food": 0, "unlocks_tier": 2, "description": "Train elite regiments here. In your capital it also trains legendary ones." },
-  "walls":    { "name": "Stone Walls", "cost": 250, "turns": 2, "gold": 0,  "food": 0, "walls": true, "description": "Walls and a small garrison that guard the province." }
+  "walls":    { "name": "Stone Walls", "cost": 250, "turns": 2, "gold": 0,  "food": 0, "walls": true, "order": 1, "description": "Walls and a small garrison that guard the province." },
+
+  "church":   { "name": "Church",       "faction": "voievodat", "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. Creatures fighting here strike 20% weaker." },
+  "hoard":    { "name": "Dragon Hoard", "faction": "zmei",      "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 1, "description": "+1 order. Raises the interest your treasury can earn by 15 gold." },
+  "ring":     { "name": "Fairy Ring",   "faction": "iele",      "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. The Hora strikes twice as hard here." },
+  "crypt":    { "name": "Crypt",        "faction": "strigoi",   "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. One more of the fallen rises after victories won here." }
 }

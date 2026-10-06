@@ -30,8 +30,20 @@ Numele din joc sunt în engleză. În paranteză e legenda românească din care
 | **The Fae Court** (Ielele) | Păduri și poieni | Rapide, slabe în luptă directă, magie | **Hora:** armatele inamice care intră în provinciile lor pierd moral și oameni în fiecare tură; nu pot fi văzute în păduri |
 | **The Revenants** (Strigoii) | Mlaștini și cimitire | Ieftini, mulți, lenți; nu suferă de frig | **Ridicarea morților:** după fiecare bătălie, o parte din morți (de ambele tabere) se ridică în rândurile lor; mai puternici iarna |
 
-**Outlaws** (Haiducii) sunt o forță neutră, nu o facțiune jucabilă. Păzesc provinciile neutre;
-din M4 se vor ridica la răscoală în provinciile cu ordine publică scăzută.
+**Outlaws** (Haiducii) sunt o forță neutră, nu o facțiune jucabilă. Păzesc provinciile neutre și
+se ridică la răscoală în provinciile cu ordine publică sub zero.
+
+**Cum arată legendele în joc (M4):**
+- **Principality:** clădirea **Church** (+2 ordine; creaturile lovesc cu 20% mai slab în provincie),
+  +25% venit și bonus de teren pe câmpie.
+- **Dragonkin:** dobândă la tezaur (5%, plafon 15 + 15 pe fiecare **Dragon Hoard**) și **răpirea moștenitorului**
+  unei capitale vecine (150 de aur; șansa scade cu gărzile; o dată la 6 anotimpuri).
+- **Fae Court:** **Hora** (4% pierderi pe anotimp pentru armatele dușmane pe pământul lor, dublu la **Fairy Ring**)
+  și armate invizibile în păduri, dacă nu ai o armată în apropiere.
+- **Revenants:** **ridicarea morților** după victorii (un regiment la fiecare 200 de puncte de viață căzute,
+  maximum 3, +1 la **Crypt**), fără pierderi iarna și +15% atac iarna.
+
+Puterile se reglează din `factions.json` (câmpul `traits`), fără să schimbi codul.
 
 ### Unități (câte 5 pe facțiune)
 
@@ -87,7 +99,11 @@ Două resurse, strânse la începutul fiecărui anotimp:
 
 **Clădiri** (3 locuri pe provincie, gata în 1–2 anotimpuri): Farmsteads (+hrană), Market (+aur),
 Mine (+aur, doar pe dealuri și munți), Barracks (unități de nivel 2–3), Stone Walls (ziduri și garnizoană).
-Clădirile specifice fiecărei facțiuni vin în M4.
+Fiecare facțiune are și o clădire proprie: Church, Dragon Hoard, Fairy Ring, Crypt.
+
+**Ordinea publică:** bază +2, capitala +2, trupele staționate +1 pe regiment (maximum +3), clădirile de ordine,
+minus neliniștea cuceririi (−6, scade cu 1 pe anotimp), foametea (−3) și datoriile (−2).
+Sub zero, fiecare punct dă 15% șansă de răscoală pe anotimp (maximum 60%).
 
 **Recrutare:** cel mult 2 regimente pe provincie pe tură. Sosesc în anotimpul următor: se alătură unei armate
 din provincie sau formează una nouă, cu un general nou. Armatele au cel mult 12 regimente și se pot uni.
@@ -171,7 +187,7 @@ tests/                 # teste pentru reguli și AI
 | **M1 — Harta** ✅ | Hartă cu provincii, selecție, armate care se mișcă, ture | Te poți plimba pe hartă |
 | **M2 — Război** ✅ | Bătălii automate, cucerire, asedii simple, condiții de victorie | Prima partidă jucabilă cap-coadă (2 facțiuni) |
 | **M3 — Economie** ✅ | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
-| **M4 — Legende** | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
+| **M4 — Legende** ✅ | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
 | **M5 — AI și diplomație** | Personalități, pace/alianță | Adversari credibili |
 | **M6 — Aspect** | Pixel art, sunete, meniu, salvare/încărcare | Arată ca un joc |
 | *(opțional)* **M7** | Bătălii în timp real | Ce lipsește ca să fie un Total War complet |

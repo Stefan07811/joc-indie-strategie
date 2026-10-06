@@ -9,7 +9,7 @@ battle maths the game uses, and marches there. Besiegers storm the walls once th
 good, otherwise they let hunger do the work. Smarter planning and personalities come in M5.
 """
 
-from . import economy
+from . import economy, legends
 
 MIN_SHARE_LEFT = 0.45  # only fight battles we expect to win with at least this much of the army left
 GOLD_RESERVE = 40  # kept back for emergencies
@@ -29,10 +29,35 @@ class SimpleAI:
             army = game.armies.get(army_id)
             if army is None:
                 continue
+            if self._abduct(game, army):
+                continue
             if game.besieging(army):
                 self._siege(game, army)
-            else:
+            elif not self._on_guard(game, army):
                 self._march(game, army)
+
+    def _abduct(self, game, army):
+        pid, reason = legends.abduction_target(game, army)
+        if reason:
+            return False
+        victim = game.provinces[pid].owner
+        if legends.abduction_chance(game, army, pid) < 0.5 or game.treasury[victim].gold < 60:
+            return False
+        game.abduct(army.id)
+        return True
+
+    def _on_guard(self, game, army):
+        """Stay to keep the peace where leaving would let the province rise up."""
+        p = game.provinces[army.province]
+        if p.owner != self.faction:
+            return False
+        order, _ = legends.public_order(game, p)
+        others = len(p.garrison) + sum(len(a.regiments) for a in game.armies_in(p.id)
+                                       if a.faction == self.faction and a.id != army.id)
+        rules = game.data.map["order"]
+        without_us = order - min(rules["max_troops"], (others + len(army.regiments)) * rules["per_regiment"]) \
+            + min(rules["max_troops"], others * rules["per_regiment"])
+        return without_us < 0
 
     def _siege(self, game, army):
         forecast = game.forecast(army, army.province)
@@ -106,9 +131,21 @@ class SimpleAI:
         if bal.food < 2:
             order.remove("farm")
             order.insert(0, "farm")
+        own = [bid for bid, b in game.data.buildings.items() if b.get("faction") == fid]
+        restless = [p for p in game.provinces_of(fid) if legends.public_order(game, p)[0] < 2]
+        for bid in own:  # calm restless provinces with the faction's own building first
+            for p in restless:
+                if gold - game.data.buildings[bid]["cost"] >= GOLD_RESERVE and \
+                        economy.building_blocker(game, fid, p.id, bid) is None:
+                    game.build(fid, p.id, bid)
+                    return
+        order[1:1] = own
         capital = game.capital_of(fid)
         # the capital first, then the richest provinces
-        provinces = sorted(game.provinces_of(fid), key=lambda p: (p.id != capital, -economy.province_yield(game, p)[0], p.id))
+        # restless provinces first, then the capital, then the richest
+        provinces = sorted(game.provinces_of(fid), key=lambda p: (legends.public_order(game, p)[0] >= 1,
+                                                                   p.id != capital,
+                                                                   -economy.province_yield(game, p)[0], p.id))
         for bid in order:
             if bid == "barracks":
                 candidates = [p for p in provinces if p.id == capital] or provinces[:1]

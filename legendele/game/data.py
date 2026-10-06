@@ -17,6 +17,7 @@ class GameData:
     units: dict
     map: dict
     buildings: dict
+    abilities: dict
 
     @property
     def terrain(self):
@@ -34,7 +35,7 @@ class GameData:
             return json.loads((data_dir / name).read_text(encoding="utf-8"))
 
         data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"),
-                   buildings=read("buildings.json"))
+                   buildings=read("buildings.json"), abilities=read("abilities.json"))
         data.validate()
         return data
 
@@ -60,7 +61,11 @@ class GameData:
         for uid, u in self.units.items():
             if u["faction"] not in self.factions:
                 raise DataError(f"unit {uid}: unknown faction {u['faction']!r}")
+            if u["ability"] and u["ability"] not in self.abilities:
+                raise DataError(f"unit {uid}: unknown ability {u['ability']!r}")
         for bid, b in self.buildings.items():
+            if b.get("faction") and b["faction"] not in self.factions:
+                raise DataError(f"building {bid}: unknown faction {b['faction']!r}")
             for t in b.get("terrain", ()):
                 if t not in self.terrain:
                     raise DataError(f"building {bid}: unknown terrain {t!r}")

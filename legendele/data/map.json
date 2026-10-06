@@ -21,6 +21,18 @@
     "winter_attrition": 0.08,
     "militia_size": 1
   },
+  "order": {
+    "base": 2,
+    "capital": 2,
+    "per_regiment": 1,
+    "max_troops": 3,
+    "conquest_unrest": 6,
+    "hunger": 3,
+    "debt": 2,
+    "revolt_chance_per_point": 0.15,
+    "max_revolt_chance": 0.6,
+    "max_rebels": 4
+  },
   "seasons": {
     "Spring": {"food": 1.0},
     "Summer": {"food": 1.5},
@@ -30,7 +42,7 @@
   "terrain": {
     "plains": {"name": "Plains", "move_cost": 1, "color": [158, 178, 98], "defense": 1.0, "tax": 18, "food": 4},
     "hills": {"name": "Hills", "move_cost": 2, "color": [178, 156, 102], "defense": 1.2, "tax": 15, "food": 2},
-    "forest": {"name": "Forest", "move_cost": 2, "color": [78, 122, 72], "defense": 1.15, "tax": 15, "food": 2},
+    "forest": {"name": "Forest", "move_cost": 2, "color": [78, 122, 72], "defense": 1.15, "tax": 12, "food": 2},
     "marsh": {"name": "Marsh", "move_cost": 2, "color": [98, 112, 88], "defense": 1.1, "tax": 10, "food": 2},
     "mountains": {"name": "Mountains", "move_cost": 3, "color": [132, 126, 122], "defense": 1.3, "tax": 10, "food": 2}
   },

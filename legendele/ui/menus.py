@@ -176,7 +176,8 @@ class SettingsScreen:
             self.controls[f"{key}-"] = pygame.Rect(cx + 40, y, 44, 40)
             self.controls[f"{key}+"] = pygame.Rect(cx + 196, y, 44, 40)
         self.controls["fullscreen"] = pygame.Rect(cx + 40, 400, 200, 40)
-        self.back_rect = pygame.Rect(cx - 100, 500, 200, 44)
+        self.controls["battles"] = pygame.Rect(cx + 40, 470, 200, 40)
+        self.back_rect = pygame.Rect(cx - 100, 580, 200, 44)
 
     def handle(self, event):
         if _escape(event) or (_clicked(event) and self.back_rect.collidepoint(event.pos)):
@@ -191,6 +192,9 @@ class SettingsScreen:
             if name == "fullscreen":
                 settings["fullscreen"] = not settings["fullscreen"]
                 self.app.apply_display()
+            elif name == "battles":
+                modes = profile.BATTLE_MODES
+                settings["battles"] = modes[(modes.index(settings["battles"]) + 1) % len(modes)]
             else:
                 key, sign = name[:-1], name[-1]
                 settings[key] = round(min(1.0, max(0.0, settings[key] + (0.1 if sign == "+" else -0.1))), 1)
@@ -212,8 +216,12 @@ class SettingsScreen:
         theme.text(surface, "Fullscreen", (cx - 40, 420), 28, theme.PARCHMENT, anchor="midright")
         rect = self.controls["fullscreen"]
         theme.button(surface, rect, "On" if settings["fullscreen"] else "Off", rect.collidepoint(mouse))
+        theme.text(surface, "Your battles", (cx - 40, 490), 28, theme.PARCHMENT, anchor="midright")
+        rect = self.controls["battles"]
+        label = {"ask": "Ask each time", "fight": "Always lead", "auto": "Always auto"}[settings["battles"]]
+        theme.button(surface, rect, label, rect.collidepoint(mouse))
         if not self.app.audio.enabled:
-            theme.text(surface, "No sound device was found: the game is silent.", (cx, 470), 18, theme.TEXT_DIM,
+            theme.text(surface, "No sound device was found: the game is silent.", (cx, 540), 18, theme.TEXT_DIM,
                        anchor="center")
         theme.button(surface, self.back_rect, "Back", self.back_rect.collidepoint(mouse))
 

@@ -12,6 +12,7 @@ from ..game.save import load_game
 from . import theme
 from .assets import Assets
 from .audio import Audio
+from .battle_screen import fight
 from .diplomacy_dialog import DiplomacyDialog
 from .map_view import MapView
 from .menus import MainMenu, PauseMenu
@@ -111,6 +112,7 @@ class Campaign:
     def __init__(self, app, faction=None, seed=None, game=None):
         self.app = app
         self.game = game or Game.new(app.data, faction, seed=seed)
+        self.game.fight_hook = lambda g, attackers, defenders, pid, kind: fight(app, g, attackers, defenders, pid, kind)
         self.music = self.game.player
         self.map = MapView(self.game, app.assets)
         self.panel = Panel(self.game, app.assets)

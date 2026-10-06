@@ -17,7 +17,9 @@ def click(app, pos, button=1):
 
 @pytest.fixture(scope="module")
 def app(data):
-    return App(data)
+    app = App(data)
+    app.settings["battles"] = "auto"  # these tests are about the campaign screens
+    return app
 
 
 def test_choose_faction_then_march(app):

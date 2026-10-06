@@ -115,17 +115,33 @@ Astfel, orice cucerire cere un asediu sau un asalt.
 
 ---
 
-## 5. Bătăliile (în prima fază: rezolvate automat)
+## 5. Bătăliile
 
-Cum am stabilit, **începem cu campania**. Bătăliile se calculează automat:
+Fiecare bătălie se poate rezolva în două feluri, cu aceleași armate și aceleași modificatori
+(teren, ziduri, general, teren de acasă, biserici, iarnă, abilități):
 
-1. Se compară puterea fiecărei armate (atac, apărare, număr, moral), cu bonusuri de
-   teren, general, ziduri și abilități de facțiune.
-2. Lupta se simulează în câteva „runde” scurte. După fiecare rundă, moralul scade cu pierderile.
-3. Tabăra care rămâne fără moral fuge. Învingătorul poate urmări și cauza pierderi în plus.
-4. Ecranul de rezultat arată pierderile, experiența câștigată și efectele speciale (ex: Strigoii ridică morți).
+**Automat** (`game/battle.py`):
+1. Se luptă în runde scurte. În fiecare rundă, fiecare regiment lovește un regiment dușman la întâmplare.
+   Lovitura crește cu atacul și scade cu apărarea țintei.
+2. Moralul hotărăște când fuge o tabără. Învingătorul o urmărește și îi mai provoacă pierderi.
+3. Aceeași formulă dă prognoza pentru jucător și pentru AI.
 
-Mai târziu, se poate adăuga un **ecran de luptă în timp real**. Formula automată rămâne pentru „rezolvare automată”.
+**În timp real** (`game/realtime.py` pentru logică, `ui/battle_screen.py` pentru ecran), doar pentru bătăliile jucătorului:
+- Regimentele mărșăluiesc cu viteza unității și se opresc când întâlnesc inamicul.
+  Lovitura e aceeași ca la rezolvarea automată, întinsă în timp: o rundă durează 3 secunde.
+- **Flancare** +30%, **spate** +60%, ambele sperie ținta. **Șarje** în primele 2,5 secunde de contact.
+  **Arcașii** trag până la 260 de pixeli; pădurea apără ținta.
+- **Terenul** câmpului vine din provincie:
+  - păduri (încetinesc și apără de săgeți);
+  - dealuri (+20% apărare);
+  - mlaștini (încetinesc);
+  - stânci (de ocolit);
+  - ziduri cu două porți la asalturi.
+- Un regiment fuge când pierderile lui, jumătate din pierderile armatei și o flancare recentă depășesc pragul moralului.
+  Tabăra fără regimente în picioare pierde. După 5 minute, apărătorii câștigă.
+- AI-ul de pe câmp atacă cel mai apropiat inamic. Arcașii lui trag de pe loc. Apărătorii așteaptă puțin,
+  iar la asalturi rămân după ziduri și atacă doar ce a trecut de ele.
+- Testele verifică faptul că, în bătăliile clare, ambele moduri dau același învingător.
 
 ---
 
@@ -224,7 +240,7 @@ tests/                 # teste pentru reguli și AI
 | **M4 — Legende** ✅ | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
 | **M5 — AI și diplomație** ✅ | Personalități, pace/alianță | Adversari credibili |
 | **M6 — Aspect** ✅ | Pixel art, sunete, meniu, salvare/încărcare | Arată ca un joc |
-| *(opțional)* **M7** | Bătălii în timp real | Ce lipsește ca să fie un Total War complet |
+| **M7 — Bătălii în timp real** ✅ | Bătălii în timp real | Ce lipsește ca să fie un Total War complet |
 
 ---
 
@@ -241,3 +257,13 @@ tests/                 # teste pentru reguli și AI
 1. **Numele jocului:** provizoriu „Legendele Carpaților”, în engleză *Legends of the Carpathians*.
 2. **Facțiunile:** cele patru propuse (Voievodatul, Zmeii, Ielele, Strigoii) + Haiducii ca rebeli.
 3. **Durata:** 60–100 de ture.
+
+---
+
+## Idei pentru mai departe
+
+- Ceață de război pe harta campaniei (ce vede fiecare facțiune).
+- Evenimente din legende: Noaptea Sfântului Andrei (strigoii ies din morminte), Sânzienele, Paparudele (ploaie, recoltă).
+- Generali cu niveluri și trăsături, câștigate în bătălii.
+- Mai multe hărți sau o hartă mai mare; o campanie cu povești.
+- Formații și abilități active în bătăliile în timp real.

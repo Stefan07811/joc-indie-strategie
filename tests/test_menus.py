@@ -11,7 +11,9 @@ from legendele.ui.menus import MainMenu, PauseMenu, SettingsScreen, SlotScreen
 
 @pytest.fixture
 def app(real_data, player_home):
-    return App(real_data)
+    app = App(real_data)
+    app.settings["battles"] = "auto"
+    return app
 
 
 def click(app, pos):

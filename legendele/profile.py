@@ -12,7 +12,8 @@ from .game.save import SaveError, read_save, save_game, summary
 
 SLOTS = ("slot1", "slot2", "slot3")
 AUTOSAVE = "autosave"
-DEFAULT_SETTINGS = {"sound": 0.7, "music": 0.4, "fullscreen": False}
+DEFAULT_SETTINGS = {"sound": 0.7, "music": 0.4, "fullscreen": False, "battles": "ask"}
+BATTLE_MODES = ("ask", "fight", "auto")
 
 
 def home():

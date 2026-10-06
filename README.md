@@ -16,6 +16,8 @@ dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii
 
 ![Diplomația](docs/diplomacy.png)
 
+![O bătălie în timp real](docs/battle.png)
+
 Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 
 ## Cum pornești jocul
@@ -37,11 +39,12 @@ python -m legendele
 | Inspectezi o provincie | clic pe ea (sau ții mouse-ul deasupra) |
 | Deselectezi | clic dreapta sau `Esc` |
 | Meniul (salvare, încărcare, setări) | butonul **Menu** sau `Esc` când nu e nimic selectat |
+| Bătălia în timp real | vezi mai jos, la M7 |
 | Administrezi o provincie | **Manage province** sau `M` |
 | Diplomația | **Diplomacy** sau `D` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M6 (aspectul)
+## Stadiul actual: etapa M7 (bătălii în timp real)
 
 **Harta și mișcarea**
 - Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
@@ -148,7 +151,35 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 - Orice sprite, sunet sau temă muzicală se poate înlocui cu propriile fișiere: vezi
   [legendele/assets/README.md](legendele/assets/README.md).
 
-**Ce urmează (opțional, M7):** bătălii în timp real.
+**Bătăliile în timp real (M7)**
+- Când armata ta e implicată într-o bătălie, jocul te întreabă: **Lead the battle (B)** sau **Auto-resolve (A)**.
+  Fereastra arată și prognoza rezolvării automate. Din **Settings** poți alege să fii întrebat de fiecare dată,
+  să conduci mereu sau să rezolvi mereu automat.
+- **Pe câmpul de luptă:**
+
+  | Acțiune | Cum |
+  |---|---|
+  | Selectezi regimente | clic sau dreptunghi tras cu mouse-ul (`Shift` adaugă la selecție, `A` le ia pe toate) |
+  | Mărșăluiești | clic dreapta pe teren |
+  | Ataci | clic dreapta pe un inamic |
+  | Oprești pe loc | `H` |
+  | Pauză | `Space` (lupta începe în pauză, ca să-ți dai ordinele) |
+  | Viteză x1, x2, x4 | `F` |
+
+  Butoanele **Auto-resolve** (calculatorul termină lupta) și **Withdraw** (retragere) sunt în bara de jos.
+- **Ce contează:**
+  - **flancarea:** o lovitură din lateral e +30%, una din spate +60%, și amândouă sperie;
+  - **șarjele:** cavaleria, Wrathful Sprites și Mace Drakes lovesc mai tare în primele secunde;
+  - **arcașii** trag de la distanță, dar pădurea îi apără pe cei ținuți la țintă;
+  - **terenul:** dealurile ajută apărarea, pădurile și mlaștinile încetinesc, stâncile din munți blochează drumul;
+  - **asalturile:** apărătorii stau după ziduri, iar atacatorii trebuie să treacă prin porți
+    (Three-Headed Wyrms ard peste ziduri);
+  - **moralul:** un regiment fuge când pierderile lui, ale armatei și flancările îl copleșesc;
+  - **abilitățile** (Life Drain, Dread, Enchanting Dance, Healing, Hero) funcționează și aici, în jurul unității.
+- Pierderile și învingătorul se întorc în campanie exact ca după o bătălie automată.
+  Dacă timpul (5 minute de luptă) expiră, apărătorii păstrează câmpul.
+
+**Ce urmează:** etapele din plan sunt gata. Vezi „Idei pentru mai departe” din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

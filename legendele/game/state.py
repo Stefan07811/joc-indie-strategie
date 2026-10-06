@@ -119,6 +119,9 @@ class Game:
     grudges: set = field(default_factory=set)  # (victim, traitor)
     last_proposal: dict = field(default_factory=dict)
     proposals: list = field(default_factory=list)  # offers waiting for the human player's answer
+    # called for the player's battles as fight_hook(game, attackers, defenders, province, kind); returning
+    # a BattleResult replaces the auto-resolve (the real-time battle screen), None keeps it
+    fight_hook: object = None
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None):
@@ -380,8 +383,7 @@ class Game:
             raise MoveError(f"{army.general} needs a fresh turn to assault")
         start = len(self.events)
         army.moves_left = 0
-        result = battle.resolve(self._attackers([army], p.id), self._garrison_side(p.id), self.data.units,
-                                self.rng, province=p.id, kind="assault")
+        result = self._resolve(self._attackers([army], p.id), self._garrison_side(p.id), p.id, "assault")
         self._record_battle(result)
         self._drop_if_destroyed(army)
         if result.attacker_won:
@@ -476,8 +478,7 @@ class Game:
         p = self.provinces[army.province]
         defenders, enemy_armies = self._field_defenders(army.faction, p.id)
         if defenders:
-            result = battle.resolve(self._attackers([army], p.id), defenders, self.data.units, self.rng,
-                                    province=p.id, kind="field")
+            result = self._resolve(self._attackers([army], p.id), defenders, p.id, "field")
             self._record_battle(result)
             for a in [army, *enemy_armies]:
                 self._drop_if_destroyed(a)
@@ -503,6 +504,14 @@ class Game:
                             f"{self.faction_name(army.faction)} lay siege to {p.name}.")
         else:
             self._capture(p, army.faction)
+
+    def _resolve(self, attackers, defenders, pid, kind):
+        """Fight a battle: the auto-resolve, unless `fight_hook` (the UI) takes a battle of the player's."""
+        if self.fight_hook and self.player in (attackers.faction, defenders.faction):
+            result = self.fight_hook(self, attackers, defenders, pid, kind)
+            if result is not None:
+                return result
+        return battle.resolve(attackers, defenders, self.data.units, self.rng, province=pid, kind=kind)
 
     def _record_battle(self, result):
         a, d = result.attacker, result.defender

@@ -9,7 +9,7 @@ from ..game import achievements
 from ..game.save import SaveError
 from . import theme
 
-VERSION = "0.6"
+VERSION = "1.0"
 
 
 def _button_column(labels, top, width=320, height=46, gap=14):

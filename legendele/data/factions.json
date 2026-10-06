@@ -10,9 +10,9 @@
     "creature": false,
     "winter_hardy": false,
     "general_names": ["Mircea the Elder", "Lady Ruxandra", "Stefan the Bold", "Lord Dragos", "Captain Ioan", "Lady Elena"],
-    "income_mult": 1.25,
+    "income_mult": 1.35,
     "traits": {"church_bane": 0.8},
-    "legend": "Churches: their bells calm the people and weaken any creature that fights nearby. Strong treasury (+25% income).",
+    "legend": "Churches: their bells calm the people and weaken any creature that fights nearby. Strong treasury (+35% income).",
     "ai": {
       "personality": "Steadfast",
       "summary": "Keeps their word and defends what is theirs.",
@@ -86,7 +86,7 @@
     "general_names": ["The Silver Dancer", "Moonmist", "Lady of the Wells", "Thornveil", "Willow-Song", "Midnight Bloom"],
     "income_mult": 1.0,
     "traits": {
-      "hora": 0.03,
+      "hora": 0.02,
       "forest_hidden": true
     },
     "legend": "The Hora: enemies on Fae land are danced to exhaustion each season. In the forests their armies cannot be seen.",
@@ -161,8 +161,8 @@
     "winter_hardy": false,
     "general_names": ["Gruia son of Novac", "Bujor", "Tunsu", "Codreanu", "Radu Anghel", "Mărgărita the Fierce"],
     "income_mult": 1.0,
-    "traits": {"plunder": 40, "beloved": 1},
-    "legend": "Rob the rich: every province they take fills their purse with 40 gold. The poor love them: +1 order in every province.",
+    "traits": {"plunder": 60, "beloved": 1},
+    "legend": "Rob the rich: every province they take fills their purse with 60 gold. The poor love them: +1 order in every province.",
     "ai": {
       "personality": "Daring",
       "summary": "Raids the rich and weak, makes friends among the poor.",
@@ -194,8 +194,8 @@
     "winter_hardy": true,
     "general_names": ["Master of the Thirteenth Seat", "Old Iezer", "Grey Cloak", "Thunder-Book", "The Hail Shepherd", "Lady of the Mists"],
     "income_mult": 1.0,
-    "traits": {"weather_lords": 0.8},
-    "legend": "Lords of the weather: storm and hail follow them, so enemy arrows and guns strike 20% weaker. They feel no cold.",
+    "traits": {"weather_lords": 0.7},
+    "legend": "Lords of the weather: storm and hail follow them, so enemy arrows and guns strike 30% weaker. They feel no cold.",
     "ai": {
       "personality": "Aloof",
       "summary": "Keeps to the mountains and strikes only when sure of victory.",

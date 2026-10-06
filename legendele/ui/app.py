@@ -13,7 +13,7 @@ from ..game import achievements, start
 from ..game.economy import DIFFICULTY
 from ..game.state import Reach
 from ..game.save import load_game
-from . import map_view, theme, tips
+from . import icon, map_view, theme, tips
 from .assets import Assets
 from .audio import Audio
 from .battle_screen import fight
@@ -589,6 +589,7 @@ class App:
         pygame.display.init()
         pygame.font.init()
         pygame.display.set_caption(TITLE)
+        pygame.display.set_icon(icon.draw(64))
         self.settings = profile.load_settings()
         self.screen = None
         self.apply_display()

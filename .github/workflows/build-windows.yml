@@ -1,0 +1,46 @@
+# Builds the Windows version of the game: a folder with LegendsOfTheCarpathians.exe, zipped.
+# Runs on every version tag (v1.0, ...) and on demand (Actions -> Build Windows -> Run workflow).
+# The zip is attached to the run as an artifact, and to a GitHub release for tags.
+name: Build Windows
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt pyinstaller
+      - name: Test
+        run: python -m pytest -q
+      - name: Build
+        run: python tools/build_exe.py
+      - name: Smoke test the program
+        shell: bash
+        run: |
+          LEGENDELE_HOME="$RUNNER_TEMP/home" dist/LegendsOfTheCarpathians/LegendsOfTheCarpathians.exe --faction voievodat --screenshot frame.png
+          test -s frame.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LegendsOfTheCarpathians-windows
+          path: dist/LegendsOfTheCarpathians.zip
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/LegendsOfTheCarpathians.zip

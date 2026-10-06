@@ -186,7 +186,7 @@
   ],
   "start_armies": [
     {"faction": "voievodat", "province": "targoviste", "general": "Vlad the Young", "regiments": ["oteni", "oteni", "arcasi", "calareti"]},
-    {"faction": "voievodat", "province": "craiova", "general": "Lord Radu", "regiments": ["oteni", "arcasi", "arcasi"]},
+    {"faction": "voievodat", "province": "craiova", "general": "Lord Radu", "regiments": ["oteni", "arcasi", "arcasi", "calareti"]},
     {"faction": "zmei", "province": "retezat", "general": "Pajura Firetongue", "regiments": ["pui_de_zmeu", "zmei_buzdugan", "spiridusi", "zmei_buzdugan"]},
     {"faction": "zmei", "province": "hunedoara", "general": "Spark-Eye", "regiments": ["spiridusi", "pui_de_zmeu", "zmei_buzdugan"]},
     {"faction": "iele", "province": "maramures", "general": "The Pale Lady", "regiments": ["iele_dansatoare", "iele_dansatoare", "valve", "sanziene"]},

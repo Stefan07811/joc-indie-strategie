@@ -25,12 +25,12 @@ Numele din joc sunt în engleză. În paranteză e legenda românească din care
 
 | Facțiune | Teritoriu de start | Stil de joc | Mecanică unică (M4) |
 |---|---|---|---|
-| **The Principality** (Voievodatul, oameni) | Văi și câmpii | Echilibrat, economie puternică (+25% venit), cetăți solide | **Cetăți:** zidurile dau bonus mare la apărare; poate ridica **biserici** care slăbesc creaturile din jur |
+| **The Principality** (Voievodatul, oameni) | Văi și câmpii | Echilibrat, economie puternică (+35% venit), cetăți solide | **Cetăți:** zidurile dau bonus mare la apărare; poate ridica **biserici** care slăbesc creaturile din jur |
 | **The Dragonkin** (Zmeii) | Munți | Puține armate, dar foarte puternice și scumpe | **Comoara:** venitul crește cu aurul strâns (dobândă); un general Dragonkin poate **răpi** moștenitorul unui conducător, pentru răscumpărare sau ca ostatic |
 | **The Fae Court** (Ielele) | Păduri și poieni | Rapide, slabe în luptă directă, magie | **Hora:** armatele inamice care intră în provinciile lor pierd moral și oameni în fiecare tură; nu pot fi văzute în păduri |
 | **The Revenants** (Strigoii) | Mlaștini și cimitire | Ieftini, mulți, lenți; nu suferă de frig | **Ridicarea morților:** după fiecare bătălie, o parte din morți (de ambele tabere) se ridică în rândurile lor; mai puternici iarna |
-| **The Outlaws** (Haiducii, M14) | Codrii Vlăsiei, Dobrogea, Delta | Mulți, ieftini, iuți; ambuscade în pădure | **Jefuiesc bogații:** 40 de aur la fiecare provincie cucerită; **iubiți de popor:** +1 ordine peste tot |
-| **The Solomonari** (Solomonarii, M14) | Apuseni, Cluj, Crișana | Magi cu toiag, grindină și balauri îmblânziți | **Stăpânii vremii:** săgețile și gloanțele dușmanilor lovesc cu 20% mai slab; nu simt frigul |
+| **The Outlaws** (Haiducii, M14) | Codrii Vlăsiei, Dobrogea, Delta | Mulți, ieftini, iuți; ambuscade în pădure | **Jefuiesc bogații:** 60 de aur la fiecare provincie cucerită; **iubiți de popor:** +1 ordine peste tot |
+| **The Solomonari** (Solomonarii, M14) | Apuseni, Cluj, Crișana | Magi cu toiag, grindină și balauri îmblânziți | **Stăpânii vremii:** săgețile și gloanțele dușmanilor lovesc cu 30% mai slab; nu simt frigul |
 
 **Rebels** (răsculații) sunt o forță neutră, nu o facțiune jucabilă. Păzesc provinciile neutre și
 se ridică la răscoală în provinciile cu ordine publică sub zero. (Până la M14 se numeau Outlaws; numele
@@ -38,7 +38,7 @@ a trecut la haiducii jucabili.)
 
 **Cum arată legendele în joc (M4):**
 - **Principality:** clădirea **Church** (+2 ordine; creaturile lovesc cu 20% mai slab în provincie),
-  +25% venit și bonus de teren pe câmpie.
+  +35% venit și bonus de teren pe câmpie.
 - **Dragonkin:** dobândă la tezaur (5%, plafon 15 + 15 pe fiecare **Dragon Hoard**) și **răpirea moștenitorului**
   unei capitale vecine (150 de aur; șansa scade cu gărzile; o dată la 6 anotimpuri).
 - **Fae Court:** **Hora** (4% pierderi pe anotimp pentru armatele dușmane pe pământul lor, dublu la **Fairy Ring**)
@@ -278,7 +278,7 @@ tests/                 # teste pentru reguli și AI
 | **M12 — Stat** ✅ | tehnologii, comerț, vasali, căsătorii |
 | **M13 — Legende** ✅ | eroi și misiuni, agenți |
 | **M14 — Rejucabilitate** ✅ | Outlaws jucabili, Solomonarii, opțiuni de start (rivali, patrii la sorți, anul 1450, lungimea războiului) |
-| **M15 — Finisaj** | joc în română, muzică și sunete, realizări, executabil |
+| **M15 — Finisaj** ✅ | muzică și sunete, realizări, executabil pentru Windows, echilibrul final (jocul în română a rămas pe dinafară) |
 
 ## 11. Decizii luate
 

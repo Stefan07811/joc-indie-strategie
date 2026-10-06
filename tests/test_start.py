@@ -75,7 +75,7 @@ def test_outlaws_rob_the_rich(data):
     game = Game.new(data, "outlaws", seed=1)
     gold = game.treasury["outlaws"].gold
     game._capture(game.provinces["buzau"], "outlaws")
-    assert game.treasury["outlaws"].gold == gold + 40
+    assert game.treasury["outlaws"].gold == gold + 60
     order = dict(legends.public_order(game, game.provinces["vlasia"])[1])
     assert order["Loved by the poor"] == 1
 

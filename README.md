@@ -27,7 +27,11 @@ Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 
 ## Cum pornești jocul
 
-Ai nevoie de Python 3.10 sau mai nou.
+**Pe Windows, fără Python:** descarci `LegendsOfTheCarpathians.zip` de la secțiunea *Releases* a depozitului
+(sau din ultima rulare a workflow-ului **Build Windows**, la *Actions*), îl dezarhivezi și pornești
+`LegendsOfTheCarpathians.exe`.
+
+**Din surse:** ai nevoie de Python 3.10 sau mai nou.
 
 ```bash
 pip install -r requirements.txt
@@ -56,7 +60,7 @@ python -m legendele
 | Agenții | clic pe jetonul agentului, apoi clic pe o provincie luminată; acțiunile apar în panou |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M14 (rejucabilitate)
+## Stadiul actual: etapa M15 (finisaj)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -110,12 +114,12 @@ Fiecare facțiune are o putere a ei. Pe ecranul de start o vezi scrisă cu auriu
 
 | Facțiune | Puterea |
 |---|---|
-| **The Principality** | **Church** (doar ei o pot construi): +2 ordine, iar creaturile care luptă în provincie lovesc cu 20% mai slab. Au +25% venit și se simt acasă pe câmpie. |
+| **The Principality** | **Church** (doar ei o pot construi): +2 ordine, iar creaturile care luptă în provincie lovesc cu 20% mai slab. Au +35% venit și se simt acasă pe câmpie. |
 | **The Dragonkin** | **Comoara**: tezaurul aduce dobândă (5%, maximum 15 aur, +15 cu fiecare **Dragon Hoard**). **Răpirea**: o armată aflată lângă capitala unui rival îi poate fura moștenitorul, pentru 150 de aur răscumpărare (o dată la 6 anotimpuri; dacă eșuează, armata pierde oameni). |
-| **The Fae Court** | **Hora**: armatele dușmane aflate pe pământul lor pierd 4% din oameni în fiecare anotimp (dublu lângă un **Fairy Ring**). În păduri armatele lor nu se văd decât dacă ai o armată aproape. |
+| **The Fae Court** | **Hora**: armatele dușmane aflate pe pământul lor pierd 2% din oameni în fiecare anotimp (dublu lângă un **Fairy Ring**). În păduri armatele lor nu se văd decât dacă ai o armată aproape. |
 | **The Revenants** | **Ridicarea morților**: după fiecare victorie, o parte din morții ambelor tabere se ridică drept Risen Dead (+1 lângă o **Crypt**). Nu simt frigul și iarna lovesc cu 15% mai tare. |
-| **The Outlaws** (M14) | **Jefuiesc bogații**: fiecare provincie cucerită le aduce 40 de aur. **Iubiți de popor**: +1 ordine în toate provinciile (+1 și cu **Greenwood Hideout**, +10 aur). Se simt acasă în păduri. |
-| **The Solomonari** (M14) | **Stăpânii vremii**: furtuna și grindina îi urmează, așa că săgețile și gloanțele dușmanilor lovesc cu 20% mai slab. Nu simt frigul, se simt acasă în munți și au **Weather Tower** (+1 ordine, +2 hrană). |
+| **The Outlaws** (M14) | **Jefuiesc bogații**: fiecare provincie cucerită le aduce 60 de aur. **Iubiți de popor**: +1 ordine în toate provinciile (+1 și cu **Greenwood Hideout**, +10 aur). Se simt acasă în păduri. |
+| **The Solomonari** (M14) | **Stăpânii vremii**: furtuna și grindina îi urmează, așa că săgețile și gloanțele dușmanilor lovesc cu 30% mai slab. Nu simt frigul, se simt acasă în munți și au **Weather Tower** (+1 ordine, +2 hrană). |
 
 **Abilitățile unităților** contează acum în luptă: Ranged, Charge, Frenzy, Monster Bane, Forest Ambush,
 Flying Fire (zidurile nu apără de foc), Life Drain (vampirii se vindecă), Dread, Enchanting Dance,
@@ -315,10 +319,23 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 
   ![Haiducii contra Solomonarilor, pe ploaie](docs/new_legends.png)
 
-**Echilibru (AI contra AI, 240 de partide):** Fae Court 22%, Dragonkin 18%, Revenants 17%, Outlaws 13%,
-Solomonari 13%, Principality 12%. Ajustarea finală vine în M15.
+**Echilibru final (M15, AI contra AI, 360 de partide):** Outlaws 17,5%, Revenants 16,9%, Principality 16,9%,
+Dragonkin 16,4%, Fae Court 15%, Solomonari 14,2% (3% fără învingător după 120 de ture). Ultimele
+reglaje: Principality +35% venit și călăreți în armata de la Craiova, Hora ielelor 2% pe anotimp,
+vremea solomonarilor -30% pentru săgeți și gloanțe, Cave Wardens la 60 de aur, haiducii iau 60 de aur
+pe provincie.
 
-**Ce urmează:** M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Finisaj (M15)**
+- **Muzică:** fiecare temă e o doină liberă urmată de o horă, cu tobă, cobză și instrumentul legendei
+  (vioară la haiduci și strigoi, clopote la Principat și la iele, tunete la solomonari), plus o temă de luptă.
+- **Sunete în bătălie:** cornul de război (începutul luptei, ordinele speciale), salvele de săgeți,
+  împușcăturile, scânteile și grindina solomonarilor, berbecul care sparge poarta.
+- **Realizări** (*Achievements*, din meniul principal): 29 de fapte, de la prima victorie la câte o victorie
+  cu fiecare dintre cele șase legende. Cele noi apar sus pe ecran, cu fanfară, și rămân în profil.
+
+  ![Realizările](docs/achievements.png)
+
+- **Executabil pentru Windows**, făcut cu PyInstaller (vezi mai jos), cu iconiță proprie: Inima Munților.
 
 ## Pentru dezvoltare
 
@@ -331,6 +348,18 @@ python tools/simulate.py 40 100       # AI contra AI pe 40 de partide, pentru ec
 python tools/duel.py                  # armate de același cost, facțiune contra facțiune
 python tools/fair_costs.py            # cât valorează fiecare unitate în luptă, față de cost
 ```
+
+### Executabilul
+
+```bash
+pip install pyinstaller
+python tools/build_exe.py             # dist/LegendsOfTheCarpathians/ (+ un .zip de împărțit)
+```
+
+Pe Windows iese `LegendsOfTheCarpathians.exe`, pe Linux sau macOS un program nativ. Workflow-ul
+`.github/workflows/build-windows.yml` face build-ul pe Windows (rulează mai întâi testele și verifică dacă
+programul pornește) la fiecare tag de versiune (`v1.0`, ...) sau la cerere, din *Actions*. Pentru un tag,
+arhiva se atașează și la release.
 
 ### Structura
 

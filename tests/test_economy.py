@@ -25,8 +25,8 @@ def test_starting_treasury_and_balance(game):
     t = game.treasury["voievodat"]
     assert (t.gold, t.food) == (200, 40)
     bal = economy.balance(game, "voievodat")
-    # Craiova (plains 18), Argeș (hills 15), Târgoviște (plains 18 + capital 25), Principality +25%
-    assert bal.tax == round((18 + 15 + 18 + 25) * 1.25)
+    # Craiova (plains 18), Argeș (hills 15), Târgoviște (plains 18 + capital 25), Principality +35%
+    assert bal.tax == round((18 + 15 + 18 + 25) * 1.35)
     assert bal.upkeep == sum(game.data.units[r.unit]["upkeep"] for a in game.armies_of("voievodat") for r in a.regiments)
     assert bal.food_made == 4 + 2 + 4
     assert bal.food_eaten == sum(economy.appetite(game, r.unit) for a in game.armies_of("voievodat")

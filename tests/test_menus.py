@@ -149,3 +149,13 @@ def test_every_legend_has_a_band():
     from legendele.ui.audio import BANDS
     assert set(BANDS) == set(MODES) >= {"battle", "outlaws", "solomonari"}
     assert len(synth_music("battle", seconds=3.0)) == 2 * 3 * 22050
+
+
+def test_the_icon_makes_a_windows_ico(app):
+    import struct
+    from legendele.ui import icon
+    raw = icon.ico_bytes()
+    reserved, kind, count = struct.unpack("<HHH", raw[:6])
+    assert (reserved, kind, count) == (0, 1, len(icon.SIZES))
+    size, offset = struct.unpack("<II", raw[6 + 8:6 + 16])
+    assert raw[offset:offset + 8] == b"\x89PNG\r\n\x1a\n"

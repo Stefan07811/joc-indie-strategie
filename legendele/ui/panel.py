@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import diplomacy, economy, legends
+from ..game import diplomacy, economy, generals, legends
 from . import theme, tips
 
 PAD = 16
@@ -173,15 +173,36 @@ class Panel:
 
     def _army(self, surface, army, x, y, width, target, mouse):
         game = self.game
-        theme.outlined(surface, army.general, (x, y), 24, theme.PARCHMENT, anchor="topleft")
+        name = theme.outlined(surface, army.general, (x, y), 24, theme.PARCHMENT, anchor="topleft")
+        for k in range(army.rank):
+            theme.star(surface, (name.right + 9 + k * 12, name.centery))
+        theme.tip(name.union(pygame.Rect(name.right, name.y, 12 * army.rank + 8, name.height)),
+                  tips.general(game, army))
         y += 30
         theme.text(surface, f"{game.faction_name(army.faction)}  ·  in {game.provinces[army.province].name}",
                    (x, y), 18, theme.faction_color(game, army.faction))
         y += 22
         mine = army.faction == game.player
         if mine:
-            theme.text(surface, f"Movement left: {army.moves_left} / {game.data.map['army_moves']}", (x, y), 18)
+            theme.text(surface, f"Movement left: {army.moves_left} / {generals.moves(game, army)}", (x, y), 18)
+            nxt = generals.next_rank_xp(army)
+            if nxt:
+                low = generals.RANKS[army.rank]
+                bar = pygame.Rect(x + width - 90, y + 6, 90, 6)
+                theme.gauge(surface, bar, (army.xp - low) / (nxt - low), theme.GOLD)
+                theme.tip(bar.inflate(0, 10), ["Experience", f"{army.xp} / {nxt} to rank {army.rank + 1}.",
+                                               ("Battles teach generals: a victory more than a defeat, and most "
+                                                "of all a victory against the odds.", theme.TEXT_DIM)])
             y += 22
+        if army.traits:
+            tx = x
+            for trait in army.traits:
+                t = game.data.traits[trait]
+                label = t["name"] + ("  " if trait != army.traits[-1] else "")
+                r = theme.text(surface, label, (tx, y), 17, theme.GOOD if t["good"] else theme.DANGER)
+                theme.tip(r, [t["name"], t["description"]])
+                tx = r.right + 6
+            y += 20
         y = self._regiments(surface, None, army.regiments, x, y, width)
         abilities = sorted({game.data.abilities[a]["name"] for a in
                             (game.data.units[r.unit]["ability"] for r in army.regiments) if a})
@@ -262,7 +283,9 @@ class Panel:
             u = units[r.unit]
             icon = self.assets.get(f"unit_{u['icon']}", theme.faction_color(self.game, u["faction"]), 2)
             surface.blit(icon, icon.get_rect(center=(x + 8, y + 7)))
-            theme.text(surface, u["name"], (x + 20, y), 18)
+            name = theme.text(surface, u["name"], (x + 20, y), 18)
+            if r.rank:
+                theme.chevrons(surface, (name.right + 6, y + 13), r.rank)
             theme.tip((x, y, width, 18), tips.unit(self.game, r.unit, r))
             bar = pygame.Rect(x + width - 90, y + 5, 90, 7)
             share = max(0.0, min(1.0, r.hp / u["hp"]))

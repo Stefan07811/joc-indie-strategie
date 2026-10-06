@@ -2,7 +2,8 @@
 
 import pygame
 
-from ..game import Abduction, Battle, Captured, DiplomacyChange, Eliminated, Proposal, Rebellion, Victory
+from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, GeneralFell, Proposal, Rebellion,
+                    Victory)
 from ..game.state import SEASONS
 from . import theme
 
@@ -24,6 +25,8 @@ def concerns_player(game, event):
         return game.player in (event.faction, event.other)
     if isinstance(event, Proposal):
         return event.other == game.player
+    if isinstance(event, GeneralFell):
+        return event.faction == game.player
     return isinstance(event, (Eliminated, Victory))
 
 
@@ -144,6 +147,10 @@ def _notice(surface, game, event):
                             else ("A Dragonkin raid was driven off", theme.GOOD))
             body = (f"The Dragonkin carried off the heir from {place}. We paid {event.ransom} gold in ransom."
                     if event.success else f"The guards of {place} drove the Dragonkin away.")
+    elif isinstance(event, GeneralFell):
+        title, color = f"{event.general} has fallen", theme.DANGER
+        body = (f"He died at the head of his men near {game.provinces[event.province].name}. "
+                f"{event.successor} takes command of the army; he will have to earn his own name.")
     elif isinstance(event, Eliminated):
         mine = event.faction == game.player
         title, color = ("Your realm is lost" if mine else f"{game.faction_name(event.faction)} are no more",

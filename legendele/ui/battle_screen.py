@@ -304,6 +304,8 @@ class BattleScreen:
             self._banners[key] = flag
         flag = self._banners[key]
         surface.blit(flag, (x + 1, y - 1 + math.sin(self.field.time * 4 + u.id)))
+        if u.regiment.rank:
+            theme.chevrons(surface, (x + 23, y + 16), u.regiment.rank)
         bar = pygame.Rect(x - 10, y - 7, 22, 3)
         pygame.draw.rect(surface, theme.INK, bar.inflate(2, 2))
         pygame.draw.rect(surface, theme.GOOD if u.side == self.me else theme.DANGER,

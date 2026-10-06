@@ -337,3 +337,24 @@ def draw_tip(surface, mouse, now=None):
         text(surface, string, (box.x + 13, y), size, color)
         y += font(size).get_linesize()
     return box
+
+
+def star(surface, center, r=5, color=GOLD):
+    """A small five-pointed star (a general's rank)."""
+    cx, cy = center
+    points = []
+    for k in range(10):
+        a = -math.pi / 2 + k * math.pi / 5
+        rr = r if k % 2 == 0 else r * 0.45
+        points.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr))
+    pygame.draw.polygon(surface, INK, [(x + 1, y + 1) for x, y in points])
+    pygame.draw.polygon(surface, color, points)
+
+
+def chevrons(surface, pos, n, color=GOLD_LIGHT):
+    """A veteran regiment's stripes, stacked upwards from `pos` (bottom-left)."""
+    x, y = pos
+    for k in range(n):
+        yy = y - k * 4
+        pygame.draw.lines(surface, INK, False, [(x, yy + 1), (x + 4, yy - 3), (x + 8, yy + 1)], 3)
+        pygame.draw.lines(surface, color, False, [(x, yy), (x + 4, yy - 4), (x + 8, yy)], 2)

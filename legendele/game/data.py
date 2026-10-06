@@ -1,7 +1,7 @@
 """Loads and validates the JSON game data (factions, units, map)."""
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
@@ -18,6 +18,7 @@ class GameData:
     map: dict
     buildings: dict
     abilities: dict
+    traits: dict = field(default_factory=dict)  # the generals' traits
 
     @property
     def terrain(self):
@@ -35,7 +36,7 @@ class GameData:
             return json.loads((data_dir / name).read_text(encoding="utf-8"))
 
         data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"),
-                   buildings=read("buildings.json"), abilities=read("abilities.json"))
+                   buildings=read("buildings.json"), abilities=read("abilities.json"), traits=read("traits.json"))
         data.validate()
         return data
 

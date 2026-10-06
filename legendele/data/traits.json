@@ -1,0 +1,17 @@
+{
+  "brave":          {"name": "Brave",          "good": true,  "attack": 1.05, "resolve": 0.05, "description": "Leads from the front: his men strike harder and hold longer."},
+  "tactician":      {"name": "Tactician",      "good": true,  "attack": 1.10, "description": "Reads a battlefield like a psalter."},
+  "stalwart":       {"name": "Stalwart",       "good": true,  "defense": 1.10, "description": "Unshakeable in defence."},
+  "inspiring":      {"name": "Inspiring",      "good": true,  "resolve": 0.08, "description": "Men would follow him into the Black Marsh."},
+  "swift":          {"name": "Swift",          "good": true,  "moves": 1, "description": "Breaks camp at dawn: +1 movement."},
+  "siege_master":   {"name": "Siege Master",   "good": true,  "assault": 1.20, "description": "Knows where every wall is weakest: +20% attack in assaults."},
+  "monster_slayer": {"name": "Monster Slayer", "good": true,  "creatures": 1.15, "description": "Has looked a zmeu in the eye: +15% attack against creatures."},
+  "winter_warrior": {"name": "Winter Warrior", "good": true,  "winter": true, "description": "His army does not freeze in winter."},
+  "beloved":        {"name": "Beloved",        "good": true,  "order": 2, "description": "The people cheer where his army camps: +2 order."},
+  "frugal":         {"name": "Frugal",         "good": true,  "upkeep": 0.85, "description": "Counts every coin: his army costs 15% less."},
+  "cruel":          {"name": "Cruel",          "good": false, "attack": 1.08, "order": -2, "description": "Feared by friend and foe: harder blows, -2 order where he camps."},
+  "coward":         {"name": "Coward",         "good": false, "resolve": -0.10, "description": "First to sound the retreat."},
+  "drunkard":       {"name": "Drunkard",       "good": false, "moves": -1, "description": "Never in a hurry to leave the tavern: -1 movement."},
+  "greedy":         {"name": "Greedy",         "good": false, "upkeep": 1.20, "description": "Keeps a share of the soldiers' pay: his army costs 20% more."},
+  "reckless":       {"name": "Reckless",       "good": false, "attack": 1.10, "defense": 0.88, "description": "All charge, no shield."}
+}

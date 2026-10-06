@@ -207,11 +207,13 @@ def test_hunger_debt_and_churches_change_order(game):
 
 
 def test_a_restless_province_rises_up(game):
+    for ai in game.ai.values():
+        ai.take_turn = lambda game: None  # nobody marches in to calm (or stir) things
     p = game.provinces["arges"]
-    p.captured_round = game.round
     p.garrison = []
-    game.treasury["voievodat"].food = -50
-    for _ in range(6):
+    for _ in range(12):
+        p.captured_round = game.round  # freshly conquered and hungry, season after season
+        game.treasury["voievodat"].food = -50
         game.end_turn()
         if any(isinstance(e, Rebellion) for e in game.events):
             break

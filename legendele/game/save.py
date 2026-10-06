@@ -45,7 +45,8 @@ def to_dict(game):
         },
         "armies": [
             {"id": a.id, "faction": a.faction, "province": a.province, "general": a.general,
-             "regiments": [asdict(r) for r in a.regiments], "moves_left": a.moves_left}
+             "regiments": [asdict(r) for r in a.regiments], "moves_left": a.moves_left,
+             "xp": a.xp, "rank": a.rank, "traits": a.traits}
             for a in game.armies.values()
         ],
         "log": game.log[-200:],
@@ -90,7 +91,8 @@ def from_dict(data, d, ai_factory=None):
         p.captured_round = saved["captured_round"]
     game.armies = {
         a["id"]: Army(a["id"], a["faction"], a["province"], a["general"],
-                      [Regiment(**r) for r in a["regiments"]], a["moves_left"])
+                      [Regiment(**r) for r in a["regiments"]], a["moves_left"],
+                      a.get("xp", 0), a.get("rank", 0), list(a.get("traits", ())))
         for a in d["armies"]
     }
     game.log = list(d["log"])

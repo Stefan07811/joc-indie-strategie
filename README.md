@@ -51,7 +51,7 @@ python -m legendele
 | Diplomația | **Diplomacy** sau `D` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M8 (claritate)
+## Stadiul actual: etapa M9 (oameni)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -207,7 +207,20 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 - **Sfetnicul:** în prima campanie, bătrânul Neagu te învață pas cu pas (armate, marș, provincie,
   diplomație, sfârșitul turei). Îl poți sări oricând și îl poți readuce din Settings.
 
-**Ce urmează:** M9–M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Generali și veterani (M9)**
+- **Generalii** câștigă experiență în bătălii (mai multă pentru o victorie, și mai multă pentru una
+  împotriva unui dușman mai numeros) și urcă în grad, până la 8 stele. Fiecare stea: +3% atac și moral mai
+  tare.
+- **Trăsăturile** vin din fapte: o victorie în inferioritate poate face un general **Brave**, un asalt reușit
+  **Siege Master**, o victorie împotriva creaturilor **Monster Slayer**, o iarnă de luptă **Winter Warrior**;
+  o înfrângere îl poate face **Coward**, iar anotimpurile liniștite acasă îl pot face **Drunkard**, **Greedy**,
+  **Frugal** sau **Beloved**. Sunt 15 trăsături, cel mult 3 pe general; unele schimbă mișcarea, solda,
+  ordinea publică sau rezistența la iarnă.
+- Un general poate **cădea în luptă**; locotenentul lui preia armata, fără grad și fără trăsături.
+- **Regimentele veterane:** cele care supraviețuiesc bătăliilor primesc până la 3 chevroane (+8% atac și
+  apărare și +5 moral fiecare). Le vezi lângă nume în panou și pe steag în bătălii.
+
+**Ce urmează:** M10–M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

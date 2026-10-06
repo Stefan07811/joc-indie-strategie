@@ -1,6 +1,6 @@
 import pytest
 
-from legendele.game import Game, MoveError
+from legendele.game import Game, MoveError, generals
 
 
 def army_at(game, fid, pid):
@@ -74,7 +74,8 @@ def test_end_turn_advances_season_and_restores_moves(game):
     game.move_army(vlad.id, "arges")
     game.end_turn()
     assert game.date == "Summer 1400"
-    assert all(a.moves_left == 4 for a in game.armies.values())
+    assert all(a.moves_left == generals.moves(game, a) for a in game.armies.values())
+    assert all(3 <= a.moves_left <= 5 for a in game.armies.values())  # 4, give or take a Swift or a Drunkard
     for _ in range(3):
         game.end_turn()
     assert game.date == "Spring 1401"

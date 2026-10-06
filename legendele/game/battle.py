@@ -11,6 +11,8 @@ import dataclasses
 import random
 from dataclasses import dataclass, field
 
+from .generals import VETERAN_MORALE, veteran_mult
+
 DAMAGE_PER_ATTACK = 5  # a blow lands for about attack × this, reduced by the target's defence
 ARMOUR = 10  # defence D lets through ARMOUR / (ARMOUR + D) of a blow
 MAX_ROUNDS = 12
@@ -33,9 +35,11 @@ DANCE, MAX_DANCE = 0.03, 3  # each Dancing Fae weakens the enemy's blows this mu
 class Regiment:
     unit: str
     hp: float
+    xp: int = 0  # battles lived through make veterans (generals.py)
+    rank: int = 0  # chevrons, 0 to 3
 
     def copy(self):
-        return Regiment(self.unit, self.hp)
+        return Regiment(self.unit, self.hp, self.xp, self.rank)
 
 
 @dataclass
@@ -50,6 +54,7 @@ class Side:
     creature: bool = False  # Monster Hunters strike creatures harder
     walls: bool = False  # defending behind walls (Flying Fire ignores them)
     ambush_ground: bool = False  # defending a forest (Forest Ambush)
+    creature_bane: float = 1.0  # a Monster Slayer general: harder blows against creatures
 
 
 @dataclass
@@ -101,7 +106,7 @@ def strength(regiments, units):
 def break_point(regiments, units, bonus=0.0):
     """Share of starting strength a side can lose before it breaks (0.3 .. 0.95)."""
     hp = sum(r.hp for r in regiments) or 1
-    morale = sum(units[r.unit]["morale"] * r.hp for r in regiments) / hp
+    morale = sum((units[r.unit]["morale"] + VETERAN_MORALE * r.rank) * r.hp for r in regiments) / hp
     return max(0.3, min(0.95, 0.25 + morale / 100 * 0.5 + bonus))
 
 
@@ -188,7 +193,9 @@ def _strikes(side, enemy, units, rng, round_no, attack_mod):
         ability = u["ability"]
         target = rng.choice(enemy.regiments)
         t = units[target.unit]
-        attack = u["attack"] * side.attack_mult * attack_mod
+        attack = u["attack"] * side.attack_mult * attack_mod * veteran_mult(r)
+        if enemy.creature:
+            attack *= side.creature_bane
         if round_no == 1:
             attack *= FIRST_ROUND.get(ability, 1.0)
             if ability == "forest_ambush" and side.ambush_ground:
@@ -198,7 +205,7 @@ def _strikes(side, enemy, units, rng, round_no, attack_mod):
         defense_mult = enemy.defense_mult
         if ability == "flying_fire" and enemy.walls:
             defense_mult /= WALLS_DEFENSE
-        defense = t["defense"] * defense_mult
+        defense = t["defense"] * defense_mult * veteran_mult(target)
         vigour = 0.5 + 0.5 * r.hp / u["hp"]
         roll = 0.8 + 0.4 * rng.random()
         dmg = DAMAGE_PER_ATTACK * attack * ARMOUR / (ARMOUR + defense) * vigour * roll

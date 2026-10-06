@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, diplomacy, economy, legends
+from . import battle, diplomacy, economy, generals, legends
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -46,6 +46,9 @@ class Army:
     general: str
     regiments: list[Regiment]
     moves_left: int
+    xp: int = 0  # the general's experience; see generals.py
+    rank: int = 0
+    traits: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -72,6 +75,14 @@ class Captured:
 class SiegeStarted:
     province: str
     faction: str
+
+
+@dataclass
+class GeneralFell:
+    faction: str
+    general: str
+    successor: str
+    province: str
 
 
 @dataclass
@@ -139,7 +150,7 @@ class Game:
                 walls=p.get("walls", False), garrison=game._regiments(p.get("garrison", ())),
             )
         for a in data.map["start_armies"]:
-            game.add_army(a["faction"], a["province"], a["general"], a["regiments"])
+            generals.birth(game, game.add_army(a["faction"], a["province"], a["general"], a["regiments"]))
         for p in game.provinces.values():
             if p.owner:
                 game._muster(p)
@@ -322,23 +333,27 @@ class Game:
 
     # --- battle setup ----------------------------------------------------------------------
 
-    def _side(self, fid, regiments, leader, pid, defending, walls=False):
+    def _side(self, fid, regiments, leader, pid, defending, walls=False, army=None, assault=False):
         p = self.provinces[pid]
         mult = battle.HOME_TERRAIN_BONUS if self.at_home(fid, pid) else 1.0
         defense = mult * (self.data.terrain[p.terrain]["defense"] if defending else 1.0)
+        defense *= generals.defense_mult(self, army)
         if walls:
             defense *= battle.WALLS_DEFENSE
         return Side(
             faction=fid, regiments=regiments, leader=leader, defense_mult=defense,
-            attack_mult=mult * (battle.GENERAL_BONUS if leader else 1.0) * legends.attack_modifier(self, fid, pid),
-            resolve_bonus=battle.WALLS_RESOLVE if walls else 0.0,
+            attack_mult=mult * (battle.GENERAL_BONUS if leader else 1.0) * legends.attack_modifier(self, fid, pid)
+            * generals.attack_mult(self, army, assault),
+            resolve_bonus=(battle.WALLS_RESOLVE if walls else 0.0) + generals.resolve_bonus(self, army),
             creature=self.data.factions[fid]["creature"],
             walls=walls, ambush_ground=defending and p.terrain == "forest",
+            creature_bane=generals.creature_bane(self, army),
         )
 
-    def _attackers(self, armies, pid):
+    def _attackers(self, armies, pid, assault=False):
         regiments = [r for a in armies for r in a.regiments]
-        return self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False)
+        return self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False, army=armies[0],
+                          assault=assault)
 
     def _field_defenders(self, fid, pid, seen_by=None):
         enemies = [a for a in self.armies_in(pid) if a.faction != fid and self.at_war(fid, a.faction)
@@ -346,7 +361,8 @@ class Game:
         if not enemies:
             return None, []
         regiments = [r for a in enemies for r in a.regiments]
-        return self._side(enemies[0].faction, regiments, enemies[0].general, pid, defending=True), enemies
+        return self._side(enemies[0].faction, regiments, enemies[0].general, pid, defending=True,
+                          army=enemies[0]), enemies
 
     def _garrison_side(self, pid):
         p = self.provinces[pid]
@@ -365,7 +381,8 @@ class Game:
         p = self.provinces[pid]
         if self.friendly_land(army.faction, pid) or not p.garrison:
             return None
-        return battle.predict(attackers, self._garrison_side(pid), self.data.units, kind="assault")
+        return battle.predict(self._attackers([army], pid, assault=True), self._garrison_side(pid),
+                              self.data.units, kind="assault")
 
     # --- actions ---------------------------------------------------------------------------
 
@@ -407,8 +424,10 @@ class Game:
             raise MoveError(f"{army.general} needs a fresh turn to assault")
         start = len(self.events)
         army.moves_left = 0
-        result = self._resolve(self._attackers([army], p.id), self._garrison_side(p.id), p.id, "assault")
+        attackers, defenders = self._attackers([army], p.id, assault=True), self._garrison_side(p.id)
+        result = self._resolve(attackers, defenders, p.id, "assault")
         self._record_battle(result)
+        self._remember(result, attackers, defenders, army, None)
         self._drop_if_destroyed(army)
         if result.attacker_won:
             legends.raise_dead(self, result, army=army)
@@ -502,8 +521,10 @@ class Game:
         p = self.provinces[army.province]
         defenders, enemy_armies = self._field_defenders(army.faction, p.id)
         if defenders:
-            result = self._resolve(self._attackers([army], p.id), defenders, p.id, "field")
+            attackers = self._attackers([army], p.id)
+            result = self._resolve(attackers, defenders, p.id, "field")
             self._record_battle(result)
+            self._remember(result, attackers, defenders, army, enemy_armies[0])
             for a in [army, *enemy_armies]:
                 self._drop_if_destroyed(a)
             if not result.attacker_won:
@@ -544,6 +565,19 @@ class Game:
         verdict = "and win" if result.attacker_won else "but are thrown back"
         self._event(Battle(result), f"{self.faction_name(a.faction)} {what} {self.faction_name(d.faction, True)} "
                                     f"at {place} {verdict}.")
+
+    def _remember(self, result, attackers, defenders, attacker_army, defender_army):
+        """The survivors learn from the battle: veterans, and the generals' experience and traits."""
+        generals.season_of_battle(attackers.regiments, result.attacker_won)
+        generals.season_of_battle(defenders.regiments, not result.attacker_won)
+        a, d = result.attacker, result.defender
+        for army, won, mine, theirs, side in ((attacker_army, result.attacker_won, a, d, defenders),
+                                              (defender_army, not result.attacker_won, d, a, attackers)):
+            if army is None or army.id not in self.armies:
+                continue
+            generals.after_battle(self, army, won, outnumbered=theirs.start_hp > mine.start_hp * 1.2,
+                                  assault=result.kind == "assault" and army is attacker_army,
+                                  defending=army is defender_army, versus_creatures=side.creature)
 
     def _drop_if_destroyed(self, army):
         self._bury(army, "is destroyed")
@@ -650,16 +684,18 @@ class Game:
             self._train_recruits(p)
             self._siege_or_rest(p)
         for army in list(self.armies.values()):
-            army.moves_left = self.data.map["army_moves"]
+            army.moves_left = generals.moves(self, army)
             if self.provinces[army.province].owner == army.faction:
                 self._heal(army.regiments)
-            elif self.season == "Winter" and not self.data.factions[army.faction]["winter_hardy"]:
+            elif self.season == "Winter" and not self.data.factions[army.faction]["winter_hardy"] \
+                    and not generals.winter_hardy(self, army):
                 for r in army.regiments:
                     r.hp -= self.data.units[r.unit]["hp"] * self.rules["winter_attrition"]
                 self._bury(army, "freezes to death in the snow")
         legends.hora(self)
         legends.healers(self)
         legends.rebellions(self)
+        generals.idle(self)
         self._check_end()
         if not self.winner:
             self._count_heart()
@@ -716,6 +752,7 @@ class Game:
             army = next((a for a in self.armies_in(p.id) if a.faction == p.owner and len(a.regiments) < cap), None)
             if army is None:
                 army = self.add_army(p.owner, p.id, self._new_general(p.owner), [])
+                generals.birth(self, army)
                 if p.owner == self.player:
                     self.log.append(f"{army.general} takes command of a new army in {p.name}.")
             army.regiments += self._regiments([uid])

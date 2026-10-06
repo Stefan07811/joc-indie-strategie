@@ -1,4 +1,5 @@
 import copy
+import dataclasses
 import os
 
 import pytest
@@ -18,8 +19,7 @@ def real_data():
 @pytest.fixture(scope="session")
 def data(real_data):
     """Most rule tests predate diplomacy: there every faction starts at war with every other."""
-    d = GameData(*(copy.deepcopy(getattr(real_data, f)) for f in
-                   ("factions", "units", "map", "buildings", "abilities")))
+    d = GameData(**{f.name: copy.deepcopy(getattr(real_data, f.name)) for f in dataclasses.fields(GameData)})
     d.map["diplomacy"]["start"] = "war"
     return d
 

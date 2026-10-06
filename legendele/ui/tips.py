@@ -1,6 +1,6 @@
 """The words behind the tooltips: what a regiment, a building, a number on the panel means."""
 
-from ..game import diplomacy, economy, legends
+from ..game import diplomacy, economy, generals, legends
 from . import theme
 
 
@@ -12,6 +12,10 @@ def unit(game, uid, regiment=None):
     stats = f"Attack {u['attack']}  ·  Defence {u['defense']}  ·  Morale {u['morale']}  ·  Speed {u['speed']}"
     if regiment is not None:
         lines.append(f"Strength {round(regiment.hp)} / {u['hp']}")
+        if regiment.rank:
+            bonus = round(generals.VETERAN_BONUS * 100 * regiment.rank)
+            lines.append((f"Veteran, {regiment.rank} chevron{'s' if regiment.rank > 1 else ''}: +{bonus}% attack "
+                          f"and defence, +{generals.VETERAN_MORALE * regiment.rank} morale", theme.GOLD))
     else:
         lines.append(f"Strength {u['hp']}")
     lines.append(stats)
@@ -94,10 +98,23 @@ RELATIONS = {
 }
 
 
+def general(game, a):
+    lines = [a.general + (f"  ·  rank {a.rank}" if a.rank else ""),
+             (f"Rank {a.rank}: +{round(generals.RANK_ATTACK * 100 * a.rank)}% attack, holds longer"
+              if a.rank else "Untried in battle.", theme.TEXT_DIM)]
+    for trait in a.traits:
+        t = game.data.traits[trait]
+        lines.append((f"{t['name']}: {t['description']}", theme.GOOD if t["good"] else theme.DANGER))
+    return lines
+
+
 def army(game, a):
-    lines = [a.general, (f"{game.faction_name(a.faction)}  ·  {len(a.regiments)} regiments", theme.TEXT_DIM)]
+    lines = [a.general + (f"  ·  rank {a.rank}" if a.rank else ""),
+             (f"{game.faction_name(a.faction)}  ·  {len(a.regiments)} regiments", theme.TEXT_DIM)]
+    if a.traits:
+        lines.append(("  ·  ".join(game.data.traits[t]["name"] for t in a.traits), theme.GOLD))
     if a.faction == game.player:
-        lines.append(f"Movement left {a.moves_left} / {game.data.map['army_moves']}")
+        lines.append(f"Movement left {a.moves_left} / {generals.moves(game, a)}")
     counts = {}
     for r in a.regiments:
         counts[r.unit] = counts.get(r.unit, 0) + 1

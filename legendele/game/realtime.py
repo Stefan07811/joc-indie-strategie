@@ -24,6 +24,7 @@ from dataclasses import dataclass, field
 
 from . import battle
 from .battle import BattleResult, SideReport
+from .generals import veteran_mult
 
 FIELD_W, FIELD_H = 1280, 600
 SECONDS_PER_ROUND = 3.0
@@ -392,7 +393,9 @@ class Battlefield:
         units = self.data
         me, them = self.sides[u.side], self.sides[target.side]
         unit, foe = units[u.regiment.unit], units[target.regiment.unit]
-        attack = unit["attack"] * me.attack_mult * self._attack_aura(u)
+        attack = unit["attack"] * me.attack_mult * self._attack_aura(u) * veteran_mult(u.regiment)
+        if them.creature:
+            attack *= me.creature_bane
         if u.fighting is not None and unit["ability"] in CHARGES and \
                 self.time - u.contact.get(target.id, self.time) < CHARGE_TIME:
             attack *= CHARGES[unit["ability"]]
@@ -414,7 +417,7 @@ class Battlefield:
             defense_mult /= battle.WALLS_DEFENSE
         if self.zone_at(target.x, target.y) == "hill":
             defense_mult *= HILL_DEFENSE
-        defense = foe["defense"] * defense_mult
+        defense = foe["defense"] * defense_mult * veteran_mult(target.regiment)
         vigour = 0.5 + 0.5 * u.regiment.hp / unit["hp"]
         roll = 0.8 + 0.4 * self.rng.random()
         per_round = battle.DAMAGE_PER_ATTACK * attack * battle.ARMOUR / (battle.ARMOUR + defense) * vigour * roll

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from . import legends
+from . import generals, legends
 
 
 # How hard the other legends push: their income, and the gold each side starts with.
@@ -66,7 +66,8 @@ def balance(game, fid, season=None):
         tax += g
         food += f
     regiments = [r for a in game.armies_of(fid) for r in a.regiments]
-    upkeep = sum(game.data.units[r.unit]["upkeep"] for r in regiments)
+    upkeep = sum(round(sum(game.data.units[r.unit]["upkeep"] for r in a.regiments) * generals.upkeep_mult(game, a))
+                 for a in game.armies_of(fid))
     eaten = sum(appetite(game, r.unit) for r in regiments)
     tax = tax * game.data.factions[fid]["income_mult"]
     if fid != game.player:

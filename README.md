@@ -174,6 +174,11 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   | Viteză x1, x2, x4 | `F` |
 
   Butoanele **Auto-resolve** (calculatorul termină lupta) și **Withdraw** (retragere) sunt în bara de jos.
+- **Cum arată:** un câmp pictat după terenul provinciei, cu sute de soldați desenați unul câte unul, în
+  formații. Ei pășesc, lovesc și cad (cei căzuți rămân pe câmp). Săgețile zboară în arc, tunurile fac fum,
+  cavaleria ridică praf, balaurii scuipă foc, iar umbrele norilor trec peste câmp.
+
+  ![Asaltul unui oraș](docs/assault.png)
 - **Ce contează:**
   - **flancarea:** o lovitură din lateral e +30%, una din spate +60%, și amândouă sperie;
   - **șarjele:** cavaleria, Wrathful Sprites și Mace Drakes lovesc mai tare în primele secunde;

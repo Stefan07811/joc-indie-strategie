@@ -145,6 +145,13 @@ Fiecare bătălie se poate rezolva în două feluri, cu aceleași armate și ace
 - AI-ul de pe câmp atacă cel mai apropiat inamic. Arcașii lui trag de pe loc. Apărătorii așteaptă puțin,
   iar la asalturi rămân după ziduri și atacă doar ce a trecut de ele.
 - Testele verifică faptul că, în bătăliile clare, ambele moduri dau același învingător.
+- **Cum arată** (`ui/battle_art.py`, doar desen): câmpul e pictat o dată la începutul luptei (relief cu
+  lumină, curbe de nivel pe dealuri, iarbă, drum, copaci, bălți, stânci, ziduri cu turnuri, porți și casele
+  orașului). Fiecare regiment e o mulțime de soldați desenați unul câte unul, în formație (de la 20 de lăncieri
+  la 2 balauri), cu umbre. Soldații merg pe rând la locul lor în rânduri, pășesc în marș, lovesc în luptă și
+  cad când regimentul pierde din putere; cei căzuți rămân pe câmp. Săgețile zboară în arc (cu umbra pe
+  pământ), tunurile scot fum, caii și lupii ridică praf, balaurii scuipă foc, iar peste câmp trec umbre de nori.
+  Steagul regimentului, cu bara de viață, stă deasupra rândurilor.
 
 ---
 

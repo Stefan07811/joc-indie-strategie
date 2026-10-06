@@ -9,19 +9,16 @@ so you can give your first orders), F changes the speed.
 """
 
 import math
-import random
 
 import pygame
 
 from ..game import battle
 from ..game.realtime import FIELD_H, FIELD_W, Battlefield
-from . import theme
+from . import battle_art, painter, theme
 
 HUD = pygame.Rect(0, FIELD_H, theme.WINDOW_SIZE[0], theme.WINDOW_SIZE[1] - FIELD_H)
 STEP = 1 / 30
 SPEEDS = (1, 2, 4)
-MEN = 16  # soldiers drawn per full-strength regiment
-GRID = 4
 
 
 def fight(app, game, attackers, defenders, pid, kind):
@@ -119,9 +116,15 @@ class BattleScreen:
         self.result = None
         self.clash_at = 0.0
         self._carry = 0.0  # unspent time, simulated in fixed steps
-        self.ground = self._paint_ground()
+        self.ground = battle_art.paint_field(field)  # the fallen are painted onto it as they fall
         names = [game.faction_name(s.faction) for s in field.sides]
         self.colors = [theme.faction_color(game, s.faction) for s in field.sides]
+        self.troops = battle_art.Troops(field, game.data.units, self.colors, self.ground)
+        self.effects = battle_art.Effects(field, game.data.units, self.troops)
+        self.troops.update(0, self.effects)
+        self.clouds = battle_art.clouds()
+        self.vignette = painter._vignette(FIELD_W, FIELD_H)
+        self._banners = {}
         self.names = names
         x = HUD.right - 16
         self.buttons = {}
@@ -175,6 +178,7 @@ class BattleScreen:
             self.speed = (self.speed + 1) % len(SPEEDS)
         elif name == "auto":
             f.finish()
+            self.troops.update(0.0, self.effects)  # the fallen of the rest of the fight
         elif name == "withdraw":
             f.withdraw(self.me)
             self.paused = False
@@ -217,9 +221,12 @@ class BattleScreen:
         if f.over or self.paused:
             return
         self._carry += min(dt, 0.1) * SPEEDS[self.speed]
+        before = f.time
         while self._carry >= STEP and not f.over:
             f.step(STEP)
             self._carry -= STEP
+        self.troops.update(f.time - before, self.effects)
+        self.effects.update(self.ground)
         self.selected = {i for i in self.selected if f.unit(i).ready}
         if any(u.fighting is not None for u in f.units) and f.time - self.clash_at > 2.5:
             self.clash_at = f.time
@@ -247,63 +254,26 @@ class BattleScreen:
 
     # --- drawing ---------------------------------------------------------------------------
 
-    def _paint_ground(self):
-        f = self.field
-        base = self.game.data.terrain[f.terrain]["color"]
-        ground = pygame.Surface((FIELD_W, FIELD_H))
-        ground.fill(base)
-        rng = random.Random(7)  # the same speckles every time
-        for _ in range(1800):
-            x, y = rng.randrange(FIELD_W), rng.randrange(FIELD_H)
-            shade = rng.choice((-14, -8, 8, 12))
-            ground.fill(tuple(max(0, min(255, c + shade)) for c in base), (x - x % 4, y - y % 4, 4, 4))
-        for z in f.zones:
-            if z.kind == "hill":
-                for i, r in enumerate((z.r, z.r * 0.7, z.r * 0.4)):
-                    pygame.draw.ellipse(ground, tuple(min(255, c + 10 + 8 * i) for c in (176, 150, 100)),
-                                        pygame.Rect(z.x - r, z.y - r * 0.75, 2 * r, 1.5 * r))
-            elif z.kind == "marsh":
-                pygame.draw.ellipse(ground, (74, 104, 112), pygame.Rect(z.x - z.r, z.y - z.r * 0.6, 2 * z.r, 1.2 * z.r))
-                for k in range(8):
-                    a = k * 0.8
-                    x, y = z.x + math.cos(a) * z.r * 0.8, z.y + math.sin(a) * z.r * 0.5
-                    pygame.draw.line(ground, (60, 92, 54), (x, y), (x, y - 8), 2)
-        for z in f.zones:
-            if z.kind == "forest":
-                floor = tuple(max(0, c - 22) for c in base)
-                pygame.draw.circle(ground, floor, (z.x, z.y), z.r)
-                for k in range(int(z.r / 6)):
-                    a = rng.uniform(0, 2 * math.pi)
-                    d = z.r * math.sqrt(rng.random())
-                    x, y = z.x + math.cos(a) * d, z.y + math.sin(a) * d
-                    pygame.draw.polygon(ground, (36, 78, 42), [(x - 8, y + 6), (x, y - 12), (x + 8, y + 6)])
-                    pygame.draw.rect(ground, (90, 60, 36), (x - 1, y + 6, 3, 4))
-        for b in f.blocks:
-            rect = pygame.Rect(b.x, b.y, b.w, b.h)
-            if b.kind == "rocks":
-                pygame.draw.rect(ground, (112, 106, 102), rect, border_radius=10)
-                pygame.draw.rect(ground, (84, 78, 74), rect, 3, border_radius=10)
-            else:
-                pygame.draw.rect(ground, (170, 160, 146), rect)
-                for yy in range(int(b.y), int(b.y + b.h), 12):
-                    pygame.draw.rect(ground, (130, 120, 108), (b.x - 3, yy, 26, 6))
-        return ground
-
     def draw(self, surface):
         f = self.field
         surface.blit(self.ground, (0, 0))
+        for uid in self.selected:
+            u = f.unit(uid)
+            ring = pygame.Rect(0, 0, 64, 40)
+            ring.center = (u.x, u.y + 2)
+            pygame.draw.ellipse(surface, theme.INK, ring.inflate(4, 4), 3)
+            pygame.draw.ellipse(surface, theme.HIGHLIGHT, ring, 2)
+        self.effects.draw_shadows(surface)
+        for _, image, rect in sorted(self.troops.sprites(f.time), key=lambda s: s[0]):
+            surface.blit(image, rect)
+        self.effects.draw(surface)
+        drift = int(f.time * 6) % FIELD_W
+        surface.blit(self.clouds, (drift - FIELD_W, 0))
+        surface.blit(self.clouds, (drift, 0))
+        surface.blit(self.vignette, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
         for u in f.units:
-            if u.shooting is not None:
-                self._arrows(surface, u, f.unit(u.shooting))
-        for u in sorted(f.units, key=lambda u: u.y):
             if u.state in ("ready", "routing"):
-                self._regiment(surface, u)
-        for u in f.units:
-            if u.fighting is not None:
-                t = f.unit(u.fighting)
-                mx, my = (u.x + t.x) / 2, (u.y + t.y) / 2
-                phase = int(f.time * 10 + u.id) % 3
-                pygame.draw.circle(surface, (255, 240, 180), (mx + phase * 3 - 3, my - phase * 2), 2)
+                self._banner(surface, u)
         if self.drag:
             rect = pygame.Rect(min(self.drag[0], self.mouse[0]), min(self.drag[1], self.mouse[1]),
                                abs(self.mouse[0] - self.drag[0]), abs(self.mouse[1] - self.drag[1]))
@@ -312,47 +282,32 @@ class BattleScreen:
         if f.over:
             self._outcome(surface)
         elif self.paused:
-            theme.text(surface, "Paused: give your orders, then press Space", (FIELD_W // 2, 24), 26,
-                       theme.HIGHLIGHT, anchor="center", shadow=theme.INK)
+            theme.outlined(surface, "Paused: give your orders, then press Space", (FIELD_W // 2, 24), 24,
+                           theme.HIGHLIGHT)
 
-    def _regiment(self, surface, u):
+    def _banner(self, surface, u):
+        """The regiment's standard above its ranks: its colours, what it is, how strong it still is."""
         unit = self.game.data.units[u.regiment.unit]
-        color = self.colors[u.side]
-        if u.state == "routing":
-            color = tuple(min(255, c + 90) for c in color)
-        men = max(1, math.ceil(MEN * u.regiment.hp / unit["hp"]))
-        cos, sin = math.cos(u.facing), math.sin(u.facing)
-        jitter = (math.sin(self.field.time * 20 + u.id) * 2) if u.state == "routing" else 0
-        for k in range(men):
-            row, col = divmod(k, GRID)
-            fx = (GRID / 2 - row - 0.5) * 9  # front rank faces forward
-            fy = (col - GRID / 2 + 0.5) * 9
-            x = u.x + fx * cos - fy * sin + jitter
-            y = u.y + fx * sin + fy * cos
-            pygame.draw.rect(surface, theme.INK, (x - 3, y - 3, 7, 7))
-            pygame.draw.rect(surface, color, (x - 2, y - 2, 5, 5))
-        if u.id in self.selected:
-            pygame.draw.circle(surface, theme.HIGHLIGHT, (u.x, u.y), 27, 2)
-        icon = self.app.assets.get(f"unit_{unit['icon']}", self.colors[u.side], 2)
-        surface.blit(icon, icon.get_rect(midbottom=(u.x, u.y - 22)))
-        bar = pygame.Rect(u.x - 16, u.y + 22, 32, 4)
-        pygame.draw.rect(surface, theme.INK, bar)
+        x, y = u.x - math.cos(u.facing) * 10, u.y - 44
+        pygame.draw.line(surface, theme.INK, (x, y), (x, y + 18), 3)
+        pygame.draw.line(surface, (196, 170, 120), (x, y), (x, y + 18), 1)
+        key = (u.side, unit["icon"], u.state == "routing")
+        if key not in self._banners:
+            color = self.colors[u.side]
+            if u.state == "routing":
+                color = tuple(min(255, c + 90) for c in color)
+            flag = pygame.Surface((20, 17), pygame.SRCALPHA)
+            pygame.draw.polygon(flag, theme.INK, [(0, 0), (20, 0), (20, 17), (10, 13), (0, 17)])
+            pygame.draw.polygon(flag, color, [(1, 1), (19, 1), (19, 15), (10, 11), (1, 15)])
+            icon = self.app.assets.get(f"unit_{unit['icon']}", theme.PARCHMENT, 1)
+            flag.blit(icon, icon.get_rect(center=(10, 7)))
+            self._banners[key] = flag
+        flag = self._banners[key]
+        surface.blit(flag, (x + 1, y - 1 + math.sin(self.field.time * 4 + u.id)))
+        bar = pygame.Rect(x - 10, y - 7, 22, 3)
+        pygame.draw.rect(surface, theme.INK, bar.inflate(2, 2))
         pygame.draw.rect(surface, theme.GOOD if u.side == self.me else theme.DANGER,
                          (bar.x, bar.y, round(bar.width * min(1.0, u.regiment.hp / unit["hp"])), bar.height))
-        if u.ready and u.order and u.side == self.me and u.id in self.selected:
-            if u.order[0] == "move":
-                pygame.draw.line(surface, theme.HIGHLIGHT, (u.x, u.y), u.order[1:], 1)
-            else:
-                t = self.field.unit(u.order[1])
-                pygame.draw.line(surface, theme.DANGER, (u.x, u.y), (t.x, t.y), 1)
-
-    def _arrows(self, surface, u, t):
-        dist = math.hypot(t.x - u.x, t.y - u.y) or 1
-        dx, dy = (t.x - u.x) / dist, (t.y - u.y) / dist
-        for k in range(3):
-            p = ((self.field.time * 1.6 + k / 3 + u.id * 0.17) % 1.0)
-            x, y = u.x + dx * dist * p, u.y + dy * dist * p - math.sin(p * math.pi) * min(60, dist / 4)
-            pygame.draw.line(surface, (60, 44, 30), (x, y), (x - dx * 8, y - dy * 8), 2)
 
     def _hud(self, surface):
         f = self.field

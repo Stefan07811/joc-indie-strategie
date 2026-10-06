@@ -212,3 +212,29 @@ def test_settings_cycle_the_battle_mode(app):
     assert app.settings["battles"] == "fight" and profile.load_settings()["battles"] == "fight"
     assert diplomacy  # imported for the campaign tests above
     assert FIELD_H == 600
+
+
+def test_every_regiment_has_its_soldiers_drawn(app, data):
+    from legendele.ui import battle_art
+    for key, unit in data.units.items():
+        for frame in range(5):
+            image = battle_art.figure(unit["icon"], (200, 40, 40), frame, frame % 2 == 1)
+            assert image.get_width() > 4 and image.get_height() > 4, key
+        assert unit["icon"] in battle_art.FIGURES, key
+
+
+def test_soldiers_fall_as_their_regiment_bleeds(app, data):
+    from legendele.ui import battle_art
+    f = field(data, ["oteni"], ["pui_de_zmeu"])
+    troops = battle_art.Troops(f, data.units, [(200, 40, 40), (40, 40, 200)], battle_art.paint_field(f))
+    effects = battle_art.Effects(f, data.units, troops)
+    troops.update(0, effects)
+    spearmen = f.units[0]
+    full = sum(m.alive for m in troops.men[spearmen.id])
+    spearmen.regiment.hp /= 2
+    troops.update(0.1, effects)
+    assert sum(m.alive for m in troops.men[spearmen.id]) == full // 2
+    spearmen.state = "dead"
+    troops.update(0.1, effects)
+    assert not any(m.alive for m in troops.men[spearmen.id])
+    assert len(troops.sprites(f.time)) == sum(m.alive for m in troops.men[f.units[1].id])

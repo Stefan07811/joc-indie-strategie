@@ -666,10 +666,96 @@ def paint_field(field):
                 trees.append((z.y + math.sin(a) * d, z.x + math.cos(a) * d, rng.random()))
     for y, x, k in sorted(trees):
         _tree(ground, x, y, k)
+    if getattr(field, "weather", "clear") == "snow":
+        _snowfall(ground, cols, rows, seed)
     tone = pygame.Surface((FIELD_W, FIELD_H))
     tone.fill((255, 246, 228))
     ground.blit(tone, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
     return ground
+
+
+def _snowfall(ground, cols, rows, seed):
+    """A winter field: snow lying thick, thinner where the ground breaks through."""
+    depth = painter._fbm_field(cols, rows, 10, seed + 31)
+    small = pygame.Surface((cols, rows), pygame.SRCALPHA)
+    for r in range(rows):
+        for c in range(cols):
+            small.set_at((c, r), (238, 242, 248, max(0, min(230, int(120 + 260 * (depth[r * cols + c] - 0.5))))))
+    ground.blit(pygame.transform.smoothscale(small, (FIELD_W, FIELD_H)), (0, 0))
+
+
+def ram_sprite(ram, color):
+    """(y, image, rect) of a battering ram under its roof of hides, for drawing among the men."""
+    image = pygame.Surface((54, 34), pygame.SRCALPHA)
+    pygame.draw.ellipse(image, (0, 0, 0, 70), (2, 24, 50, 9))
+    for x in (10, 42):
+        pygame.draw.circle(image, (60, 42, 26), (x, 27), 5)
+        pygame.draw.circle(image, (120, 86, 52), (x, 27), 3)
+    pygame.draw.polygon(image, (96, 70, 44), [(4, 24), (27, 4), (50, 24)])
+    pygame.draw.polygon(image, _shade(color, 0.7), [(27, 4), (50, 24), (27, 24)])
+    pygame.draw.polygon(image, DARK, [(4, 24), (27, 4), (50, 24)], 2)
+    pygame.draw.line(image, (70, 70, 76), (30, 18), (53, 18), 4)  # the iron-shod beam
+    rect = image.get_rect(midbottom=(round(ram.x), round(ram.y) + 8))
+    return (ram.y, image, rect)
+
+
+class Sky:
+    """Weather and the hour: rain, snow or fog over the field, and the dark lit by torches."""
+
+    def __init__(self, field):
+        self.field = field
+        self.rng = random.Random(9)
+        self.weather = getattr(field, "weather", "clear")
+        self.night = getattr(field, "night", False)
+        count = {"rain": 260, "snow": 220}.get(self.weather, 0)
+        self.drops = [[self.rng.uniform(0, FIELD_W), self.rng.uniform(0, FIELD_H), self.rng.uniform(0.6, 1.0)]
+                      for _ in range(count)]
+        self.fog = None
+        if self.weather == "fog":
+            fog = clouds()
+            fog.fill((222, 226, 226, 0), special_flags=pygame.BLEND_RGBA_MAX)
+            fog.fill((255, 255, 255, 150), special_flags=pygame.BLEND_RGBA_MIN)
+            self.fog = fog
+        self.glow = None
+        if self.night:
+            self.glow = pygame.Surface((90, 90))
+            for r in range(45, 0, -3):
+                v = int(120 * (1 - r / 45) ** 1.5)
+                pygame.draw.circle(self.glow, (v, int(v * 0.75), int(v * 0.4)), (45, 45), r)
+
+    def update(self, dt):
+        if self.weather == "rain":
+            for d in self.drops:
+                d[0] -= 90 * dt * d[2]
+                d[1] += 700 * dt * d[2]
+                if d[1] > FIELD_H:
+                    d[0], d[1] = self.rng.uniform(0, FIELD_W + 100), -10
+        elif self.weather == "snow":
+            for d in self.drops:
+                d[0] += math.sin(d[1] / 40 + d[2] * 6) * 20 * dt
+                d[1] += 45 * dt * d[2]
+                if d[1] > FIELD_H:
+                    d[0], d[1] = self.rng.uniform(0, FIELD_W), -5
+
+    def draw(self, surface, time, units):
+        if self.night:
+            shade = pygame.Surface((FIELD_W, FIELD_H))
+            shade.fill((122, 130, 176))
+            surface.blit(shade, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
+            for u in units:  # every regiment carries torches
+                flicker = 1 + 0.08 * math.sin(time * 9 + u.id)
+                glow = pygame.transform.scale(self.glow, (round(90 * flicker), round(90 * flicker)))
+                surface.blit(glow, glow.get_rect(center=(u.x, u.y - 10)), special_flags=pygame.BLEND_RGB_ADD)
+        if self.weather == "rain":
+            for x, y, k in self.drops:
+                pygame.draw.line(surface, (170, 184, 196), (x, y), (x - 3 * k, y + 12 * k), 1)
+        elif self.weather == "snow":
+            for x, y, k in self.drops:
+                pygame.draw.circle(surface, (246, 248, 252), (x, y), 1 + k)
+        elif self.fog is not None:
+            drift = int(time * 10) % FIELD_W
+            surface.blit(self.fog, (drift - FIELD_W, 0))
+            surface.blit(self.fog, (drift, 0))
 
 
 def _contours(ground, z, base):

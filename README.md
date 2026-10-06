@@ -52,7 +52,7 @@ python -m legendele
 | Curțile străine (tribut, mercenari) | `F` sau din Diplomacy |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M10 (harta vie)
+## Stadiul actual: etapa M11 (bătălii tactice)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -173,8 +173,11 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   | Mărșăluiești | clic dreapta pe teren |
   | Ataci | clic dreapta pe un inamic |
   | Oprești pe loc | `H` |
-  | Pauză | `Space` (lupta începe în pauză, ca să-ți dai ordinele) |
+  | Desfășurare (înainte de luptă) | tragi regimentele în zona luminată sau clic dreapta pentru cele selectate; `Space` începe lupta |
+  | Ordinul special al regimentului | `Q` sau butonul din bara de jos (are reîncărcare) |
+  | Pauză | `Space` |
   | Viteză x1, x2, x4 | `F` |
+  | Zoom | rotița mouse-ului sau `+` / `-`; harta se mută cu săgețile, mouse-ul la margine sau rotița apăsată |
 
   Butoanele **Auto-resolve** (calculatorul termină lupta) și **Withdraw** (retragere) sunt în bara de jos.
 - **Cum arată:** un câmp pictat după terenul provinciei, cu sute de soldați desenați unul câte unul, în
@@ -235,7 +238,24 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   să te lase în pace, iar regatele creștine vecine îți vând mercenari: Winged Hussars, Black Army Foot și
   Hungarian Knights.
 
-**Ce urmează:** M11–M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Bătălii tactice (M11)**
+- **Desfășurarea:** înainte de luptă îți așezi regimentele în zona ta.
+- **Ordine speciale:** fiecare regiment are un ordin special, cu reîncărcare: Charge!, Volley!, War cry,
+  Dragon fire, Bewitching round, Dread wail, Midsummer blessing sau Brace!. Le folosește și AI-ul.
+- **Vreme și noapte:** ploaia udă coardele arcurilor și praful de pușcă, zăpada încetinește pasul, ceața și
+  noaptea scurtează bătaia arcașilor. Noaptea fiecare regiment are torțe, iar Revenants lovesc mai tare.
+- **Întăriri:** o armată de-a ta (sau a dușmanului) din provincia vecină, care n-a mărșăluit în anotimpul
+  ăsta, vine în ajutor și intră pe câmp după 30 de secunde.
+- **Asedii:** porțile sunt închise. După un anotimp de asediu ai scări (oamenii urcă încet pe ziduri), după
+  două și un berbec care sparge poarta (arcașii de pe ziduri încearcă să-l ardă). Balaurii zboară peste ziduri.
+  Fără echipament, asaltul e mai slab și în rezolvarea automată.
+- **Zoom** pe câmpul de luptă.
+- **Bătălia personalizată** (din meniul principal): alegi cele două oști (inclusiv puterile străine sau
+  Outlaws), regimentele, terenul, asaltul, vremea, ora, echipamentul de asediu și partea pe care o conduci.
+
+  ![Asalt noaptea, pe zăpadă](docs/battle_night.png)
+
+**Ce urmează:** M12–M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

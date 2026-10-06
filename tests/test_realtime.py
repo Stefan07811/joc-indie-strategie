@@ -179,21 +179,31 @@ def test_battle_screen_controls(app, data):
     f = field(data, ["oteni", "oteni", "arcasi"], ["pui_de_zmeu"], player_side=0)
     screen = BattleScreen(app, game, f)
     screen.draw(app.screen)
-    assert screen.paused
+    assert screen.deploying and screen.paused
     mine = [u for u in f.units if u.side == 0]
-    # drag a box around our regiments, then order them to march
+    # drag a box around our regiments
     xs, ys = [u.x for u in mine], [u.y for u in mine]
     screen.handle(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(min(xs) - 30, min(ys) - 30), button=1))
     screen.handle(pygame.event.Event(pygame.MOUSEBUTTONUP, pos=(max(xs) + 30, max(ys) + 30), button=1))
     assert screen.selected == {u.id for u in mine}
+    # while deploying, a right-click sets them down (inside our zone), it does not order a march
+    screen.handle(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(200, 150), button=3))
+    assert all(u.order is None for u in mine) and min(u.y for u in mine) < min(ys)
+    screen.handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))  # begin!
+    assert not screen.deploying and not screen.paused
     screen.handle(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(640, 300), button=3))
     assert all(u.order and u.order[0] == "move" for u in mine)
     enemy = next(u for u in f.units if u.side == 1)
     screen.handle(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=(enemy.x, enemy.y), button=3))
     assert all(u.order == ("attack", enemy.id) for u in mine)
-    screen.handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_SPACE))
+    screen.handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_q))  # special orders
+    assert all(u.ready_at > 0 for u in mine) and screen.shouts
     screen.handle(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_f))
     assert not screen.paused and screen.speed == 1
+    screen.handle(pygame.event.Event(pygame.MOUSEWHEEL, x=0, y=1))  # zoom in, then look around
+    assert screen.zoom > 1
+    screen.pan(200, 100)
+    assert screen.to_field(screen.to_screen((500, 300))) == pytest.approx((500, 300))
     for _ in range(60):
         screen.update(1 / 30)
     screen.draw(app.screen)
@@ -304,3 +314,17 @@ def test_deployment_stays_in_the_zone(data):
     f.place([f.units[0].id], 1000, 300)  # too far forward
     zx, zy, zw, zh = f.deploy_zone(0)
     assert f.units[0].x <= zx + zw
+
+
+@pytest.mark.parametrize("weather,night", [("rain", False), ("snow", True), ("fog", False)])
+def test_weather_and_assaults_are_drawn(app, data, weather, night):
+    from legendele.ui.battle_screen import BattleScreen
+    game = Game.new(data, "voievodat", seed=1)
+    f = field(data, ["oteni", "arcasi"], ["oteni"], kind="assault", walls=True, player_side=0,
+              equipment={"ram": True, "ladders": True}, weather=weather, night=night)
+    screen = BattleScreen(app, game, f)
+    screen.start()
+    for _ in range(30):
+        screen.update(1 / 10)
+    screen.draw(app.screen)
+    assert f.ram is not None

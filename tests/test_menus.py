@@ -34,7 +34,7 @@ def button(scene, label):
 def test_title_screen_without_saves(app):
     assert isinstance(app.scene, MainMenu)
     app.scene.draw(app.screen)
-    assert [label for _, label in app.scene.buttons] == ["New Campaign", "Load Game", "Settings", "Quit"]
+    assert [label for _, label in app.scene.buttons] == ["New Campaign", "Load Game", "Custom Battle", "Settings", "Quit"]
     click(app, button(app.scene, "New Campaign"))
     assert isinstance(app.scene, FactionSelect)
     click(app, app.scene.back_rect.center)
@@ -123,3 +123,23 @@ def test_events_make_the_right_sounds(real_data):
     assert event_sound(game, [DiplomacyChange("peace", "zmei", "voievodat")]) == "peace"
     assert event_sound(game, []) is None
     assert Battle  # imported for completeness
+
+
+def test_custom_battle(app):
+    from legendele.ui.custom_battle import CustomBattle
+    from legendele.ui.menus import MainMenu
+    app.scene = MainMenu(app)
+    rect = next(r for r, label in app.scene.buttons if label == "Custom Battle")
+    click(app, rect.center)
+    screen = app.scene
+    assert isinstance(screen, CustomBattle)
+    screen.draw(app.screen)
+    for _ in range(4):
+        screen.set_faction(1)  # the foe may be a foreign power
+    screen.kind, screen.works, screen.weather, screen.night = "assault", "ladders", "snow", True
+    screen.draw(app.screen)
+    attacker, defender, you = screen.build()
+    assert defender.walls and attacker.equipment == {"ladders": True, "ram": False} and you == 0
+    f = screen.field()
+    assert f.weather == "snow" and f.night and f.player_side == 0
+    assert f.finish().kind == "assault"

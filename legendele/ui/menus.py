@@ -40,8 +40,9 @@ class MainMenu:
     def __init__(self, app):
         self.app = app
         self.continue_slot = profile.latest_slot()
-        labels = (["Continue"] if self.continue_slot else []) + ["New Campaign", "Load Game", "Settings", "Quit"]
-        self.buttons = _button_column(labels, 330)
+        labels = (["Continue"] if self.continue_slot else []) + ["New Campaign", "Load Game", "Custom Battle",
+                                                                  "Settings", "Quit"]
+        self.buttons = _button_column(labels, 312, height=42, gap=12)
 
     def handle(self, event):
         if not _clicked(event):
@@ -57,6 +58,9 @@ class MainMenu:
                     self.app.scene = SlotScreen(self.app, "load", back=self)
                 elif label == "Settings":
                     self.app.scene = SettingsScreen(self.app, back=self)
+                elif label == "Custom Battle":
+                    from .custom_battle import CustomBattle
+                    self.app.scene = CustomBattle(self.app, back=self)
                 else:
                     self.app.quit()
 

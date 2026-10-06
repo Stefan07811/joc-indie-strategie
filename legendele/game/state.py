@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, diplomacy, economy, events, generals, legends
+from . import battle, diplomacy, economy, events, foreign, generals, legends
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -142,6 +142,9 @@ class Game:
     stats: dict = field(default_factory=dict)  # fid -> {"won", "lost", "taken", "fallen"}
     difficulty: str = "normal"
     pending_events: list = field(default_factory=list)  # tales waiting for the human player's choice
+    tribute: dict = field(default_factory=dict)  # fid -> [powers it pays to keep their raiders away]
+    raids: dict = field(default_factory=dict)  # raiding army id -> {"victim", "plunders", "seasons"}
+    raided: dict = field(default_factory=dict)  # power -> {fid: raids so far}
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal"):
@@ -180,7 +183,7 @@ class Game:
             fid: {"provinces": len(self.provinces_of(fid)),
                   "regiments": sum(len(a.regiments) for a in self.armies_of(fid)),
                   "gold": self.treasury[fid].gold if fid in self.treasury else 0}
-            for fid in self.data.factions if fid != REBELS}}
+            for fid, f in self.data.factions.items() if f["playable"]}}
         if self.history and self.history[-1]["round"] == self.round:
             self.history[-1] = snapshot
         else:
@@ -639,6 +642,9 @@ class Game:
         return not self.has_enemy_army(fid, pid)
 
     def _capture(self, p, fid):
+        if foreign.is_power(self, fid):
+            foreign.plunder(self, p, fid)  # raiders loot, they do not keep
+            return
         previous = p.owner
         p.owner = fid
         p.garrison = []
@@ -701,6 +707,7 @@ class Game:
             if self.over:
                 return
         self.rebels.take_turn(self)
+        foreign.take_turn(self)
         if self.over:
             return
         self._new_round()
@@ -732,6 +739,7 @@ class Game:
         legends.rebellions(self)
         generals.idle(self)
         events.season(self)
+        foreign.season(self)
         for p in self.provinces.values():
             p.mods = [m for m in p.mods if m[2] > self.round]
         self._check_end()

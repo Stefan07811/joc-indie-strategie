@@ -7,7 +7,8 @@ import pygame
 
 from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
-                    Rebellion, SiegeStarted, Tale, Victory, diplomacy)
+                    Raid, Rebellion, SiegeStarted, Tale, Victory, diplomacy,
+                    foreign)
 from ..game.economy import DIFFICULTY
 from ..game.save import load_game
 from . import map_view, theme, tips
@@ -15,6 +16,7 @@ from .assets import Assets
 from .audio import Audio
 from .battle_screen import fight
 from .diplomacy_dialog import DiplomacyDialog
+from .foreign_dialog import ForeignDialog
 from .map_view import MapView
 from .menus import MainMenu, PauseMenu
 from .panel import Panel
@@ -108,7 +110,7 @@ class FactionSelect:
 
 # Which sound a batch of events makes (the first match wins, so a battle drowns out a siege).
 def event_sound(game, events):
-    for kind, sound in ((Victory, None), (Eliminated, None), (Battle, "battle"), (Rebellion, "alarm"),
+    for kind, sound in ((Victory, None), (Eliminated, None), (Battle, "battle"), (Rebellion, "alarm"), (Raid, "alarm"),
                         (DiplomacyChange, None), (Abduction, "coins"), (Captured, None), (Proposal, "select"),
                         (SiegeStarted, "march")):
         for e in events:
@@ -192,7 +194,10 @@ class Campaign:
             return
         if self.dialog:
             if self.dialog.handle(event):
+                switch = getattr(self.dialog, "switch", None)
                 self.dialog = None
+                if switch == "foreign":
+                    self.open_foreign()
                 self._report(self.game.events[self._dialog_from:])  # what we did in there
             return
         if event.type == pygame.MOUSEMOTION:
@@ -227,6 +232,8 @@ class Campaign:
                 self.open_province()
             elif event.key == pygame.K_d:
                 self.open_diplomacy()
+            elif event.key == pygame.K_f:
+                self.open_foreign()
 
     def _click(self, pos):
         panel = self.panel
@@ -306,6 +313,11 @@ class Campaign:
     def open_diplomacy(self):
         if not self.game.over:
             self.dialog = DiplomacyDialog(self.game, self.app.assets)
+            self._dialog_from = len(self.game.events)
+
+    def open_foreign(self):
+        if not self.game.over:
+            self.dialog = ForeignDialog(self.game, self.app.assets)
             self._dialog_from = len(self.game.events)
 
     def _answer(self, event):
@@ -434,6 +446,16 @@ class Campaign:
             screen_rect = rect.move(self.map.to_screen((0, 0)))
             if self.map.rect.contains(screen_rect) and army_id in self.game.armies:
                 theme.tip(screen_rect, tips.army(self.game, self.game.armies[army_id]))
+        for land in self.game.data.map.get("foreign", []):
+            power = next((fid for fid in foreign.powers(self.game)
+                          if land["name"] in self.game.data.factions[fid]["foreign"]["lands"]), None)
+            if power:
+                f = self.game.data.factions[power]
+                spot = pygame.Rect(0, 0, 380, 70)
+                spot.center = self.map.to_screen((land["x"], land["y"]))
+                theme.tip(spot.clip(self.map.rect), [land["name"], f["description"],
+                                                     (f"Raids on you so far: {self.game.raided.get(power, {}).get(self.game.player, 0)}"
+                                                      "  ·  Foreign courts: F", theme.TEXT_DIM)])
         theme.tip(self.map.minimap_rect, ["The whole map", "Click or drag here to look elsewhere. "
                                           "Arrows or the mouse at the edge scroll the map; Home returns to your capital."])
         info = self.hovered if self.selected_army is None and self.hovered else self.selected_province

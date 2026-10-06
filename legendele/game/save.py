@@ -71,6 +71,9 @@ def to_dict(game):
         "stats": game.stats,
         "difficulty": game.difficulty,
         "pending_events": [asdict(t) for t in game.pending_events],
+        "tribute": game.tribute,
+        "raids": {str(k): v for k, v in game.raids.items()},
+        "raided": game.raided,
     }
 
 
@@ -119,6 +122,9 @@ def from_dict(data, d, ai_factory=None):
     game.history = list(d.get("history", game.history))  # saves from before the chronicle have none
     game.stats = {fid: dict(row) for fid, row in d.get("stats", {}).items()}
     game.pending_events = [Tale(**t) for t in d.get("pending_events", [])]
+    game.tribute = {fid: list(powers) for fid, powers in d.get("tribute", {}).items()}
+    game.raids = {int(k): dict(v) for k, v in d.get("raids", {}).items()}
+    game.raided = {power: dict(row) for power, row in d.get("raided", {}).items()}
     for fid in game.eliminated:
         game.ai.pop(fid, None)
     return game

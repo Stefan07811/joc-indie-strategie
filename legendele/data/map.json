@@ -177,11 +177,11 @@
     {"name": "Poiana Ruscă", "width": 30, "points": [[368, 685], [432, 702]]}
   ],
   "foreign": [
-    {"name": "Kingdom of Hungary", "x": 208, "y": 81, "terrain": "plains"},
-    {"name": "Serbian Despotate", "x": 192, "y": 1058, "terrain": "hills"},
-    {"name": "Lands of the Sultan", "x": 864, "y": 1201, "terrain": "plains"},
-    {"name": "The Wild Fields", "x": 1440, "y": 115, "terrain": "plains"},
-    {"name": "Kingdom of Poland", "x": 736, "y": 58, "terrain": "forest"},
+    {"name": "Kingdom of Hungary", "x": 208, "y": 81, "terrain": "plains", "borders": ["banat", "crisana", "satmar"]},
+    {"name": "Serbian Despotate", "x": 192, "y": 1058, "terrain": "hills", "borders": ["banat", "craiova", "iron_gates"]},
+    {"name": "Lands of the Sultan", "x": 864, "y": 1201, "terrain": "plains", "borders": ["black_marsh", "craiova", "delta", "dobrogea", "vlasia"]},
+    {"name": "The Wild Fields", "x": 1440, "y": 115, "terrain": "plains", "borders": ["barlad", "black_marsh", "delta", "iasi", "siret", "suceava"]},
+    {"name": "Kingdom of Poland", "x": 736, "y": 58, "terrain": "forest", "borders": ["bistrita", "maramures", "satmar", "suceava"]},
     {"name": "Black Sea", "x": 1504, "y": 1139, "terrain": "sea"}
   ],
   "start_armies": [

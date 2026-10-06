@@ -28,6 +28,8 @@ class DiplomacyDialog:
         self.actions = []  # (rect, label, callable) rebuilt every frame
         self.feedback = {}  # faction -> (message, colour)
         self.done_rect = pygame.Rect(BOX.right - 150, BOX.bottom - 52, 126, 36)
+        self.foreign_rect = pygame.Rect(BOX.right - 380, BOX.bottom - 52, 214, 36)
+        self.switch = None  # "foreign" to open the foreign courts on closing
 
     def handle(self, event):
         """Returns True when the window should close."""
@@ -35,6 +37,9 @@ class DiplomacyDialog:
             return True
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.done_rect.collidepoint(event.pos) or not BOX.collidepoint(event.pos):
+                return True
+            if self.foreign_rect.collidepoint(event.pos):
+                self.switch = "foreign"
                 return True
             for rect, _, action in self.actions:
                 if rect.collidepoint(event.pos):
@@ -91,6 +96,7 @@ class DiplomacyDialog:
             self._row(surface, fid, x, y + 10, mouse)
             y += ROW
         theme.button(surface, self.done_rect, "Done", self.done_rect.collidepoint(mouse))
+        theme.button(surface, self.foreign_rect, "Foreign courts  (F)", self.foreign_rect.collidepoint(mouse))
         theme.text(surface, "Esc or D closes this window", (x, BOX.bottom - 34), 17, theme.TEXT_DIM, anchor="midleft")
 
     def _row(self, surface, fid, x, y, mouse):

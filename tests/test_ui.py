@@ -392,3 +392,18 @@ def test_a_tale_is_answered_in_its_window(app):
     assert c.reports and c.reports[0] is tale
     click(app, tale_choice_rects(2)[1].center)  # sell the surplus
     assert not c.reports and c.game.treasury["voievodat"].gold == gold + 90
+
+
+def test_the_foreign_courts(app):
+    from legendele.ui.foreign_dialog import ForeignDialog
+    app.start_campaign("voievodat", seed=10)
+    press(app, pygame.K_d)
+    click(app, app.scene.dialog.foreign_rect.center)
+    assert isinstance(app.scene.dialog, ForeignDialog)
+    dialog = app.scene.dialog
+    app.scene.draw(app.screen)
+    rect = next(r for r, _ in dialog.actions)  # the tribute to the first power on our border
+    click(app, rect.center)
+    assert any(app.scene.game.tribute.get("voievodat", []))
+    press(app, pygame.K_ESCAPE)
+    assert app.scene.dialog is None

@@ -13,7 +13,24 @@
     "income_mult": 1.25,
     "traits": {"church_bane": 0.8},
     "legend": "Churches: their bells calm the people and weaken any creature that fights nearby. Strong treasury (+25% income).",
-    "ai": {"personality": "Steadfast", "summary": "Keeps their word and defends what is theirs.", "friendliness": 0, "aggression": 0.4, "max_wars": 2, "war_ratio": 1.3, "peace_ratio": 0.8, "loyalty": 0.95, "greed": 1.0, "alliance_threshold": 30, "stay_near_home": false, "targets": {"neutral": 3.0, "enemy": 3.5, "heart": 6.0}}
+    "ai": {
+      "personality": "Steadfast",
+      "summary": "Keeps their word and defends what is theirs.",
+      "friendliness": 0,
+      "aggression": 0.4,
+      "max_wars": 2,
+      "war_ratio": 1.3,
+      "peace_ratio": 0.8,
+      "loyalty": 0.95,
+      "greed": 1.0,
+      "alliance_threshold": 30,
+      "stay_near_home": false,
+      "targets": {
+        "neutral": 3.0,
+        "enemy": 3.5,
+        "heart": 6.0
+      }
+    }
   },
   "zmei": {
     "name": "The Dragonkin",
@@ -27,9 +44,34 @@
     "winter_hardy": false,
     "general_names": ["Ironscale", "Cinderjaw", "Old Gold-Hoarder", "Stormwing", "Ember-Eyes", "Sevenscale"],
     "income_mult": 1.0,
-    "traits": {"hoard_interest": 0.05, "hoard_cap": 15, "abduction": {"ransom": 150, "cooldown": 6, "chance": 0.75}},
+    "traits": {
+      "hoard_interest": 0.05,
+      "hoard_cap": 15,
+      "abduction": {
+        "ransom": 150,
+        "cooldown": 6,
+        "chance": 0.75
+      }
+    },
     "legend": "The Hoard: gold breeds gold. Their lords can abduct a rival's heir and demand a ransom.",
-    "ai": {"personality": "Greedy", "summary": "Picks fights with the weak and can be bought with gold.", "friendliness": -10, "aggression": 0.7, "max_wars": 2, "war_ratio": 1.1, "peace_ratio": 0.7, "loyalty": 0.6, "greed": 2.0, "alliance_threshold": 40, "stay_near_home": false, "targets": {"neutral": 3.0, "enemy": 4.0, "heart": 6.0}}
+    "ai": {
+      "personality": "Greedy",
+      "summary": "Picks fights with the weak and can be bought with gold.",
+      "friendliness": -10,
+      "aggression": 0.7,
+      "max_wars": 2,
+      "war_ratio": 1.1,
+      "peace_ratio": 0.7,
+      "loyalty": 0.6,
+      "greed": 2.0,
+      "alliance_threshold": 40,
+      "stay_near_home": false,
+      "targets": {
+        "neutral": 3.0,
+        "enemy": 4.0,
+        "heart": 6.0
+      }
+    }
   },
   "iele": {
     "name": "The Fae Court",
@@ -43,9 +85,29 @@
     "winter_hardy": false,
     "general_names": ["The Silver Dancer", "Moonmist", "Lady of the Wells", "Thornveil", "Willow-Song", "Midnight Bloom"],
     "income_mult": 1.0,
-    "traits": {"hora": 0.03, "forest_hidden": true},
+    "traits": {
+      "hora": 0.03,
+      "forest_hidden": true
+    },
     "legend": "The Hora: enemies on Fae land are danced to exhaustion each season. In the forests their armies cannot be seen.",
-    "ai": {"personality": "Guarded", "summary": "Seldom starts a war and is quick to make peace.", "friendliness": 5, "aggression": 0.3, "max_wars": 2, "war_ratio": 1.3, "peace_ratio": 0.8, "loyalty": 0.9, "greed": 1.0, "alliance_threshold": 25, "stay_near_home": false, "targets": {"neutral": 3.0, "enemy": 3.5, "heart": 5.5}}
+    "ai": {
+      "personality": "Guarded",
+      "summary": "Seldom starts a war and is quick to make peace.",
+      "friendliness": 5,
+      "aggression": 0.3,
+      "max_wars": 2,
+      "war_ratio": 1.3,
+      "peace_ratio": 0.8,
+      "loyalty": 0.9,
+      "greed": 1.0,
+      "alliance_threshold": 25,
+      "stay_near_home": false,
+      "targets": {
+        "neutral": 3.0,
+        "enemy": 3.5,
+        "heart": 5.5
+      }
+    }
   },
   "strigoi": {
     "name": "The Revenants",
@@ -59,9 +121,33 @@
     "winter_hardy": true,
     "general_names": ["The Hollow Count", "Grave-Mother", "Lord Ashen", "The Night Bell", "Crowfeather", "The Pale Widow"],
     "income_mult": 1.0,
-    "traits": {"raise_dead": {"unit": "morti", "hp_per_regiment": 200, "max": 3}, "winter_fury": 1.15},
+    "traits": {
+      "raise_dead": {
+        "unit": "morti",
+        "hp_per_regiment": 200,
+        "max": 3
+      },
+      "winter_fury": 1.15
+    },
     "legend": "Raise the dead: after every victory the fallen of both sides rise to join them. They feel no cold and strike harder in winter.",
-    "ai": {"personality": "Relentless", "summary": "Always hungry for more land; hates the living Principality.", "friendliness": -5, "aggression": 0.6, "max_wars": 3, "war_ratio": 1.2, "peace_ratio": 0.6, "loyalty": 0.7, "greed": 0.5, "alliance_threshold": 35, "stay_near_home": false, "targets": {"neutral": 3.5, "enemy": 3.5, "heart": 6.0}}
+    "ai": {
+      "personality": "Relentless",
+      "summary": "Always hungry for more land; hates the living Principality.",
+      "friendliness": -5,
+      "aggression": 0.6,
+      "max_wars": 3,
+      "war_ratio": 1.2,
+      "peace_ratio": 0.6,
+      "loyalty": 0.7,
+      "greed": 0.5,
+      "alliance_threshold": 35,
+      "stay_near_home": false,
+      "targets": {
+        "neutral": 3.5,
+        "enemy": 3.5,
+        "heart": 6.0
+      }
+    }
   },
   "haiduci": {
     "name": "Outlaws",
@@ -77,5 +163,89 @@
     "income_mult": 1.0,
     "traits": {},
     "legend": "They rise wherever public order collapses."
+  },
+  "hungary": {
+    "name": "Kingdom of Hungary",
+    "adjective": "Hungarian",
+    "color": [60, 96, 170],
+    "capital": null,
+    "playable": false,
+    "terrain_mastery": [],
+    "description": "The crown of Saint Stephen, master of the plains to the west.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Count Stephen", "Ban Ladislas", "Voivode Nicholas", "Count Paul"],
+    "income_mult": 1.0,
+    "traits": {},
+    "legend": "The crown of Saint Stephen, master of the plains to the west.",
+    "foreign": {
+      "lands": ["Kingdom of Hungary"],
+      "raid_units": ["hungarian_knights", "black_army", "black_army"],
+      "tribute": 20,
+      "mercenaries": ["black_army", "hungarian_knights"]
+    }
+  },
+  "poland": {
+    "name": "Kingdom of Poland",
+    "adjective": "Polish",
+    "color": [214, 214, 222],
+    "capital": null,
+    "playable": false,
+    "terrain_mastery": [],
+    "description": "The Polish crown and its hussars, beyond the northern forests.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Hetman Jan", "Starost Piotr", "Castellan Mikołaj"],
+    "income_mult": 1.0,
+    "traits": {},
+    "legend": "The Polish crown and its hussars, beyond the northern forests.",
+    "foreign": {
+      "lands": ["Kingdom of Poland"],
+      "raid_units": ["winged_hussars", "black_army"],
+      "tribute": 20,
+      "mercenaries": ["winged_hussars"]
+    }
+  },
+  "ottomans": {
+    "name": "The Sultan",
+    "adjective": "Ottoman",
+    "color": [38, 120, 104],
+    "capital": null,
+    "playable": false,
+    "terrain_mastery": [],
+    "description": "The Sultan's armies beyond the Danube: they raid for slaves and plunder, unless paid tribute.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Mihaloğlu Ali Bey", "Evrenos Bey", "Malkoçoğlu Bali Bey", "Turahan Bey"],
+    "income_mult": 1.0,
+    "traits": {},
+    "legend": "The Sultan's armies beyond the Danube: they raid for slaves and plunder, unless paid tribute.",
+    "foreign": {
+      "lands": ["Lands of the Sultan", "Serbian Despotate"],
+      "raid_units": ["akinci", "akinci", "janissaries"],
+      "tribute": 30,
+      "mercenaries": []
+    }
+  },
+  "tatars": {
+    "name": "The Tatars",
+    "adjective": "Tatar",
+    "color": [150, 110, 60],
+    "capital": null,
+    "playable": false,
+    "terrain_mastery": [],
+    "description": "Horsemen of the Wild Fields, who ride in to burn and plunder and are gone before the bells stop ringing.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Mengli Giray", "Nur Devlet", "Haji Giray"],
+    "income_mult": 1.0,
+    "traits": {},
+    "legend": "Horsemen of the Wild Fields, who ride in to burn and plunder and are gone before the bells stop ringing.",
+    "foreign": {
+      "lands": ["The Wild Fields"],
+      "raid_units": ["tatar_riders", "tatar_riders", "tatar_riders"],
+      "tribute": 15,
+      "mercenaries": []
+    }
   }
 }

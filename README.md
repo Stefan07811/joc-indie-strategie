@@ -49,9 +49,10 @@ python -m legendele
 | Bătălia în timp real | vezi mai jos, la M7 |
 | Administrezi o provincie | **Manage province** sau `M` |
 | Diplomația | **Diplomacy** sau `D` |
+| Curțile străine (tribut, mercenari) | `F` sau din Diplomacy |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M9 (oameni)
+## Stadiul actual: etapa M10 (harta vie)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -220,7 +221,21 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 - **Regimentele veterane:** cele care supraviețuiesc bătăliilor primesc până la 3 chevroane (+8% atac și
   apărare și +5 moral fiecare). Le vezi lângă nume în panou și pe steag în bătălii.
 
-**Ce urmează:** M10–M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Harta vie (M10)**
+- **Drumuri și râuri:** drumul dintre două provincii prietene costă un punct de mișcare mai puțin; un râu fără
+  pod (unde nu e drum) costă unul în plus. Atacul peste un râu e mai slab (-10%, peste Dunăre -20%), iar în
+  bătălia în timp real râul taie câmpul: cine îl trece prin vad merge încet și e mai ușor de lovit.
+- **Întâmplări din folclor:** 16 evenimente cu alegeri, cum ar fi Sânzienele, Noaptea Sfântului Andrei, un
+  strigoi în sat, ciuma, cometa, comoara lui Decebal, Zilele Babei Dochia, iarna lupilor, negustorii sași.
+  Urmările: aur, hrană, ordine pentru câteva anotimpuri, regimente gratuite, trăsături pentru generali, armate
+  rănite sau vindecate, ori un pariu cu norocul. Alegi cu clic sau cu tastele 1-3.
+- **Puterile străine:** Regatul Ungariei, Regatul Poloniei, Sultanul și tătarii din Câmpia Sălbatică trimit
+  din al treilea an incursiuni peste graniță (tot mai dese cu anii). Jefuiesc provinciile (aur, clădiri,
+  liniște) și pleacă acasă cu prada. În **Foreign courts** (tasta F sau din Diplomacy) le poți plăti tribut ca
+  să te lase în pace, iar regatele creștine vecine îți vând mercenari: Winged Hussars, Black Army Foot și
+  Hungarian Knights.
+
+**Ce urmează:** M11–M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

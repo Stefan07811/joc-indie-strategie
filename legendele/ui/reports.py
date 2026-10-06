@@ -2,8 +2,8 @@
 
 import pygame
 
-from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, GeneralFell, Proposal, Rebellion,
-                    Tale, Victory, events)
+from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, GeneralFell, Plundered, Proposal, Raid,
+                    Rebellion, Tale, Victory, events)
 from ..game.state import SEASONS
 from . import theme
 
@@ -27,6 +27,8 @@ def concerns_player(game, event):
         return event.other == game.player
     if isinstance(event, GeneralFell):
         return event.faction == game.player
+    if isinstance(event, (Raid, Plundered)):
+        return event.victim == game.player
     if isinstance(event, Tale):
         return event.faction == game.player and event in game.pending_events
     return isinstance(event, (Eliminated, Victory))
@@ -179,6 +181,16 @@ def _notice(surface, game, event):
                             else ("A Dragonkin raid was driven off", theme.GOOD))
             body = (f"The Dragonkin carried off the heir from {place}. We paid {event.ransom} gold in ransom."
                     if event.success else f"The guards of {place} drove the Dragonkin away.")
+    elif isinstance(event, Raid):
+        name = game.provinces[event.province].name
+        title, color = f"Raiders in {name}!", theme.DANGER
+        body = (f"{game.data.factions[event.power]['adjective']} horsemen have crossed the border into {name}. "
+                "They will plunder what they can and ride on. Gather an army, or pay their masters tribute "
+                "(Foreign courts, F).")
+    elif isinstance(event, Plundered):
+        title, color = f"{game.provinces[event.province].name} is plundered", theme.DANGER
+        body = (f"The {game.data.factions[event.power]['adjective']} raiders carried off {event.gold} gold and "
+                "left the people in fear.")
     elif isinstance(event, GeneralFell):
         title, color = f"{event.general} has fallen", theme.DANGER
         body = (f"He died at the head of his men near {game.provinces[event.province].name}. "

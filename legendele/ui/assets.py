@@ -37,6 +37,10 @@ PATTERNS = {
     "emblem_iele": ["..w..", ".wyw.", "wyyyw", ".wyw.", "..w.."],
     "emblem_strigoi": [".www.", "wwwww", "w.w.w", "wwwww", ".w.w."],
     "emblem_haiduci": ["..ww.", ".www.", "wwww.", "..b..", "..b.."],
+    "emblem_hungary": ["..w..", "wwwww", "..w..", "wwwww", "..w.."],
+    "emblem_poland": ["w.w.w", "wwwww", ".www.", "..w..", ".w.w."],
+    "emblem_ottomans": [".ww..", "w....", "w..y.", "w....", ".ww.."],
+    "emblem_tatars": ["y...y", ".y.y.", "..y..", "..y..", ".yyy."],
     # unit icons (see "icon" in units.json)
     "unit_spear": ["...w...", "..www..", "...b...", "...b...", "...b...", "...b...", "...b...", "...b..."],
     "unit_bow": ["..bbw..", ".b..w..", "b...w..", "b.yyyyy", "b...w..", ".b..w..", "..bbw.."],

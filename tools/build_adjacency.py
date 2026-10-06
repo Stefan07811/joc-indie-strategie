@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from legendele.mapshape import adjacency, components, map_grid  # noqa: E402
+from legendele.mapshape import CELL, adjacency, components, land_mask, map_grid  # noqa: E402
 
 MAP_PATH = ROOT / "legendele" / "data" / "map.json"
 
@@ -26,6 +26,9 @@ def main():
             print(f"warning: {p['id']} is split into {pieces} pieces")
         p["neighbors"] = sorted(adj.get(p["id"], ()))
         print(f"{p['id']:12} -> {', '.join(p['neighbors'])}")
+    for land, borders in foreign_borders(data, grid).items():
+        next(f for f in data["foreign"] if f["name"] == land)["borders"] = borders
+        print(f"{land:20} borders {', '.join(borders)}")
     by_id = {p["id"]: p for p in data["provinces"]}
     for p in data["provinces"]:
         p["roads"] = sorted(n for n in p["neighbors"] if has_road(p, by_id[n]))
@@ -56,6 +59,27 @@ def main():
             break
         text = compacted
     MAP_PATH.write_text(text + "\n", encoding="utf-8")
+
+
+def foreign_borders(data, grid):
+    """For each land beyond the border, the provinces that touch it (the sea touches nobody's land)."""
+    lands = [f for f in data.get("foreign", []) if f["terrain"] != "sea"]
+    if not lands:
+        return {}
+    rows, cols = len(grid), len(grid[0])
+    sea = land_mask([tuple(p) for p in data["sea"]], cols, rows) if data.get("sea") else None
+    out = {f["name"]: set() for f in lands}
+    for r in range(rows):
+        for c in range(cols):
+            pid = grid[r][c]
+            if pid is None:
+                continue
+            for nr, nc in ((r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)):
+                if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] is None and not (sea and sea[nr][nc]):
+                    x, y = nc * CELL, nr * CELL
+                    land = min(lands, key=lambda f: (f["x"] - x) ** 2 + (f["y"] - y) ** 2)
+                    out[land["name"]].add(pid)
+    return {name: sorted(pids) for name, pids in out.items()}
 
 
 def has_road(a, b):

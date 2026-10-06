@@ -77,10 +77,9 @@ class DiplomacyDialog:
         veil = pygame.Surface(theme.MAP_RECT.size, pygame.SRCALPHA)
         veil.fill((10, 8, 6, 160))
         surface.blit(veil, theme.MAP_RECT)
-        pygame.draw.rect(surface, theme.PANEL_BG, BOX, border_radius=8)
-        pygame.draw.rect(surface, theme.GOLD, BOX, 3, border_radius=8)
+        theme.frame(surface, BOX)
         x, y = BOX.x + 24, BOX.y + 18
-        theme.text(surface, "Diplomacy", (x, y), 36, theme.GOLD)
+        theme.outlined(surface, "Diplomacy", (x, y - 2), 32, theme.GOLD, anchor="topleft")
         theme.text(surface, f"Treasury: {game.treasury[game.player].gold} gold", (BOX.right - 24, y + 8), 22,
                    theme.GOLD, anchor="topright")
         theme.text(surface, "Peace closes borders. Breaking a truce or an alliance is treachery, and every "
@@ -88,7 +87,7 @@ class DiplomacyDialog:
         y += 66
         others = [f for f, d in game.data.factions.items() if d["playable"] and f != game.player]
         for fid in others:
-            pygame.draw.line(surface, theme.PANEL_LINE, (x, y), (BOX.right - 24, y))
+            theme.divider(surface, x, BOX.right - 24, y)
             self._row(surface, fid, x, y + 10, mouse)
             y += ROW
         theme.button(surface, self.done_rect, "Done", self.done_rect.collidepoint(mouse))
@@ -101,7 +100,7 @@ class DiplomacyDialog:
         color = theme.faction_color(game, fid)
         banner = self.assets.get(f"army_{fid}", color)
         surface.blit(banner, (x, y))
-        theme.text(surface, game.faction_name(fid), (x + 44, y), 26, color)
+        theme.outlined(surface, game.faction_name(fid), (x + 44, y - 2), 22, color, anchor="topleft")
         if fid in game.eliminated:
             theme.text(surface, "Destroyed", (x + width, y + 4), 22, theme.TEXT_DIM, anchor="topright")
             return
@@ -141,7 +140,7 @@ class DiplomacyDialog:
             buttons = [("Break alliance", lambda: self._break(fid))]
         bx = x + 44
         for label, action in buttons:
-            w = theme.font(20).size(label)[0] + 28
+            w = theme.serif(16).size(label)[0] + 50
             rect = pygame.Rect(bx, y + 124, w, 30)
             self._button(surface, rect, label, mouse)
             self.actions.append((rect, label, action))
@@ -151,7 +150,4 @@ class DiplomacyDialog:
             theme.text(surface, message, (x + width, y + 130), 19, colour, anchor="topright")
 
     def _button(self, surface, rect, label, mouse):
-        hovered = rect.collidepoint(mouse)
-        pygame.draw.rect(surface, (92, 70, 44) if hovered else (66, 52, 38), rect, border_radius=4)
-        pygame.draw.rect(surface, theme.GOLD, rect, 2, border_radius=4)
-        theme.text(surface, label, rect.center, 20, theme.TEXT, anchor="center")
+        theme.button(surface, rect, label, rect.collidepoint(mouse))

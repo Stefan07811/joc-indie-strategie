@@ -224,6 +224,12 @@ Limită cunoscută: AI-ul vede și armatele Fae ascunse în păduri.
 - Logica jocului e **separată de grafică**, ca s-o putem testa automat și ca AI-ul să folosească aceleași reguli.
 - Datele (facțiuni, unități, clădiri, hartă) sunt în fișiere **JSON**, ca să putem echilibra jocul fără să schimbăm codul.
 - Grafica: la început forme simple. Codul încearcă să încarce un sprite din `assets/` și, dacă nu-l găsește, desenează o formă. Astfel pixel art-ul se poate adăuga treptat.
+- **Aspectul (stil „pictat realist 2D”)**, totul desenat din cod:
+  - harta campaniei e pictată o dată și păstrată în cache (`ui/painter.py`);
+  - bătăliile au câmp pictat și soldați individuali (`ui/battle_art.py`);
+  - interfața folosește o trusă comună (`ui/theme.py`): panouri din lemn închis în rame aurite cu colțuri
+    ornamentate, panglici de pergament pentru titluri, butoane din lemn cu relief și ținte de alamă,
+    bare de progres încastrate, separatoare aurite și litere cu serife (Liberation Serif, licență SIL OFL).
 
 ```
 legendele/

@@ -69,11 +69,12 @@ class MainMenu:
             banner = self.app.assets.get(f"army_{fid}", color, 5)
             x = cx + (i - 1.5) * 90
             surface.blit(banner, banner.get_rect(midbottom=(x, 150)))
-        theme.text(surface, "Legends of the Carpathians", (cx, 200), 76, theme.GOLD, anchor="center",
-                   shadow=theme.INK)
-        theme.text(surface, "Four legends. One Heart of the Mountains.", (cx, 254), 28, theme.PARCHMENT,
-                   anchor="center")
+        theme.outlined(surface, "Legends of the Carpathians", (cx, 200), 66, theme.GOLD, width=3)
+        theme.outlined(surface, "Four legends. One Heart of the Mountains.", (cx, 256), 26, theme.PARCHMENT,
+                       style="italic")
         mouse = pygame.mouse.get_pos()
+        box = self.buttons[0][0].unionall([r for r, _ in self.buttons]).inflate(70, 50)
+        theme.frame(surface, box)
         for rect, label in self.buttons:
             theme.button(surface, rect, label, rect.collidepoint(mouse))
         if self.continue_slot:
@@ -133,16 +134,17 @@ class SlotScreen:
     def draw(self, surface):
         _backdrop(self.app, surface, 200)
         cx = theme.WINDOW_SIZE[0] // 2
-        theme.text(surface, "Save Game" if self.mode == "save" else "Load Game", (cx, 130), 52, theme.GOLD,
-                   anchor="center")
+        box = self.rows[0][0].unionall([r for r, _ in self.rows]).inflate(60, 80).move(0, -22)
+        theme.frame(surface, box)
+        theme.ribbon(surface, (cx, box.y + 2), "Save Game" if self.mode == "save" else "Load Game", 30, width=320)
         mouse = pygame.mouse.get_pos()
         for rect, slot in self.rows:
             info = profile.slot_info(slot)
             usable = self.mode == "save" or (info and "error" not in info)
             hovered = usable and rect.collidepoint(mouse)
-            pygame.draw.rect(surface, (78, 60, 40) if hovered else theme.PANEL_BG, rect, border_radius=6)
-            pygame.draw.rect(surface, theme.GOLD if hovered else theme.PANEL_LINE, rect, 2, border_radius=6)
-            theme.text(surface, _slot_name(slot), (rect.x + 18, rect.y + 12), 26, theme.PARCHMENT)
+            theme.row(surface, rect, hovered, usable)
+            theme.outlined(surface, _slot_name(slot), (rect.x + 18, rect.y + 8), 22, theme.PARCHMENT, anchor="topleft",
+                           width=1)
             if info is None:
                 theme.text(surface, "Empty", (rect.x + 18, rect.y + 42), 19, theme.TEXT_DIM)
             elif "error" in info:
@@ -204,7 +206,8 @@ class SettingsScreen:
     def draw(self, surface):
         _backdrop(self.app, surface, 200)
         cx = theme.WINDOW_SIZE[0] // 2
-        theme.text(surface, "Settings", (cx, 150), 52, theme.GOLD, anchor="center")
+        theme.frame(surface, pygame.Rect(cx - 330, 150, 660, 414))
+        theme.ribbon(surface, (cx, 152), "Settings", 30, width=300)
         mouse = pygame.mouse.get_pos()
         settings = self.app.settings
         for i, (key, label) in enumerate((("sound", "Sound effects"), ("music", "Music"))):
@@ -267,8 +270,7 @@ class PauseMenu:
         veil.fill((10, 8, 6, 170))
         surface.blit(veil, theme.MAP_RECT)
         box = self.buttons[0][0].unionall([r for r, _ in self.buttons]).inflate(60, 110).move(0, -20)
-        pygame.draw.rect(surface, theme.PANEL_BG, box, border_radius=8)
-        pygame.draw.rect(surface, theme.GOLD, box, 3, border_radius=8)
-        theme.text(surface, "Paused", (box.centerx, box.y + 30), 36, theme.GOLD, anchor="center")
+        theme.frame(surface, box)
+        theme.ribbon(surface, (box.centerx, box.y + 4), "Paused", 28, width=240)
         for rect, label in self.buttons:
             theme.button(surface, rect, label, rect.collidepoint(mouse))

@@ -24,18 +24,14 @@ class Panel:
     def draw(self, surface, *, province=None, army=None, target=None, mouse=(0, 0)):
         game = self.game
         rect = theme.PANEL_RECT
-        pygame.draw.rect(surface, theme.PANEL_BG, rect)
-        pygame.draw.line(surface, theme.PANEL_LINE, rect.topleft, rect.bottomleft, 3)
-        x, y = rect.x + PAD, rect.y + PAD
+        theme.frame(surface, rect, accent=theme.faction_color(game, game.player))
+        x, y = rect.x + PAD, rect.y + PAD + 4
         width = rect.width - 2 * PAD
         self.assault_rect = self.merge_rect = self.manage_rect = self.abduct_rect = None
 
-        theme.text(surface, game.date, (x, y), 30, theme.GOLD)
-        hovered = self.menu_rect.collidepoint(mouse)
-        pygame.draw.rect(surface, (92, 70, 44) if hovered else (66, 52, 38), self.menu_rect, border_radius=4)
-        pygame.draw.rect(surface, theme.GOLD, self.menu_rect, 1, border_radius=4)
-        theme.text(surface, "Menu", self.menu_rect.center, 20, theme.TEXT, anchor="center")
-        y += 30
+        theme.outlined(surface, game.date, (x, y - 2), 26, theme.GOLD, anchor="topleft")
+        theme.button(surface, self.menu_rect, "Menu", self.menu_rect.collidepoint(mouse))
+        y += 32
         y = self._progress(surface, x, y, width)
         y = self._treasury(surface, x, y, width)
         y = self._rule(surface, y)
@@ -65,8 +61,11 @@ class Panel:
         game = self.game
         rules = game.victory_rules
         color = theme.faction_color(game, game.player)
-        pygame.draw.rect(surface, color, (x, y + 3, 12, 12))
-        theme.text(surface, game.faction_name(game.player), (x + 18, y), 20)
+        shield = [(x, y + 2), (x + 13, y + 2), (x + 13, y + 10), (x + 6.5, y + 16), (x, y + 10)]
+        pygame.draw.polygon(surface, color, shield)
+        pygame.draw.polygon(surface, theme.GOLD, shield, 1)
+        theme.outlined(surface, game.faction_name(game.player), (x + 20, y - 1), 18, theme.PARCHMENT,
+                       anchor="topleft", width=1)
         y += 22
         owned = len(game.provinces_of(game.player))
         theme.text(surface, f"Provinces {owned} / {rules['conquest_provinces']}", (x, y), 18, theme.TEXT_DIM)
@@ -88,14 +87,14 @@ class Panel:
 
     def _rule(self, surface, y):
         rect = theme.PANEL_RECT
-        pygame.draw.line(surface, theme.PANEL_LINE, (rect.x + PAD, y + 4), (rect.right - PAD, y + 4))
-        return y + 14
+        theme.divider(surface, rect.x + PAD, rect.right - PAD, y + 5)
+        return y + 16
 
     def _province(self, surface, p, x, y, width, mouse):
         game = self.game
         terrain = game.data.terrain[p.terrain]
-        theme.text(surface, p.name, (x, y), 28, theme.PARCHMENT)
-        y += 28
+        theme.outlined(surface, p.name, (x, y), 24, theme.PARCHMENT, anchor="topleft")
+        y += 30
         theme.text(surface, f"Owner: {game.faction_name(p.owner)}", (x, y), 20,
                    theme.faction_color(game, p.owner) if p.owner else theme.TEXT_DIM)
         if p.owner and p.owner != game.player:
@@ -168,8 +167,8 @@ class Panel:
 
     def _army(self, surface, army, x, y, width, target, mouse):
         game = self.game
-        theme.text(surface, army.general, (x, y), 28, theme.PARCHMENT)
-        y += 28
+        theme.outlined(surface, army.general, (x, y), 24, theme.PARCHMENT, anchor="topleft")
+        y += 30
         theme.text(surface, f"{game.faction_name(army.faction)}  ·  in {game.provinces[army.province].name}",
                    (x, y), 18, theme.faction_color(game, army.faction))
         y += 22
@@ -249,17 +248,16 @@ class Panel:
             icon = self.assets.get(f"unit_{u['icon']}", theme.faction_color(self.game, u["faction"]), 2)
             surface.blit(icon, icon.get_rect(center=(x + 8, y + 7)))
             theme.text(surface, u["name"], (x + 20, y), 18)
-            bar = pygame.Rect(x + width - 90, y + 4, 90, 8)
+            bar = pygame.Rect(x + width - 90, y + 5, 90, 7)
             share = max(0.0, min(1.0, r.hp / u["hp"]))
-            pygame.draw.rect(surface, theme.PANEL_LINE, bar)
-            pygame.draw.rect(surface, theme.GOOD if share > 0.5 else theme.HIGHLIGHT if share > 0.25 else theme.DANGER,
-                             (bar.x, bar.y, round(bar.width * share), bar.height))
+            theme.gauge(surface, bar, share,
+                        theme.GOOD if share > 0.5 else theme.HIGHLIGHT if share > 0.25 else theme.DANGER)
             y += 19
         return y + 4
 
     def _chronicle(self, surface, x, y, width, bottom):
-        theme.text(surface, "Chronicle", (x, y), 22, theme.GOLD)
-        y += 24
+        theme.outlined(surface, "Chronicle", (x, y), 19, theme.GOLD, anchor="topleft", width=1)
+        y += 26
         lines = []
         for entry in reversed(self.game.log):
             lines.extend((line, entry is self.game.log[-1]) for line in theme.wrap(entry, 17, width))

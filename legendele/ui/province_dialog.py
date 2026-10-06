@@ -41,11 +41,10 @@ class ProvinceDialog:
         veil = pygame.Surface(theme.MAP_RECT.size, pygame.SRCALPHA)
         veil.fill((10, 8, 6, 160))
         surface.blit(veil, theme.MAP_RECT)
-        pygame.draw.rect(surface, theme.PANEL_BG, BOX, border_radius=8)
-        pygame.draw.rect(surface, theme.faction_color(game, p.owner), BOX, 3, border_radius=8)
+        theme.frame(surface, BOX, accent=theme.faction_color(game, p.owner))
 
         x, y = BOX.x + 24, BOX.y + 18
-        theme.text(surface, p.name, (x, y), 36, theme.GOLD)
+        theme.outlined(surface, p.name, (x, y - 2), 32, theme.GOLD, anchor="topleft")
         gold, food = economy.province_yield(game, p)
         terrain = game.data.terrain[p.terrain]["name"]
         theme.text(surface, f"{terrain}  ·  yields {gold} gold and {food} food a season", (x, y + 36), 19,
@@ -57,7 +56,7 @@ class ProvinceDialog:
         if blocked:
             theme.text(surface, blocked, (BOX.right - 24, y + 36), 19, theme.DANGER, anchor="topright")
         top = y + 70
-        pygame.draw.line(surface, theme.PANEL_LINE, (x, top - 6), (BOX.right - 24, top - 6))
+        theme.divider(surface, x, BOX.right - 24, top - 6)
 
         self._buildings(surface, p, x, top, mouse)
         self._recruitment(surface, p, x + COLUMN + 24, top, mouse)
@@ -145,8 +144,7 @@ class ProvinceDialog:
     def _row(self, surface, rect, title, price, detail, reason, mouse, icon=None):
         enabled = reason is None
         hovered = enabled and rect.collidepoint(mouse)
-        pygame.draw.rect(surface, (78, 60, 40) if hovered else (52, 42, 34), rect, border_radius=4)
-        pygame.draw.rect(surface, theme.GOLD if hovered else theme.PANEL_LINE, rect, 1, border_radius=4)
+        theme.row(surface, rect, hovered, enabled)
         left = rect.x + 10
         if icon and self.assets:
             image = self.assets.get(icon, theme.faction_color(self.game, self.game.player), 3)

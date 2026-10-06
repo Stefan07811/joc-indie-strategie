@@ -68,10 +68,8 @@ class BattleQuestion:
         veil.fill((10, 8, 6, 150))
         surface.blit(veil, (0, 0))
         box = self.box
-        pygame.draw.rect(surface, theme.PANEL_BG, box, border_radius=8)
-        pygame.draw.rect(surface, theme.GOLD, box, 3, border_radius=8)
-        theme.text(surface, _title(game, self.pid, self.kind), (box.centerx, box.y + 26), 34, theme.GOLD,
-                   anchor="midtop")
+        theme.frame(surface, box, accent=theme.DANGER)
+        theme.ribbon(surface, (box.centerx, box.y + 4), _title(game, self.pid, self.kind), 26)
         a, d = self.attackers, self.defenders
         line = (f"{game.faction_name(a.faction)} ({len(a.regiments)} regiments)  against  "
                 f"{game.faction_name(d.faction, True)} ({len(d.regiments)})")
@@ -311,9 +309,9 @@ class BattleScreen:
 
     def _hud(self, surface):
         f = self.field
-        pygame.draw.rect(surface, theme.PANEL_BG, HUD)
-        pygame.draw.line(surface, theme.PANEL_LINE, HUD.topleft, HUD.topright, 3)
-        theme.text(surface, _title(self.game, f.province, f.kind), (16, HUD.y + 10), 28, theme.GOLD)
+        theme.frame(surface, HUD, corners=False)
+        theme.outlined(surface, _title(self.game, f.province, f.kind), (16, HUD.y + 10), 24, theme.GOLD,
+                       anchor="topleft")
         minutes, seconds = divmod(int(f.time), 60)
         theme.text(surface, f"{minutes}:{seconds:02d}   speed x{SPEEDS[self.speed]}", (16, HUD.y + 42), 20,
                    theme.TEXT_DIM)
@@ -322,9 +320,7 @@ class BattleScreen:
             share = f.strength(side) / f.start_hp[side] if f.start_hp[side] else 0
             standing = len(f.standing(side))
             theme.text(surface, f"{self.names[side]}: {standing} standing", (16, y), 18, self.colors[side])
-            bar = pygame.Rect(260, y + 4, 200, 10)
-            pygame.draw.rect(surface, theme.PANEL_LINE, bar)
-            pygame.draw.rect(surface, self.colors[side], (bar.x, bar.y, round(bar.width * share), bar.height))
+            theme.gauge(surface, pygame.Rect(260, y + 4, 200, 10), share, self.colors[side])
         x = 490
         for uid in sorted(self.selected)[:5]:
             u = f.unit(uid)
@@ -332,8 +328,7 @@ class BattleScreen:
             icon = self.app.assets.get(f"unit_{unit['icon']}", self.colors[u.side], 3)
             surface.blit(icon, icon.get_rect(center=(x + 16, HUD.y + 30)))
             theme.text(surface, unit["name"], (x + 34, HUD.y + 14), 16)
-            pygame.draw.rect(surface, theme.PANEL_LINE, (x + 34, HUD.y + 34, 70, 6))
-            pygame.draw.rect(surface, theme.GOOD, (x + 34, HUD.y + 34, round(70 * u.regiment.hp / unit["hp"]), 6))
+            theme.gauge(surface, pygame.Rect(x + 34, HUD.y + 34, 70, 6), u.regiment.hp / unit["hp"], theme.GOOD)
             x += 150
         if not self.selected:
             theme.text(surface, "Left-click or drag: select  ·  Right-click: march / attack  ·  A: all  ·  H: halt",
@@ -350,6 +345,6 @@ class BattleScreen:
         veil = pygame.Surface((FIELD_W, FIELD_H), pygame.SRCALPHA)
         veil.fill((10, 8, 6, 140))
         surface.blit(veil, (0, 0))
-        theme.text(surface, "Victory!" if won else "Defeat", (FIELD_W // 2, FIELD_H // 2 - 30), 72,
-                   theme.GOOD if won else theme.DANGER, anchor="center", shadow=theme.INK)
+        theme.outlined(surface, "Victory!" if won else "Defeat", (FIELD_W // 2, FIELD_H // 2 - 30), 72,
+                       theme.GOOD if won else theme.DANGER, width=3)
         theme.button(surface, self.continue_rect, "Continue (Enter)", self.continue_rect.collidepoint(pygame.mouse.get_pos()))

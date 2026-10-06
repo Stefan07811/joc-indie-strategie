@@ -61,18 +61,19 @@ class FactionSelect:
         shade.fill((20, 14, 10, 170))
         surface.blit(shade, (0, 0))
         cx = theme.WINDOW_SIZE[0] // 2
-        theme.text(surface, TITLE, (cx, 90), 72, theme.GOLD, anchor="center", shadow=theme.INK)
-        theme.text(surface, "Choose the legend you will lead", (cx, 150), 28, theme.PARCHMENT, anchor="center")
+        theme.outlined(surface, TITLE, (cx, 90), 60, theme.GOLD, width=3)
+        theme.outlined(surface, "Choose the legend you will lead", (cx, 150), 26, theme.PARCHMENT, style="italic")
         mouse = pygame.mouse.get_pos()
         for rect, fid in self.cards:
             f = data.factions[fid]
             color = tuple(f["color"])
             hovered = rect.collidepoint(mouse)
-            pygame.draw.rect(surface, (58, 46, 36) if hovered else theme.PANEL_BG, rect, border_radius=6)
-            pygame.draw.rect(surface, color, rect, 3 if hovered else 2, border_radius=6)
+            theme.frame(surface, rect, accent=color)
+            if hovered:
+                pygame.draw.rect(surface, theme.GOLD_LIGHT, rect.inflate(4, 4), 2)
             banner = self.app.assets.get(f"army_{fid}", color, 4)
             surface.blit(banner, banner.get_rect(midtop=(rect.centerx, rect.y + 14)))
-            theme.text(surface, f["name"], (rect.centerx, rect.y + 76), 30, color, anchor="midtop")
+            theme.outlined(surface, f["name"], (rect.centerx, rect.y + 74), 26, color, anchor="midtop")
             y = rect.y + 110
             for line in theme.wrap(f["description"], 19, rect.width - 32):
                 theme.text(surface, line, (rect.x + 16, y), 19)

@@ -33,8 +33,7 @@ def _shade(surface):
 
 
 def _frame(surface, rect, color):
-    pygame.draw.rect(surface, theme.PANEL_BG, rect, border_radius=8)
-    pygame.draw.rect(surface, color, rect, 3, border_radius=8)
+    theme.frame(surface, rect, accent=color)
 
 
 ACCEPT_RECT = pygame.Rect(0, 0, 160, 40)
@@ -59,8 +58,8 @@ def draw_report(surface, game, assets, event, mouse=(0, 0)):
 def _proposal(surface, game, offer, mouse):
     color = theme.faction_color(game, offer.faction)
     _frame(surface, BOX, color)
-    theme.text(surface, f"Envoys from {game.faction_name(offer.faction, True)}", (BOX.centerx, BOX.y + 40), 34,
-               color, anchor="midtop")
+    theme.ribbon(surface, (BOX.centerx, BOX.y + 4), f"Envoys from {game.faction_name(offer.faction, True)}", 24,
+                 color=color)
     if offer.kind == "peace":
         body = "They are tired of this war and offer peace."
         if offer.gold:
@@ -80,9 +79,9 @@ def _battle(surface, game, assets, result):
     player_won = result.winning_faction == game.player
     _frame(surface, BOX, theme.GOOD if player_won else theme.DANGER)
     title = f"{'Assault on' if result.kind == 'assault' else 'Battle of'} {place}"
-    theme.text(surface, title, (BOX.centerx, BOX.y + 22), 34, theme.GOLD, anchor="midtop")
-    theme.text(surface, "Victory!" if player_won else "Defeat", (BOX.centerx, BOX.y + 60), 30,
-               theme.GOOD if player_won else theme.DANGER, anchor="midtop")
+    theme.ribbon(surface, (BOX.centerx, BOX.y + 4), title, 24)
+    theme.outlined(surface, "Victory!" if player_won else "Defeat", (BOX.centerx, BOX.y + 58), 34,
+                   theme.GOOD if player_won else theme.DANGER, anchor="midtop")
 
     column = BOX.width // 2
     for i, (side, label) in enumerate(((result.attacker, "Attacker"), (result.defender, "Defender"))):
@@ -92,7 +91,8 @@ def _battle(surface, game, assets, result):
         banner = assets.get(f"army_{side.faction}", color)
         surface.blit(banner, (x, y))
         theme.text(surface, label, (x + 44, y), 18, theme.TEXT_DIM)
-        theme.text(surface, game.faction_name(side.faction), (x + 44, y + 18), 22, color)
+        theme.outlined(surface, game.faction_name(side.faction), (x + 44, y + 17), 19, color, anchor="topleft",
+                       width=1)
         y += 50
         theme.text(surface, side.leader or "Garrison", (x, y), 20)
         y += 26
@@ -102,8 +102,7 @@ def _battle(surface, game, assets, result):
         y += 24
         bar = pygame.Rect(x, y, column - 60, 12)
         share = side.end_hp / side.start_hp if side.start_hp else 0
-        pygame.draw.rect(surface, theme.DANGER, bar)
-        pygame.draw.rect(surface, theme.GOOD, (bar.x, bar.y, round(bar.width * share), bar.height))
+        theme.gauge(surface, bar, share, theme.GOOD if share > 0.5 else theme.HIGHLIGHT if share > 0.25 else theme.DANGER)
         theme.text(surface, f"{round(share * 100)}% strength left", (x, y + 18), 17, theme.TEXT_DIM)
     footer = [f"The fighting lasted {result.rounds} round{'s' if result.rounds != 1 else ''}.", *result.notes]
     for i, line in enumerate(reversed(footer)):
@@ -158,7 +157,7 @@ def _notice(surface, game, event):
                "last_standing": "outlasted every rival"}[event.kind]
         body = f"{game.faction_name(event.faction)} {how}."
     _frame(surface, BOX, color)
-    theme.text(surface, title, (BOX.centerx, BOX.y + 60), 40, color, anchor="midtop")
+    theme.ribbon(surface, (BOX.centerx, BOX.y + 4), title, 24, color=color)
     y = BOX.y + 130
     for line in theme.wrap(body, 24, BOX.width - 80):
         theme.text(surface, line, (BOX.centerx, y), 24, theme.PARCHMENT, anchor="midtop")
@@ -168,11 +167,9 @@ def _notice(surface, game, event):
 def draw_game_over(surface, game, button_rect, mouse):
     """A strip at the top of the map once the war is decided, with a way back to the menu."""
     strip = pygame.Rect(theme.MAP_RECT.x, 0, theme.MAP_RECT.width, 56)
-    veil = pygame.Surface(strip.size, pygame.SRCALPHA)
-    veil.fill((20, 14, 10, 220))
-    surface.blit(veil, strip)
+    theme.frame(surface, strip, corners=False)
     won = game.winner is not None and game.winner.faction == game.player
     text = "You are master of the Carpathians!" if won else "The war is lost."
-    theme.text(surface, text, (strip.x + 20, strip.centery), 30, theme.GOOD if won else theme.DANGER,
-               anchor="midleft")
+    theme.outlined(surface, text, (strip.x + 20, strip.centery), 26, theme.GOOD if won else theme.DANGER,
+                   anchor="midleft")
     theme.button(surface, button_rect, "Main menu", button_rect.collidepoint(mouse))

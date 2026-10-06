@@ -11,16 +11,21 @@ Desenează la rezoluție mică și mărește de 3× fără netezire, ca să se p
 
 | Fișier | Ce este | Mărime (pixeli de desen) |
 |---|---|---|
-| `army_voievodat.png`, `army_zmei.png`, `army_iele.png`, `army_strigoi.png`, `army_haiduci.png` | Steagul armatei, cu emblema facțiunii | 12×14 |
+| `army_voievodat.png`, `army_zmei.png`, `army_iele.png`, `army_strigoi.png`, `army_haiduci.png` | Armata pe harta campaniei (în locul generalului cu stindard desenat din cod) | ~40×50 px de ecran |
 | `emblem_<facțiune>.png` | Emblema singură | 5×5 |
-| `castle.png` | Oraș cu ziduri | 13×7 |
-| `camp.png` | Garnizoană fără ziduri | 9×6 |
-| `heart.png` | Inima Munților | 9×9 |
 | `siege.png` | Asediu | 9×9 |
 | `unit_<icon>.png` | Pictograma unei unități (vezi câmpul `icon` din `data/units.json`) | ~8×8 |
 
+Harta campaniei (relief, păduri, munți, râuri, cetăți, sate) e pictată de `ui/painter.py` și `ui/figures.py`
+și se păstrează gata pictată în `~/.legendele/cache/`.
+
 Pictogramele existente: spear, bow, horse, stake, gun, whelp, mace, wyrm, imp, crown, flower, tree, star, bolt,
 skull, fang, ghost, wolf, axe.
+
+## Fonturi
+
+`fonts/` conține Liberation Serif (licența SIL Open Font License, vezi `fonts/LICENSE-Liberation.txt`),
+folosit pentru nume și titluri.
 
 ## Sunete (`sounds/<nume>.ogg` sau `.wav`)
 

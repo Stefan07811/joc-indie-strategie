@@ -80,6 +80,14 @@
     {"id": "arges", "name": "Argeș", "terrain": "hills", "x": 480, "y": 510, "owner": "voievodat", "neighbors": ["brasov", "craiova", "heart", "sibiu", "targoviste"]},
     {"id": "targoviste", "name": "Târgoviște", "terrain": "plains", "x": 600, "y": 630, "owner": "voievodat", "walls": true, "garrison": ["oteni", "arcasi"], "neighbors": ["arges", "black_marsh", "buzau", "craiova"]}
   ],
+  "rivers": [
+    {"name": "Danube", "points": [[0, 700], [120, 688], [250, 704], [420, 697], [560, 708], [700, 699], [830, 690], [960, 700]]},
+    {"name": "Mureș", "points": [[525, 250], [440, 268], [372, 298], [300, 302], [236, 334], [196, 362], [120, 376], [0, 392]]},
+    {"name": "Olt", "points": [[655, 338], [600, 352], [520, 368], [452, 420], [398, 452], [400, 525], [412, 605], [420, 697]]},
+    {"name": "Siret", "points": [[800, 0], [812, 118], [822, 228], [800, 330], [812, 452], [800, 545], [812, 640], [830, 694]]},
+    {"name": "Bistrița", "points": [[600, 182], [662, 200], [724, 214], [818, 228]]},
+    {"name": "Argeș", "points": [[536, 432], [528, 520], [522, 606], [540, 701]]}
+  ],
   "start_armies": [
     {"faction": "voievodat", "province": "targoviste", "general": "Vlad the Young", "regiments": ["oteni", "oteni", "arcasi", "calareti"]},
     {"faction": "voievodat", "province": "craiova", "general": "Lord Radu", "regiments": ["oteni", "arcasi", "arcasi"]},

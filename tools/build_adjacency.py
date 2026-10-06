@@ -29,7 +29,7 @@ def main():
 
     # Keep one province per line so the file stays easy to edit by hand.
     text = json.dumps(data, ensure_ascii=False, indent=2)
-    for key in ("provinces", "start_armies"):
+    for key in ("provinces", "rivers", "start_armies"):
         compact = ",\n    ".join(json.dumps(item, ensure_ascii=False) for item in data[key])
         start = text.index(f'"{key}": [')
         end = _matching_bracket(text, text.index("[", start))

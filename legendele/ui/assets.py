@@ -121,6 +121,10 @@ class Assets:
             self._cache[key] = image or self._draw(name, color, scale)
         return self._cache[key]
 
+    def load(self, name):
+        """A PNG from the assets folder, or None (no drawn fallback)."""
+        return self._load(name)
+
     def _load(self, name):
         path = self.asset_dir / f"{name}.png"
         if not path.exists():

@@ -1,5 +1,7 @@
 """Colours, fonts, layout and small drawing helpers shared by the screens."""
 
+from pathlib import Path
+
 import pygame
 
 WINDOW_SIZE = (1280, 720)
@@ -18,13 +20,46 @@ DANGER = (236, 86, 70)
 GOOD = (126, 196, 104)
 NEUTRAL = (150, 144, 134)
 
+FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+SERIF = {"regular": "LiberationSerif-Regular.ttf", "bold": "LiberationSerif-Bold.ttf",
+         "italic": "LiberationSerif-Italic.ttf"}
+
 _fonts = {}
+_outlined = {}
 
 
 def font(size):
     if size not in _fonts:
         _fonts[size] = pygame.font.Font(None, size)
     return _fonts[size]
+
+
+def serif(size, style="bold"):
+    """The book-face used for names and titles (bundled Liberation Serif)."""
+    key = ("serif", size, style)
+    if key not in _fonts:
+        _fonts[key] = pygame.font.Font(str(FONT_DIR / SERIF[style]), size)
+    return _fonts[key]
+
+
+def outlined(surface, string, pos, size, color=PARCHMENT, outline=INK, anchor="center", style="bold", width=2):
+    """Serif text with a dark outline, readable on any ground (map labels, titles)."""
+    key = (string, size, color, outline, style, width)
+    if key not in _outlined:
+        f = serif(size, style)
+        core = f.render(string, True, color)
+        edge = f.render(string, True, outline)
+        image = pygame.Surface((core.get_width() + 2 * width, core.get_height() + 2 * width), pygame.SRCALPHA)
+        for dx in range(-width, width + 1):
+            for dy in range(-width, width + 1):
+                if dx * dx + dy * dy <= width * width + 1:
+                    image.blit(edge, (dx + width, dy + width))
+        image.blit(core, (width, width))
+        _outlined[key] = image
+    image = _outlined[key]
+    rect = image.get_rect(**{anchor: pos})
+    surface.blit(image, rect)
+    return rect
 
 
 def text(surface, string, pos, size=20, color=TEXT, anchor="topleft", shadow=None):

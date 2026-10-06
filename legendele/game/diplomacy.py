@@ -5,6 +5,12 @@
   Making peace starts a truce; declaring war during it is treachery, and everyone remembers.
 - **Allies** march freely through each other's land and defend each other: whoever declares war
   on one of them is at war with the other too.
+- A **trade agreement** brings both sides gold every season, until a war ends it.
+- A **royal marriage** binds two houses: they like each other better, and making war on your
+  in-laws is treachery.
+- A legend beaten badly enough may be made a **vassal**: it becomes its overlord's ally, pays it a
+  quarter of its taxes, and its provinces count towards the overlord's conquest. It is free again
+  if either side breaks the alliance or goes to war.
 Neutral land and the Outlaws are always fair game.
 """
 
@@ -23,9 +29,14 @@ class DiplomacyChange:
     treachery: bool = False
 
 
+TRADE_BASE, TRADE_PER_PROVINCE, TRADE_MAX = 10, 2, 35
+VASSAL_SHARE = 0.25  # of the vassal's taxes, paid to the overlord
+VASSAL_MIGHT = 0.4  # a legend this much weaker than its foe may be made a vassal
+
+
 @dataclass
 class Proposal:
-    kind: str  # "peace" or "alliance"
+    kind: str  # "peace", "alliance", "trade", "marriage" or "vassal" (the proposer becomes overlord)
     faction: str  # who proposes
     other: str  # who must answer
     gold: int = 0  # offered along with a peace
@@ -113,6 +124,15 @@ def attitude(game, fid, other):
         parts.append(("Shared border", -10))
     if set(at_war_with(game, fid)) & set(at_war_with(game, other)) - {fid, other}:
         parts.append(("Common enemy", 20))
+    k = key(fid, other)
+    if k in game.marriages:
+        parts.append(("Royal marriage", 25))
+    if k in game.trade:
+        parts.append(("Trade partners", 10))
+    if game.vassals.get(fid) == other:
+        parts.append(("Our overlord", 15))
+    elif game.vassals.get(other) == fid:
+        parts.append(("Our vassal", 15))
     if game.heart_turns.get(other, 0):
         parts.append(("Holds the Heart", -8 * game.heart_turns[other]))
     # Realms grow wary of anyone holding more than 30% of the land.
@@ -125,10 +145,37 @@ def attitude(game, fid, other):
 
 # --- actions ---------------------------------------------------------------------------------
 
+def trade_income(game, a, b):
+    """Gold each partner earns a season from trading with the other."""
+    small = min(len(game.provinces_of(a)), len(game.provinces_of(b)))
+    return min(TRADE_MAX, TRADE_BASE + TRADE_PER_PROVINCE * small)
+
+
+def trade_partners(game, fid):
+    return sorted(other for k in game.trade if fid in k for other in k if other != fid)
+
+
+def vassals_of(game, fid):
+    return sorted(v for v, lord in game.vassals.items() if lord == fid)
+
+
+def free(game, a, b):
+    """Whatever bound a vassal to its overlord between these two is over."""
+    for v, lord in ((a, b), (b, a)):
+        if game.vassals.get(v) == lord:
+            del game.vassals[v]
+            game.log.append(f"{game.faction_name(v)} are no longer vassals of {game.faction_name(lord, True)}.")
+
+
 def declare_war(game, fid, other):
     if relation(game, fid, other) == WAR:
         raise DiplomacyError("Already at war")
-    treachery = relation(game, fid, other) == ALLIANCE or in_truce(game, fid, other)
+    k = key(fid, other)
+    treachery = relation(game, fid, other) == ALLIANCE or in_truce(game, fid, other) or k in game.marriages
+    if game.vassals.get(fid) == other:
+        treachery = False  # a vassal rising for its freedom is no traitor
+    game.trade.discard(k)
+    free(game, fid, other)
     if treachery:
         game.treachery[fid] = game.treachery.get(fid, 0) + 1
         game.grudges.add((other, fid))
@@ -171,6 +218,7 @@ def break_alliance(game, fid, other):
     if relation(game, fid, other) != ALLIANCE:
         raise DiplomacyError("Not allies")
     _set(game, fid, other, PEACE)
+    free(game, fid, other)
     _withdraw(game, fid, other)
     game._event(DiplomacyChange("break", fid, other),
                 f"{game.faction_name(fid)} end their alliance with {game.faction_name(other, True)}.")
@@ -182,8 +230,28 @@ def proposal_blocker(game, proposal):
     if b not in game.turn_order or a not in game.turn_order:
         return "They are gone"
     rel = relation(game, a, b)
+    k = key(a, b)
     if proposal.kind == "peace" and rel != WAR:
         return "Not at war"
+    if proposal.kind == "trade":
+        if rel == WAR:
+            return "Not while at war"
+        if k in game.trade:
+            return "Already trading"
+    if proposal.kind == "marriage":
+        if rel == WAR:
+            return "Not while at war"
+        if k in game.marriages:
+            return "Already wed"
+        if "strigoi" in (a, b):
+            return "The dead do not wed"
+    if proposal.kind == "vassal":
+        if rel != WAR:
+            return "Only a beaten foe kneels"
+        if b in game.vassals or a in game.vassals:
+            return "Already bound to another"
+        if might(game, b) > might(game, a) * VASSAL_MIGHT and len(game.provinces_of(b)) > 2:
+            return "They are not beaten yet"
     if proposal.kind == "alliance":
         if rel != PEACE:
             return "Must be at peace first"
@@ -228,8 +296,25 @@ def settle(game, proposal, accepted):
         return
     if proposal.kind == "peace":
         make_peace(game, a, b, proposal.gold)
-    else:
+    elif proposal.kind == "alliance":
         make_alliance(game, a, b)
+    elif proposal.kind == "trade":
+        game.trade.add(key(a, b))
+        game._event(DiplomacyChange("trade", a, b),
+                    f"{game.faction_name(a)} and {game.faction_name(b, True)} open their markets to each other.")
+    elif proposal.kind == "marriage":
+        game.marriages.add(key(a, b))
+        game.truce_until[key(a, b)] = max(game.truce_until.get(key(a, b), 0), game.round + rules(game)["truce_turns"])
+        game._event(DiplomacyChange("marriage", a, b),
+                    f"The houses of {game.faction_name(a, True)} and {game.faction_name(b, True)} are joined "
+                    "in a royal wedding.")
+    elif proposal.kind == "vassal":
+        _set(game, a, b, ALLIANCE)
+        game.truce_until[key(a, b)] = game.round + rules(game)["truce_turns"]
+        _withdraw(game, a, b)
+        game.vassals[b] = a
+        game._event(DiplomacyChange("vassal", a, b),
+                    f"{game.faction_name(b)} bend the knee and become vassals of {game.faction_name(a, True)}.")
 
 
 def _withdraw(game, a, b):

@@ -45,6 +45,11 @@ def gold(game):
              (f"Taxes from provinces and buildings  +{bal.tax}", theme.GOOD)]
     if bal.interest:
         lines.append((f"Interest on the hoard  +{bal.interest}", theme.GOOD))
+    if bal.trade:
+        lines.append((f"Trade agreements  +{bal.trade}", theme.GOOD))
+    if bal.vassals:
+        lines.append((f"{'Tribute from vassals' if bal.vassals > 0 else 'Tribute to our overlord'}  {bal.vassals:+}",
+                      theme.GOOD if bal.vassals > 0 else theme.DANGER))
     lines.append((f"Upkeep of the armies  -{bal.upkeep}", theme.DANGER))
     lines.append((f"Each season  {bal.gold:+}", theme.GOLD))
     return lines
@@ -61,7 +66,8 @@ def food(game):
 
 def conquest(game):
     need = game.victory_rules["conquest_provinces"]
-    return ["Conquest victory", f"Hold {need} of the {len(game.provinces)} provinces to rule the Carpathians."]
+    return ["Conquest victory", f"Hold {need} of the {len(game.provinces)} provinces to rule the Carpathians.",
+            ("Your vassals' provinces count as yours.", theme.TEXT_DIM)]
 
 
 def heart(game):

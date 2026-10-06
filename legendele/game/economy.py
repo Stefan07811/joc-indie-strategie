@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from . import generals, legends
+from . import generals, legends, techs
 
 
 # How hard the other legends push: their income, and the gold each side starts with.
@@ -27,10 +27,12 @@ class Balance:
     food_made: int  # this season, after the season's multiplier
     food_eaten: int
     interest: int = 0  # the Dragonkin hoard
+    trade: int = 0  # from trade agreements
+    vassals: int = 0  # tribute from our vassals (negative: what we pay our overlord)
 
     @property
     def gold(self):
-        return self.tax + self.interest - self.upkeep
+        return self.tax + self.interest + self.trade + self.vassals - self.upkeep
 
     @property
     def food(self):
@@ -69,12 +71,28 @@ def balance(game, fid, season=None):
     upkeep = sum(round(sum(game.data.units[r.unit]["upkeep"] for r in a.regiments) * generals.upkeep_mult(game, a))
                  for a in game.armies_of(fid))
     eaten = sum(appetite(game, r.unit) for r in regiments)
-    tax = tax * game.data.factions[fid]["income_mult"]
+    upkeep = round(upkeep * techs.bonus(game, fid, "upkeep"))
+    food = food * techs.bonus(game, fid, "food")
+    tax = tax * game.data.factions[fid]["income_mult"] * techs.bonus(game, fid, "income")
     if fid != game.player:
         tax *= DIFFICULTY[game.difficulty]["ai_income"]
     tax = round(tax)
+    from . import diplomacy
+    trade = sum(diplomacy.trade_income(game, fid, other) for other in diplomacy.trade_partners(game, fid))
+    vassals = sum(round(_raw_tax(game, v) * diplomacy.VASSAL_SHARE) for v in diplomacy.vassals_of(game, fid))
+    if fid in game.vassals:
+        vassals -= round(tax * diplomacy.VASSAL_SHARE)
     return Balance(tax, upkeep, round(food * game.data.map["seasons"][season]["food"]), eaten,
-                   legends.interest(game, fid))
+                   legends.interest(game, fid), trade, vassals)
+
+
+def _raw_tax(game, fid):
+    """A realm's taxes before anything is paid out of them."""
+    total = sum(province_yield(game, p)[0] for p in game.provinces_of(fid))
+    mult = game.data.factions[fid]["income_mult"] * techs.bonus(game, fid, "income")
+    if fid != game.player:
+        mult *= DIFFICULTY[game.difficulty]["ai_income"]
+    return round(total * mult)
 
 
 # --- what may be built or recruited, and why not ------------------------------------------
@@ -126,7 +144,7 @@ def unit_blocker(game, fid, pid, uid):
         return "Capital only"
     if u["ability"] == "hero" and hero_taken(game, fid, uid):
         return "Already serves you"
-    if len(p.recruits) >= game.rules["recruits_per_turn"]:
+    if len(p.recruits) >= game.rules["recruits_per_turn"] + techs.bonus(game, fid, "recruits"):
         return "Training grounds full"
     if game.treasury[fid].gold < u["cost"]:
         return "Not enough gold"

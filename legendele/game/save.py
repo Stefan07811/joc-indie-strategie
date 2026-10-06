@@ -75,6 +75,11 @@ def to_dict(game):
         "tribute": game.tribute,
         "raids": {str(k): v for k, v in game.raids.items()},
         "raided": game.raided,
+        "techs": game.techs,
+        "studying": game.studying,
+        "trade": sorted(_pair(k) for k in game.trade),
+        "marriages": sorted(_pair(k) for k in game.marriages),
+        "vassals": game.vassals,
     }
 
 
@@ -127,6 +132,11 @@ def from_dict(data, d, ai_factory=None):
     game.tribute = {fid: list(powers) for fid, powers in d.get("tribute", {}).items()}
     game.raids = {int(k): dict(v) for k, v in d.get("raids", {}).items()}
     game.raided = {power: dict(row) for power, row in d.get("raided", {}).items()}
+    game.techs = {fid: list(t) for fid, t in d.get("techs", {}).items()}
+    game.studying = {fid: dict(s) for fid, s in d.get("studying", {}).items()}
+    game.trade = {_unpair(k) for k in d.get("trade", [])}
+    game.marriages = {_unpair(k) for k in d.get("marriages", [])}
+    game.vassals = dict(d.get("vassals", {}))
     for fid in game.eliminated:
         game.ai.pop(fid, None)
     return game

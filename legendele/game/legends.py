@@ -210,6 +210,10 @@ def public_order(game, p):
     if camped:
         parts.append(("Generals", camped))
     parts += events_order(game, p)
+    from .techs import bonus
+    learnt = bonus(game, fid, "order")
+    if learnt:
+        parts.append(("Traditions", learnt))
     if p.captured_round is not None:
         unrest = rules["conquest_unrest"] - (game.round - p.captured_round)
         if unrest > 0:

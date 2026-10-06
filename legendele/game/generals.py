@@ -68,7 +68,9 @@ def creature_bane(game, army):
 
 
 def moves(game, army):
-    return max(1, game.data.map["army_moves"] + sum(t.get("moves", 0) for t in _traits(game, army)))
+    from .techs import bonus
+    return max(1, game.data.map["army_moves"] + sum(t.get("moves", 0) for t in _traits(game, army))
+               + bonus(game, army.faction, "moves"))
 
 
 def upkeep_mult(game, army):

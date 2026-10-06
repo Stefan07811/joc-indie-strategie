@@ -170,14 +170,16 @@ def test_everyone_turns_on_a_runaway_leader(game):
 
 def test_ai_turns_are_diplomatic(real_data):
     kinds = set()
+    from legendele.game.ai import SimpleAI
     for seed in range(8):
         g = Game.new(real_data, "voievodat", seed=seed)
-        for _ in range(25):
+        g.ai["voievodat"] = SimpleAI("voievodat")  # every legend is the computer's: a long war
+        g.spectate = True
+        for _ in range(30):
+            g.ai_turn("voievodat")
             g.end_turn()
             if g.over:
                 break
-            while g.proposals:
-                diplomacy.answer(g, g.proposals[0], accept=False)
         kinds |= {e.kind for e in g.events if isinstance(e, DiplomacyChange)}
     assert "war" in kinds and "peace" in kinds
 

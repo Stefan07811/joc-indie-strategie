@@ -23,6 +23,7 @@ from .panel import Panel
 from .province_dialog import ProvinceDialog
 from .reports import (ACCEPT_RECT, DECLINE_RECT, EndScreen, TurnSummary, concerns_player, draw_game_over, draw_report,
                       tale_choice_rects)
+from .techs_dialog import TechsDialog
 from .tutorial import Tutorial
 
 TITLE = "Legends of the Carpathians"
@@ -234,6 +235,8 @@ class Campaign:
                 self.open_diplomacy()
             elif event.key == pygame.K_f:
                 self.open_foreign()
+            elif event.key == pygame.K_t:
+                self.open_traditions()
 
     def _click(self, pos):
         panel = self.panel
@@ -247,6 +250,8 @@ class Campaign:
             self.end_turn()
         elif panel.diplomacy_rect.collidepoint(pos):
             self.open_diplomacy()
+        elif panel.traditions_rect.collidepoint(pos):
+            self.open_traditions()
         elif panel.assault_rect and panel.assault_rect.collidepoint(pos):
             self.assault()
         elif panel.abduct_rect and panel.abduct_rect.collidepoint(pos):
@@ -313,6 +318,11 @@ class Campaign:
     def open_diplomacy(self):
         if not self.game.over:
             self.dialog = DiplomacyDialog(self.game, self.app.assets)
+            self._dialog_from = len(self.game.events)
+
+    def open_traditions(self):
+        if not self.game.over:
+            self.dialog = TechsDialog(self.game, self.app.audio)
             self._dialog_from = len(self.game.events)
 
     def open_foreign(self):

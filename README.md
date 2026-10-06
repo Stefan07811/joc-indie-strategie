@@ -50,9 +50,10 @@ python -m legendele
 | Administrezi o provincie | **Manage province** sau `M` |
 | Diplomația | **Diplomacy** sau `D` |
 | Curțile străine (tribut, mercenari) | `F` sau din Diplomacy |
+| Tradițiile (cercetare) | `T` sau butonul **Traditions** |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M11 (bătălii tactice)
+## Stadiul actual: etapa M12 (statul)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -255,7 +256,20 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 
   ![Asalt noaptea, pe zăpadă](docs/battle_night.png)
 
-**Ce urmează:** M12–M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Statul (M12)**
+- **Tradiții** (tasta T sau butonul din panou): un arbore de cercetare cu 10 tradiții pe facțiune, 8 comune
+  și 2 proprii. Se studiază una câte una: o plătești la început și o înveți în câteva anotimpuri. Aduc
+  bonusuri permanente: taxe, hrană, soldă, ordine, mișcare, atac, apărare, moral, vindecare, echipament
+  de asediu mai repede sau mai mulți recruți odată.
+- **Acorduri comerciale:** aur în fiecare anotimp pentru amândoi partenerii, până când un război le rupe.
+- **Căsătorii dinastice:** casele unite se plac mai mult, iar războiul împotriva rudelor e trădare.
+  Strigoii nu se însoară.
+- **Vasali:** un dușman zdrobit poate fi pus să îngenuncheze. Devine aliatul tău, îți plătește un sfert
+  din taxe, iar provinciile lui se numără la victoria prin cucerire. Se eliberează dacă se rupe alianța sau
+  începe un război.
+- AI-ul face și el toate acestea.
+
+**Ce urmează:** M13–M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

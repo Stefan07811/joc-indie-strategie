@@ -14,7 +14,9 @@ class Panel:
         self.assets = assets
         rect = theme.PANEL_RECT
         self.end_turn_rect = pygame.Rect(rect.x + PAD, rect.bottom - 64, rect.width - 2 * PAD, 44)
-        self.diplomacy_rect = pygame.Rect(rect.x + PAD, rect.bottom - 132, rect.width - 2 * PAD, 34)
+        half = (rect.width - 2 * PAD - 8) // 2
+        self.diplomacy_rect = pygame.Rect(rect.x + PAD, rect.bottom - 132, half, 34)
+        self.traditions_rect = pygame.Rect(rect.x + PAD + half + 8, rect.bottom - 132, half, 34)
         self.menu_rect = pygame.Rect(rect.right - PAD - 72, rect.y + PAD, 72, 28)
         self.assault_rect = None  # set while the selected army can storm walls
         self.merge_rect = None  # set while the selected army has comrades to absorb
@@ -50,8 +52,15 @@ class Panel:
         y = self._rule(surface, y)
 
         self._chronicle(surface, x, y, width, self.diplomacy_rect.top - 8)
-        theme.button(surface, self.diplomacy_rect, "Diplomacy  (D)", self.diplomacy_rect.collidepoint(mouse),
+        theme.button(surface, self.diplomacy_rect, "Diplomacy (D)", self.diplomacy_rect.collidepoint(mouse),
                      enabled=not game.over)
+        study = game.studying.get(game.player)
+        label = "Traditions (T)" if not study else f"Studying ({study['turns_left']})"
+        theme.button(surface, self.traditions_rect, label, self.traditions_rect.collidepoint(mouse),
+                     enabled=not game.over)
+        if study:
+            theme.tip(self.traditions_rect, ["Traditions", f"Studying {game.data.techs[study['tech']]['name']}: "
+                                                           f"{study['turns_left']} more seasons."])
         theme.text(surface, "Enter: end turn  ·  Tab: next army  ·  Esc: deselect", (rect.centerx, rect.bottom - 82),
                    16, theme.TEXT_DIM, anchor="center")
         theme.button(surface, self.end_turn_rect, "End Turn", self.end_turn_rect.collidepoint(mouse),
@@ -67,7 +76,7 @@ class Panel:
         theme.outlined(surface, game.faction_name(game.player), (x + 20, y - 1), 18, theme.PARCHMENT,
                        anchor="topleft", width=1)
         y += 22
-        owned = len(game.provinces_of(game.player))
+        owned = game.realm_size(game.player)
         r = theme.text(surface, f"Provinces {owned} / {rules['conquest_provinces']}", (x, y), 18, theme.TEXT_DIM)
         theme.tip(r, tips.conquest(game))
         heart = game.heart_turns.get(game.player, 0)

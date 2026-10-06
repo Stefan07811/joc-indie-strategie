@@ -72,6 +72,13 @@ class SimpleAI:
         mood, _ = diplomacy.attitude(game, me, other)
         if proposal.kind == "alliance":
             return not diplomacy.never_allied(game, me, other) and mood >= pers["alliance_threshold"]
+        if proposal.kind == "trade":
+            return mood >= -10
+        if proposal.kind == "marriage":
+            return not diplomacy.never_allied(game, me, other) and mood >= 10
+        if proposal.kind == "vassal":
+            # kneel rather than be wiped out
+            return diplomacy.might(game, me) < diplomacy.might(game, other) * 0.3 or len(game.provinces_of(me)) <= 2
         ours, theirs = diplomacy.might(game, me), max(1.0, diplomacy.might(game, other))
         pressure = 0
         if ours < theirs * pers["peace_ratio"]:
@@ -96,6 +103,14 @@ class SimpleAI:
                 self._offer(game, "alliance", other)
             elif rel == ALLIANCE and mood < -20:
                 game.break_alliance(me, other)
+            if rel != WAR and mood >= 0 and game.rng.random() < 0.2:
+                self._offer(game, "trade", other)
+            if rel != WAR and mood >= 25 and game.rng.random() < 0.08:
+                self._offer(game, "marriage", other)
+            if rel == WAR and game.rng.random() < 0.3:
+                self._offer(game, "vassal", other)
+            if game.vassals.get(me) == other and diplomacy.might(game, me) > diplomacy.might(game, other) * 0.9:
+                game.break_alliance(me, other)  # strong again: no more bending the knee
         self._maybe_declare_war(game)
 
     def _alarming(self, game):

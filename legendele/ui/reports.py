@@ -75,6 +75,15 @@ def _proposal(surface, game, offer, mouse):
         body = "They are tired of this war and offer peace."
         if offer.gold:
             body += f" They will pay {offer.gold} gold."
+    elif offer.kind == "trade":
+        body = (f"They offer to open the markets between our lands: "
+                f"{diplomacy_income(game, offer)} gold a season for each of us, until a war ends it.")
+    elif offer.kind == "marriage":
+        body = ("They propose a royal marriage between our houses. Friendship will follow; "
+                "and war on one's in-laws is treachery.")
+    elif offer.kind == "vassal":
+        body = ("They demand that we kneel: become their vassals, pay a quarter of our taxes, and fight at "
+                "their side. Refuse, and the war goes on.")
     else:
         body = "They propose an alliance: open roads between us, and each defends the other."
     y = BOX.y + 110
@@ -110,6 +119,11 @@ def _tale(surface, game, tale, mouse):
                    theme.HIGHLIGHT if hovered else theme.PARCHMENT)
         theme.text(surface, events.summary(game, choice.get("effects", {})), (rect.x + 34, rect.y + 31), 16,
                    theme.GOLD)
+
+
+def diplomacy_income(game, offer):
+    from ..game import diplomacy
+    return diplomacy.trade_income(game, offer.faction, offer.other)
 
 
 def _battle(surface, game, assets, result):
@@ -164,6 +178,12 @@ def _notice(surface, game, event):
             "alliance": (f"Alliance with {name}", theme.GOOD, "Our armies may cross each other's land, "
                                                              "and we stand together if attacked."),
             "break": (f"The alliance with {name} is over", theme.GOLD, "We are merely at peace now."),
+            "trade": (f"Trade with {name}", theme.GOOD, "Merchants travel between our lands: gold for both."),
+            "marriage": (f"A royal wedding with {name}", theme.GOOD, "Our houses are one family now."),
+            "vassal": ((f"{game.faction_name(other)} kneel to us" if mine else f"We kneel to {name}"),
+                       theme.GOOD if mine else theme.DANGER,
+                       "A quarter of their taxes is ours, and their provinces count as our realm." if mine
+                       else "A quarter of our taxes goes to our overlord."),
         }[event.kind]
     elif isinstance(event, Rebellion):
         title, color = f"{game.provinces[event.province].name} rises up!", theme.DANGER

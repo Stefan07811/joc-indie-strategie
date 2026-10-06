@@ -1,0 +1,22 @@
+{
+  "three_field":  {"name": "Three-Field Rotation", "cost": 120, "turns": 2, "food": 1.25, "description": "Fields rest in turn: +25% food."},
+  "markets":      {"name": "Market Rights", "cost": 150, "turns": 2, "income": 1.1, "description": "Fairs and tolls: +10% taxes."},
+  "drill":        {"name": "Drill and Discipline", "cost": 150, "turns": 3, "resolve": 0.05, "description": "Regiments hold their ranks longer."},
+  "chancery":     {"name": "Chancery", "cost": 160, "turns": 3, "order": 1, "description": "Scribes and seals: +1 order in every province."},
+  "iron_mines":   {"name": "Deep Iron Mines", "cost": 220, "turns": 3, "attack": 1.05, "requires": ["drill"], "description": "Better steel: +5% attack."},
+  "engineers":    {"name": "Siege Engineers", "cost": 200, "turns": 3, "siege": 1, "requires": ["drill"], "description": "Ladders and rams one season sooner."},
+  "muster":       {"name": "Muster Rolls", "cost": 220, "turns": 3, "recruits": 1, "requires": ["chancery"], "description": "One more regiment can train in each province at a time."},
+  "royal_roads":  {"name": "Royal Roads", "cost": 320, "turns": 4, "moves": 1, "requires": ["markets", "chancery"], "description": "Paved roads and post houses: +1 movement for every army."},
+
+  "monasteries":  {"name": "Painted Monasteries", "faction": "voievodat", "cost": 200, "turns": 3, "order": 1, "heal": 1.3, "requires": ["chancery"], "description": "The monks tend the wounded and calm the people: +1 order, faster healing."},
+  "boyar_council": {"name": "Council of Boyars", "faction": "voievodat", "cost": 260, "turns": 3, "income": 1.1, "defense": 1.05, "requires": ["markets"], "description": "The great families lend coin and men: +10% taxes, +5% defence."},
+
+  "hoard_vaults": {"name": "Hoard Vaults", "faction": "zmei", "cost": 220, "turns": 3, "income": 1.15, "requires": ["markets"], "description": "Gold sleeps safest under a dragon: +15% taxes."},
+  "wyrm_lore":    {"name": "Wyrm Lore", "faction": "zmei", "cost": 280, "turns": 4, "attack": 1.08, "requires": ["iron_mines"], "description": "The old dragons teach the young to fight: +8% attack."},
+
+  "sacred_groves": {"name": "Sacred Groves", "faction": "iele", "cost": 200, "turns": 3, "food": 1.2, "order": 1, "requires": ["three_field"], "description": "The forest feeds those who honour it: +20% food, +1 order."},
+  "fairy_rings":  {"name": "Fairy Rings", "faction": "iele", "cost": 260, "turns": 3, "defense": 1.08, "resolve": 0.05, "requires": ["drill"], "description": "Mushroom circles that confuse the enemy: +8% defence, steadier ranks."},
+
+  "grave_tithes": {"name": "Grave Tithes", "faction": "strigoi", "cost": 200, "turns": 3, "upkeep": 0.9, "requires": ["markets"], "description": "The dead need no pay: -10% upkeep."},
+  "blood_rites":  {"name": "Blood Rites", "faction": "strigoi", "cost": 260, "turns": 3, "resolve": 0.08, "requires": ["drill"], "description": "Dark vows bind the ranks: much steadier regiments."}
+}

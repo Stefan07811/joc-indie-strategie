@@ -20,6 +20,7 @@ class GameData:
     abilities: dict
     traits: dict = field(default_factory=dict)  # the generals' traits
     events: dict = field(default_factory=dict)  # tales from folklore (events.py)
+    techs: dict = field(default_factory=dict)  # traditions to study (techs.py)
 
     @property
     def terrain(self):
@@ -38,7 +39,7 @@ class GameData:
 
         data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"),
                    buildings=read("buildings.json"), abilities=read("abilities.json"), traits=read("traits.json"),
-                   events=read("events.json"))
+                   events=read("events.json"), techs=read("techs.json"))
         data.validate()
         return data
 

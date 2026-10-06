@@ -135,17 +135,38 @@ class DiplomacyDialog:
         line = "At war with: " + (", ".join(wars) or "no one else")
         if allies:
             line += "  ·  Allied with: " + ", ".join(allies)
-        theme.text(surface, line, (x + 44, y + 106), 16, theme.TEXT_DIM)
+        bonds = []
+        k = diplomacy.key(me, fid)
+        if k in game.trade:
+            bonds.append(f"trade +{diplomacy.trade_income(game, me, fid)} gold a season")
+        if k in game.marriages:
+            bonds.append("royal marriage")
+        if game.vassals.get(fid) == me:
+            bonds.append("your vassal")
+        elif game.vassals.get(me) == fid:
+            bonds.append("your overlord")
+        if bonds:
+            line += "  ·  " + ", ".join(bonds).capitalize()
+        theme.text(surface, line, (x + 44, y + 106), 16, theme.GOLD if bonds else theme.TEXT_DIM)
 
         buttons = []
+        treachery = truce > 0 or k in game.marriages
         if rel == "war":
             buttons = [("Offer peace", lambda: self._offer("peace", fid)),
                        (f"Peace + {BRIBE} gold", lambda: self._offer("peace", fid, BRIBE))]
+            if diplomacy.proposal_blocker(game, diplomacy.Proposal("vassal", me, fid)) is None:
+                buttons.append(("Demand they kneel", lambda: self._offer("vassal", fid)))
         elif rel == "peace":
-            buttons = [("Propose alliance", lambda: self._offer("alliance", fid)),
-                       ("Declare war" + (" (treachery!)" if truce > 0 else ""), lambda: self._war(fid))]
+            buttons = [("Propose alliance", lambda: self._offer("alliance", fid))]
         elif rel == "alliance":
             buttons = [("Break alliance", lambda: self._break(fid))]
+        if rel != "war":
+            if k not in game.trade:
+                buttons.append(("Trade agreement", lambda: self._offer("trade", fid)))
+            if k not in game.marriages and "strigoi" not in (me, fid):
+                buttons.append(("Royal marriage", lambda: self._offer("marriage", fid)))
+        if rel == "peace":
+            buttons.append(("Declare war" + (" (treachery!)" if treachery else ""), lambda: self._war(fid)))
         bx = x + 44
         for label, action in buttons:
             w = theme.serif(16).size(label)[0] + 50

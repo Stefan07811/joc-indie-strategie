@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, diplomacy, economy, events, foreign, generals, legends
+from . import battle, diplomacy, economy, events, foreign, generals, legends, techs
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -149,6 +149,11 @@ class Game:
     tribute: dict = field(default_factory=dict)  # fid -> [powers it pays to keep their raiders away]
     raids: dict = field(default_factory=dict)  # raiding army id -> {"victim", "plunders", "seasons"}
     raided: dict = field(default_factory=dict)  # power -> {fid: raids so far}
+    techs: dict = field(default_factory=dict)  # fid -> traditions learnt (techs.py)
+    studying: dict = field(default_factory=dict)  # fid -> {"tech", "turns_left"}
+    trade: set = field(default_factory=set)  # frozenset({a, b}): trade agreements
+    marriages: set = field(default_factory=set)  # frozenset({a, b}): royal marriages
+    vassals: dict = field(default_factory=dict)  # vassal -> overlord
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal"):
@@ -361,14 +366,15 @@ class Game:
         p = self.provinces[pid]
         mult = battle.HOME_TERRAIN_BONUS if self.at_home(fid, pid) else 1.0
         defense = mult * (self.data.terrain[p.terrain]["defense"] if defending else 1.0)
-        defense *= generals.defense_mult(self, army)
+        defense *= generals.defense_mult(self, army) * techs.bonus(self, fid, "defense")
         if walls:
             defense *= battle.WALLS_DEFENSE
         return Side(
             faction=fid, regiments=regiments, leader=leader, defense_mult=defense,
             attack_mult=mult * (battle.GENERAL_BONUS if leader else 1.0) * legends.attack_modifier(self, fid, pid)
-            * generals.attack_mult(self, army, assault),
-            resolve_bonus=(battle.WALLS_RESOLVE if walls else 0.0) + generals.resolve_bonus(self, army),
+            * generals.attack_mult(self, army, assault) * techs.bonus(self, fid, "attack"),
+            resolve_bonus=(battle.WALLS_RESOLVE if walls else 0.0) + generals.resolve_bonus(self, army)
+            + techs.bonus(self, fid, "resolve"),
             creature=self.data.factions[fid]["creature"],
             walls=walls, ambush_ground=defending and p.terrain == "forest",
             creature_bane=generals.creature_bane(self, army),
@@ -379,7 +385,7 @@ class Game:
         side = self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False, army=armies[0],
                           assault=assault)
         if assault:
-            turns = min(2, self.provinces[pid].siege_turns)
+            turns = min(2, self.provinces[pid].siege_turns + techs.bonus(self, armies[0].faction, "siege"))
             side.attack_mult *= SIEGE_ATTACK[turns]
             side.equipment = {"ladders": turns >= 1, "ram": turns >= 2}
         river = self.river_between(origin, pid) if origin and origin != pid else None
@@ -714,10 +720,18 @@ class Game:
             self._tally(event.faction, "taken")
             self._tally(event.previous, "fallen")
 
+    def realm_size(self, fid):
+        """Provinces a legend rules: its own, and its vassals'."""
+        return len(self.provinces_of(fid)) + sum(len(self.provinces_of(v)) for v in diplomacy.vassals_of(self, fid))
+
     def _check_end(self):
         for fid in list(self.turn_order):
             if not self.provinces_of(fid):
                 self.eliminated.append(fid)
+                self.vassals.pop(fid, None)
+                for v in diplomacy.vassals_of(self, fid):
+                    del self.vassals[v]
+                self.trade = {k for k in self.trade if fid not in k}
                 for a in self.armies_of(fid):
                     self._leave(a)
                     del self.armies[a.id]
@@ -725,7 +739,7 @@ class Game:
         if self.winner:
             return
         for fid in self.turn_order:
-            if len(self.provinces_of(fid)) >= self.victory_rules["conquest_provinces"]:
+            if fid not in self.vassals and self.realm_size(fid) >= self.victory_rules["conquest_provinces"]:
                 self._win(fid, "conquest")
                 return
         if len(self.turn_order) == 1:
@@ -770,7 +784,7 @@ class Game:
         for army in list(self.armies.values()):
             army.moves_left = generals.moves(self, army)
             if self.provinces[army.province].owner == army.faction:
-                self._heal(army.regiments)
+                self._heal(army.regiments, army.faction)
             elif self.season == "Winter" and not self.data.factions[army.faction]["winter_hardy"] \
                     and not generals.winter_hardy(self, army):
                 for r in army.regiments:
@@ -782,6 +796,7 @@ class Game:
         generals.idle(self)
         events.season(self)
         foreign.season(self)
+        techs.season(self)
         for p in self.provinces.values():
             p.mods = [m for m in p.mods if m[2] > self.round]
         self._check_end()
@@ -862,7 +877,7 @@ class Game:
                 self.log.append(f"The starving defenders of {p.name} surrender.")
                 self._capture(p, besieger.faction)
         elif p.owner:
-            self._heal(p.garrison)
+            self._heal(p.garrison, p.owner)
             self._muster(p)
 
     def _muster(self, p):
@@ -888,10 +903,11 @@ class Game:
             del self.armies[army.id]
             self.log.append(f"{army.general}'s army {how}.")
 
-    def _heal(self, regiments):
+    def _heal(self, regiments, fid=None):
+        rate = HEAL_RATE * techs.bonus(self, fid, "heal")
         for r in regiments:
             full = self.data.units[r.unit]["hp"]
-            r.hp = min(full, r.hp + full * HEAL_RATE)
+            r.hp = min(full, r.hp + full * rate)
 
     def _count_heart(self):
         holder = self.heart_holder()

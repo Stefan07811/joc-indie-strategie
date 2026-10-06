@@ -407,3 +407,31 @@ def test_the_foreign_courts(app):
     assert any(app.scene.game.tribute.get("voievodat", []))
     press(app, pygame.K_ESCAPE)
     assert app.scene.dialog is None
+
+
+def test_traditions_window(app):
+    from legendele.ui.techs_dialog import TechsDialog
+    app.start_campaign("zmei", seed=11)
+    c = app.scene
+    c.game.treasury["zmei"].gold = 1000
+    press(app, pygame.K_t)
+    assert isinstance(c.dialog, TechsDialog)
+    rect, tid = c.dialog.cards[0]
+    click(app, rect.center)
+    assert c.game.studying["zmei"]["tech"] == tid
+    press(app, pygame.K_ESCAPE)
+    assert c.dialog is None
+    assert c.panel.traditions_rect.collidepoint(c.panel.traditions_rect.center)
+
+
+def test_diplomacy_offers_trade_and_marriage(app):
+    from legendele.game import diplomacy
+    app.start_campaign("voievodat", seed=12)
+    c = app.scene
+    game = c.game
+    for fid in game.turn_order[1:]:
+        if diplomacy.relation(game, "voievodat", fid) == "war":
+            diplomacy.make_peace(game, "voievodat", fid)
+    press(app, pygame.K_d)
+    labels = [label for _, label, _ in c.dialog.actions]
+    assert "Trade agreement" in labels and "Royal marriage" in labels

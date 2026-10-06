@@ -24,7 +24,7 @@ GOLD_RESERVE = 40  # kept back for emergencies
 BUILD_ORDER = ("market", "farm", "mine", "barracks", "walls")
 WALLS_WHEN_RICHER_THAN = 400
 HEART_ALARM = 3  # seasons of holding the Heart after which everyone turns on the holder
-CONQUEST_ALARM = 8  # provinces short of a conquest victory at which everyone turns on the largest realm
+CONQUEST_ALARM = 0.3  # share of the land at which everyone turns on the largest realm
 
 DEFAULT_PERSONALITY = {
     "personality": "Cautious", "summary": "", "friendliness": 0, "aggression": 0.4, "max_wars": 2,
@@ -103,7 +103,7 @@ class SimpleAI:
         once it is big enough to threaten a conquest victory."""
         sizes = {f: len(game.provinces_of(f)) for f in game.turn_order}
         largest = max(sizes.values())
-        needed = game.victory_rules["conquest_provinces"] - CONQUEST_ALARM
+        needed = round(CONQUEST_ALARM * len(game.provinces))
         return {f for f in game.turn_order if f != self.faction and
                 (game.heart_turns.get(f, 0) >= HEART_ALARM or sizes[f] == largest >= needed)}
 

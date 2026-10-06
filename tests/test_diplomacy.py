@@ -43,10 +43,10 @@ def test_everyone_starts_at_peace(game):
 def test_peace_closes_borders(game):
     vlad = army_at(game, "voievodat", "targoviste")
     reach = game.reachable(vlad)
-    assert "black_marsh" not in reach  # Revenant land, Revenant army, but we are at peace
+    assert "retezat" not in reach  # Dragonkin land, a Dragonkin army, but we are at peace
     assert "buzau" in reach  # neutral land is always open
-    game.declare_war("voievodat", "strigoi")
-    assert "black_marsh" in game.reachable(vlad)
+    game.declare_war("voievodat", "zmei")
+    assert "retezat" in game.reachable(vlad)
 
 
 def test_peace_protects_armies_on_neutral_land(game):

@@ -89,18 +89,14 @@ def test_beaten_defenders_retreat_or_die(game):
     no_ai(game)
     vlad = army_at(game, "voievodat", "targoviste")
     vlad.regiments += [Regiment("calareti", 90) for _ in range(5)]
-    gravedigger = army_at(game, "strigoi", "barlad")
-    gravedigger.regiments = [Regiment("morti", 20)]
-    game.move_army(vlad.id, "buzau")
-    game.end_turn()
-    game.end_turn()
-    vlad.moves_left = 4
-    game.provinces["buzau"].owner = "voievodat"
-    game.provinces["buzau"].garrison = []
-    game.provinces["buzau"].besieged_by = None
-    game.move_army(vlad.id, "barlad")
-    assert gravedigger.id not in game.armies or gravedigger.province != "barlad"
-    assert vlad.province == "barlad"
+    victim = army_at(game, "zmei", "hunedoara")
+    victim.regiments = [Regiment("morti", 20)]
+    game.provinces["banat"].owner = "voievodat"
+    game.provinces["banat"].garrison = []
+    vlad.province = "banat"
+    game.move_army(vlad.id, "hunedoara")
+    assert victim.id not in game.armies or victim.province != "hunedoara"
+    assert vlad.province == "hunedoara"
 
 
 def test_losing_every_province_eliminates_a_faction(game):
@@ -123,11 +119,13 @@ def test_conquest_victory(game):
     capitals = {game.capital_of(f) for f in game.turn_order}
     others = [p for p in game.provinces.values()
               if p.owner != "voievodat" and p.id not in capitals and not game.armies_in(p.id)]
-    for p in others[:10]:
+    needed = game.victory_rules["conquest_provinces"]
+    short = needed - 1 - len(game.provinces_of("voievodat"))
+    for p in others[:short]:
         p.owner = "voievodat"
-    last = next(p for p in others[10:] if any(game.provinces[n].owner == "voievodat" for n in p.neighbors))
+    last = next(p for p in others[short:] if any(game.provinces[n].owner == "voievodat" for n in p.neighbors))
     last.garrison = []
-    assert len(game.provinces_of("voievodat")) == 13
+    assert len(game.provinces_of("voievodat")) == needed - 1
     army = game.add_army("voievodat", next(n for n in last.neighbors if game.provinces[n].owner == "voievodat"),
                          "Test", ["calareti"])
     game.move_army(army.id, last.id)

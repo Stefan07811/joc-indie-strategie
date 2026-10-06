@@ -3,6 +3,9 @@ highlights, settlement flags, labels and the armies' standards.
 
 Province shapes come from a coarse grid (one cell = mapshape.CELL pixels); the colour washes and
 highlights are drawn on that grid and smoothed up, so borders look painted rather than pixelated.
+
+The world is bigger than the screen: a camera shows part of it in the map area (world and screen
+coordinates differ by the camera's offset), and a minimap in the corner shows the whole.
 """
 
 import math
@@ -12,19 +15,25 @@ from functools import lru_cache
 import pygame
 
 from .. import profile
-from ..mapshape import CELL, build_grid
+from ..mapshape import CELL, map_grid
 from . import figures, painter, theme
 
 
+MINIMAP_WIDTH = 210
+SCROLL_SPEED = 900  # pixels per second
+EDGE = 14  # how close to the map's edge the mouse scrolls it
+
+
 @lru_cache(maxsize=4)
-def _grid_for(provinces_key, width, height):
+def _grid_for(provinces_key, width, height, land):
     provinces = [dict(id=i, x=x, y=y, size=s) for i, x, y, s in provinces_key]
-    return build_grid(provinces, width, height)
+    return map_grid({"width": width, "height": height, "land": land}, provinces)
 
 
 def province_grid(data):
     key = tuple((p["id"], p["x"], p["y"], p.get("size", 1.0)) for p in data.provinces)
-    return _grid_for(key, data.map["width"], data.map["height"])
+    land = tuple(tuple(p) for p in data.map.get("land", ()))
+    return _grid_for(key, data.map["width"], data.map["height"], land)
 
 
 def _hash(c, r):
@@ -44,17 +53,21 @@ def army_figure(fid, color):
 
 
 class MapView:
-    def __init__(self, game, assets):
+    def __init__(self, game, assets, rect=None):
         self.game = game
         self.assets = assets
+        self.rect = pygame.Rect(rect or theme.MAP_RECT)  # where on the screen the map is shown
         data = game.data
         self.grid = province_grid(data)
         self.rows, self.cols = len(self.grid), len(self.grid[0])
         self.cells = {pid: [] for pid in game.provinces}
         for r, row in enumerate(self.grid):
             for c, pid in enumerate(row):
-                self.cells[pid].append((c, r))
-        self.size = (self.cols * CELL, self.rows * CELL)
+                if pid is not None:
+                    self.cells[pid].append((c, r))
+        self.size = (self.cols * CELL, self.rows * CELL)  # the whole world
+        self.camera = [0.0, 0.0]  # the world point shown at the map's top-left corner
+        self.canvas = pygame.Surface(self.size)
         self.terrain_layer = painter.paint(data, self.grid, profile.home() / "cache")
         capitals = {f["capital"] for f in data.factions.values() if f["capital"]}
         self.settlement = {
@@ -68,8 +81,51 @@ class MapView:
         self._owner_key = None
         self._owner_layer = None
         self._snow_layer = None
-        self.army_rects = []  # (rect, army id), refreshed every frame for clicks
+        self.army_rects = []  # (world rect, army id), refreshed every frame for clicks
         self.marching = {}  # army id -> (points, start time, seconds per step): standards on the move
+        scale = MINIMAP_WIDTH / self.size[0]
+        self.minimap_rect = pygame.Rect(self.rect.x + 10, 0, MINIMAP_WIDTH, round(self.size[1] * scale))
+        self.minimap_rect.bottom = self.rect.bottom - 10
+        self._minimap_key = None
+        self._minimap = None
+        self._vignette = painter._vignette(*self.rect.size)
+        capital = data.factions.get(game.player, {}).get("capital")
+        if capital in game.provinces:
+            self.center_on(game.provinces[capital].x, game.provinces[capital].y)
+        else:
+            self.center_on(self.size[0] / 2, self.size[1] / 2)
+
+    # --- the camera ------------------------------------------------------------------------
+
+    def view(self):
+        """The part of the world on show, as a world rect."""
+        return pygame.Rect(round(self.camera[0]), round(self.camera[1]), *self.rect.size)
+
+    def _clamp(self):
+        self.camera[0] = max(0.0, min(self.camera[0], self.size[0] - self.rect.width))
+        self.camera[1] = max(0.0, min(self.camera[1], self.size[1] - self.rect.height))
+
+    def scroll(self, dx, dy):
+        self.camera[0] += dx
+        self.camera[1] += dy
+        self._clamp()
+
+    def center_on(self, x, y):
+        self.camera = [x - self.rect.width / 2, y - self.rect.height / 2]
+        self._clamp()
+
+    def to_world(self, pos):
+        return (pos[0] - self.rect.x + round(self.camera[0]), pos[1] - self.rect.y + round(self.camera[1]))
+
+    def to_screen(self, pos):
+        return (pos[0] + self.rect.x - round(self.camera[0]), pos[1] + self.rect.y - round(self.camera[1]))
+
+    def on_minimap(self, pos):
+        return self.minimap_rect.collidepoint(pos)
+
+    def minimap_to_world(self, pos):
+        scale = self.size[0] / self.minimap_rect.width
+        return ((pos[0] - self.minimap_rect.x) * scale, (pos[1] - self.minimap_rect.y) * scale)
 
     # --- layers ----------------------------------------------------------------------------
 
@@ -80,7 +136,7 @@ class MapView:
         return pygame.transform.smoothscale(small, self.size)
 
     def _build_mask(self, pid, outline):
-        small = self._small()
+        """The province's shape (or its outline), cropped to its bounds: (surface, world top-left)."""
         cells = self.cells[pid]
         if outline:
             cellset = set(cells)
@@ -88,16 +144,20 @@ class MapView:
                 (c, r) for c, r in cells
                 if any((c + dc, r + dr) not in cellset for dc, dr in ((1, 0), (-1, 0), (0, 1), (0, -1)))
             ]
+        left, top = min(c for c, _ in cells) - 2, min(r for _, r in cells) - 2
+        w, h = max(c for c, _ in cells) - left + 3, max(r for _, r in cells) - top + 3
+        small = pygame.Surface((w, h), pygame.SRCALPHA)
         for c, r in cells:
-            small.set_at((c, r), (255, 255, 255, 255))
-        return self._smooth(small)
+            small.set_at((c - left, r - top), (255, 255, 255, 255))
+        return pygame.transform.smoothscale(small, (w * CELL, h * CELL)), (left * CELL, top * CELL)
 
     def _tinted(self, kind, pid, rgba):
         key = (kind, pid, rgba)
         if key not in self._tints:
-            surf = (self.outlines if kind == "outline" else self.masks)[pid].copy()
+            surf, offset = (self.outlines if kind == "outline" else self.masks)[pid]
+            surf = surf.copy()
             surf.fill(rgba, special_flags=pygame.BLEND_RGBA_MULT)
-            self._tints[key] = surf
+            self._tints[key] = (surf, offset)
         return self._tints[key]
 
     def _owner_overlay(self):
@@ -110,6 +170,8 @@ class MapView:
             wash, lines = self._small(), self._small()
             for r, row in enumerate(self.grid):
                 for c, pid in enumerate(row):
+                    if pid is None:
+                        continue
                     owner = provinces[pid].owner
                     color = theme.faction_color(self.game, owner)
                     if owner:
@@ -119,7 +181,7 @@ class MapView:
                         if not (0 <= nc < self.cols and 0 <= nr < self.rows):
                             continue
                         other = self.grid[nr][nc]
-                        if other == pid:
+                        if other == pid or other is None:
                             continue
                         if provinces[other].owner != owner:
                             lines.set_at((c, r), (*color, 235) if owner else (*theme.INK, 120))
@@ -135,6 +197,8 @@ class MapView:
             small = self._small()
             for r in range(self.rows):
                 for c in range(self.cols):
+                    if self.grid[r][c] is None:
+                        continue
                     n = (math.sin(c * 0.21 + math.sin(r * 0.13) * 2) + math.sin(r * 0.17 + c * 0.05)) / 2
                     alpha = int(52 + 38 * n + (_hash(c, r) % 14))
                     small.set_at((c, r), (232, 240, 252, max(0, min(150, alpha))))
@@ -164,20 +228,37 @@ class MapView:
         return (x0 + (x1 - x0) * f, y0 + (y1 - y0) * f)
 
     def province_at(self, pos):
-        x, y = pos
+        """The province under a screen point (None off the map, at sea or abroad)."""
+        if not self.rect.collidepoint(pos) or self.on_minimap(pos):
+            return None
+        x, y = self.to_world(pos)
         c, r = int(x) // CELL, int(y) // CELL
         if 0 <= c < self.cols and 0 <= r < self.rows:
             return self.grid[r][c]
         return None
 
     def army_at(self, pos):
+        if not self.rect.collidepoint(pos) or self.on_minimap(pos):
+            return None
+        pos = self.to_world(pos)
         for rect, army_id in reversed(self.army_rects):
             if rect.collidepoint(pos):
                 return army_id
         return None
 
-    def draw(self, surface, *, hovered=None, selected_province=None, selected_army=None, reach=None,
-             path=None):
+    def draw(self, surface, **marks):
+        """The map as the camera sees it, in the map area of `surface`, with the minimap."""
+        view = self.view()
+        self.canvas.set_clip(view)
+        self.draw_world(self.canvas, **marks)
+        self.canvas.set_clip(None)
+        surface.blit(self.canvas, self.rect.topleft, area=view)
+        surface.blit(self._vignette, self.rect.topleft, special_flags=pygame.BLEND_RGB_MULT)
+        self._draw_minimap(surface, view)
+
+    def draw_world(self, surface, *, hovered=None, selected_province=None, selected_army=None, reach=None,
+                   path=None):
+        """Everything, in world coordinates, onto a world-sized surface (its clip limits the work)."""
         game = self.game
         surface.blit(self.terrain_layer, (0, 0))
         if game.season == "Winter":
@@ -189,11 +270,11 @@ class MapView:
             here = game.armies[selected_army].province if selected_army in game.armies else None
             for pid in game.provinces:
                 if pid not in reach and pid != here:
-                    surface.blit(self._tinted("mask", pid, (16, 12, 8, 120)), (0, 0))
+                    surface.blit(*self._tinted("mask", pid, (16, 12, 8, 120)))
         if hovered:
-            surface.blit(self._tinted("outline", hovered, (255, 248, 220, 230)), (0, 0))
+            surface.blit(*self._tinted("outline", hovered, (255, 248, 220, 230)))
         if selected_province:
-            surface.blit(self._tinted("outline", selected_province, (*theme.HIGHLIGHT, 255)), (0, 0))
+            surface.blit(*self._tinted("outline", selected_province, (*theme.HIGHLIGHT, 255)))
 
         if path:
             self._draw_path(surface, [self._banner_spot(game.provinces[pid]) for pid in path])
@@ -279,3 +360,20 @@ class MapView:
             pygame.draw.circle(surface, (226, 190, 96), plaque, 9, 1)
             theme.outlined(surface, str(len(army.regiments)), (plaque[0], plaque[1] - 1), 13, theme.PARCHMENT, width=1)
             self.army_rects.append((rect.inflate(6, 4), army.id))
+
+    def _draw_minimap(self, surface, view):
+        key = (self._owner_key, self.game.season == "Winter")
+        if key != self._minimap_key or self._minimap is None:
+            self._minimap_key = key
+            world = self.terrain_layer.copy()
+            world.blit(self._owner_overlay(), (0, 0))
+            self._minimap = pygame.transform.smoothscale(world, self.minimap_rect.size)
+        frame = self.minimap_rect
+        pygame.draw.rect(surface, theme.INK, frame.inflate(8, 8))
+        surface.blit(self._minimap, frame)
+        pygame.draw.rect(surface, (226, 190, 96), frame.inflate(4, 4), 2)
+        scale = frame.width / self.size[0]
+        shown = pygame.Rect(frame.x + view.x * scale, frame.y + view.y * scale, view.width * scale,
+                            view.height * scale)
+        pygame.draw.rect(surface, theme.INK, shown.inflate(2, 2), 3)
+        pygame.draw.rect(surface, theme.PARCHMENT, shown, 1)

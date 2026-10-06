@@ -141,7 +141,7 @@ def test_only_the_dragonkin_abduct(game):
 
 def test_hora_wears_down_invaders(game):
     vlad = army_at(game, "voievodat", "targoviste")
-    vlad.province = "lapus"  # Fae land
+    vlad.province = "suceava"  # Fae land
     full = sum(r.hp for r in vlad.regiments)
     game.end_turn()
     assert sum(r.hp for r in vlad.regiments) < full

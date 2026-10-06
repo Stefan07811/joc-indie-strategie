@@ -10,6 +10,8 @@ dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii
 
 ![Harta campaniei](docs/screenshot.png)
 
+![Toată harta: România, Carpații și ținuturile vecine](docs/map.png)
+
 ![Raport de bătălie](docs/battle_report.png)
 
 ![Administrarea unei provincii](docs/province.png)
@@ -35,7 +37,10 @@ python -m legendele
 |---|---|
 | Selectezi o armată | clic pe steagul ei |
 | Mărșăluiești | cu armata selectată, clic pe o provincie luminată (cercul arată costul) |
-| Treci la următoarea armată | `Tab` |
+| Treci la următoarea armată | `Tab` (harta se mută pe ea) |
+| Derulezi harta | săgețile, mouse-ul la marginea hărții sau tragi cu rotița apăsată |
+| Sari oriunde pe hartă | clic pe harta mică din colț |
+| Te întorci la capitală | `Home` sau `C` |
 | Inspectezi o provincie | clic pe ea (sau ții mouse-ul deasupra) |
 | Deselectezi | clic dreapta sau `Esc` |
 | Meniul (salvare, încărcare, setări) | butonul **Menu** sau `Esc` când nu e nimic selectat |
@@ -47,7 +52,9 @@ python -m legendele
 ## Stadiul actual: etapa M7 (bătălii în timp real)
 
 **Harta și mișcarea**
-- Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
+- Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
+  Dunărea, Delta, Marea Neagră și râurile mari, cu ținuturile vecine (Ungaria, Polonia, Serbia, Sultanul)
+  desenate estompat dincolo de graniță. Harta e mai mare decât ecranul și se derulează; o hartă mică arată tot.
 - Armatele au 4 puncte de mișcare pe tură. Câmpia costă 1, dealurile, pădurea și mlaștina 2, munții 3.
   Fiecare facțiune se mișcă ieftin (cost 1) pe terenul ei: Dragonkin prin munți, Fae Court prin păduri,
   Revenants prin mlaștini. Excepție: Inima Munților nu aparține niciunei legende.
@@ -66,7 +73,7 @@ python -m legendele
 - **Raport de bătălie** după fiecare luptă la care participi.
 
 **Victorie și înfrângere**
-- **Cucerire:** 14 din 20 de provincii.
+- **Cucerire:** 21 din 30 de provincii.
 - **Victorie de legendă:** ții Inima Munților și capitala ta 8 ture la rând.
 - O facțiune care își pierde toate provinciile e eliminată. Dacă ești tu, ai pierdut.
 

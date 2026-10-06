@@ -20,15 +20,17 @@ import random
 
 import pygame
 
-from ..mapshape import CELL
-from . import figures
+from ..mapshape import CELL, WARP, _noise, land_mask
+from . import figures, theme
 
-PAINTER_VERSION = 3
-HEIGHT = {"marsh": 0.10, "plains": 0.22, "forest": 0.32, "hills": 0.52, "mountains": 0.86}
+PAINTER_VERSION = 4
+HEIGHT = {"sea": 0.0, "marsh": 0.10, "plains": 0.22, "forest": 0.32, "hills": 0.52, "mountains": 0.86}
 COLOR = {
     "plains": (166, 168, 104), "hills": (164, 148, 104), "forest": (92, 112, 70),
-    "marsh": (104, 116, 96), "mountains": (150, 142, 130),
+    "marsh": (104, 116, 96), "mountains": (150, 142, 130), "sea": (92, 124, 134),
 }
+SHALLOW, DEEP = (122, 152, 150), (58, 86, 104)
+LAND, ABROAD, SEA = 0, 1, 2
 LIGHT = (-0.7, -0.7)  # the sun stands in the north-west
 SHADE_STRENGTH = 2.2
 
@@ -60,8 +62,9 @@ def paint(data, grid, cache_dir=None):
 
 
 def _key(data):
-    blob = json.dumps({"provinces": data.provinces, "rivers": data.map.get("rivers", []),
-                       "terrain": data.terrain, "v": PAINTER_VERSION}, sort_keys=True)
+    blob = json.dumps({"provinces": data.provinces, "terrain": data.terrain, "v": PAINTER_VERSION,
+                       **{k: data.map.get(k) for k in ("width", "height", "rivers", "ranges", "land", "sea", "foreign")}},
+                      sort_keys=True)
     return hashlib.sha1(blob.encode()).hexdigest()[:16]
 
 
@@ -73,23 +76,24 @@ def _hash(ix, iy, seed):
     return ((h ^ (h >> 16)) & 0xFFFF) / 0xFFFF
 
 
-def _value(x, y, seed):
-    ix, iy = math.floor(x), math.floor(y)
-    fx, fy = x - ix, y - iy
-    sx, sy = fx * fx * (3 - 2 * fx), fy * fy * (3 - 2 * fy)
-    a, b = _hash(ix, iy, seed), _hash(ix + 1, iy, seed)
-    c, d = _hash(ix, iy + 1, seed), _hash(ix + 1, iy + 1, seed)
-    return (a + (b - a) * sx) + ((c + (d - c) * sx) - (a + (b - a) * sx)) * sy
-
-
-def _fbm(x, y, seed, octaves=4):
-    total, amp, freq, norm = 0.0, 1.0, 1.0, 0.0
+def _fbm_field(cols, rows, scale, seed, octaves=4):
+    """Fractal value noise (0..1) at every cell, one lattice point every `scale` cells, halving
+    for each octave; built from upscaled lattice images rather than cell by cell."""
+    norm = sum(0.5 ** o for o in range(octaves))
+    acc = pygame.Surface((cols, rows))
+    acc.fill((0, 0, 0))
     for o in range(octaves):
-        total += amp * _value(x * freq, y * freq, seed + o)
-        norm += amp
-        amp *= 0.5
-        freq *= 2.0
-    return total / norm
+        step = scale / 2 ** o  # cells between two lattice points
+        w, h = int(cols / step) + 2, int(rows / step) + 2
+        lattice = pygame.Surface((w, h))
+        amp = 0.5 ** o / norm
+        for y in range(h):
+            for x in range(w):
+                v = int(255 * amp * _hash(x, y, seed + o))
+                lattice.set_at((x, y), (v, v, v))
+        big = pygame.transform.smoothscale(lattice, (max(cols, round(w * step)), max(rows, round(h * step))))
+        acc.blit(big, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+    return [v / 255 for v in pygame.image.tobytes(acc, "RGB")[::3]]
 
 
 def _blur(field, cols, rows, radius):
@@ -115,34 +119,98 @@ def _blur(field, cols, rows, radius):
 
 # --- the painting ----------------------------------------------------------------------------
 
+def _ranges(data, cols, rows):
+    """Per cell, how deep into a mountain chain it lies: 1 on the crest, 0 beyond its foothills."""
+    layer = pygame.Surface((cols, rows))
+    layer.fill((0, 0, 0))
+    steps = 12
+    for chain in data.map.get("ranges", []):
+        points = [(x / CELL, y / CELL) for x, y in chain["points"]]
+        for k in range(steps):
+            width = max(1, round(2 * chain["width"] / CELL * (1 - k / steps)))
+            v = round(255 * (k + 1) / steps)
+            band = pygame.Surface((cols, rows))
+            band.fill((0, 0, 0))
+            pygame.draw.lines(band, (v, v, v), False, points, width)
+            for x, y in points:
+                pygame.draw.circle(band, (v, v, v), (x, y), width / 2)
+            layer.blit(band, (0, 0), special_flags=pygame.BLEND_RGB_MAX)
+    small = pygame.transform.smoothscale(pygame.transform.smoothscale(layer, (cols // 2, rows // 2)), (cols, rows))
+    return [small.get_at((c, r))[0] / 255 for r in range(rows) for c in range(cols)]
+
+
+def _regions(data, grid):
+    """Per cell: the terrain as painted, how mountainous it is, and whether it is our land, a land
+    beyond the border or the sea. The great chains are painted where they truly run, whatever the
+    provinces' terrain says; a province of "mountains" off the chains is painted as high hills."""
+    rows, cols = len(grid), len(grid[0])
+    chains = _ranges(data, cols, rows)
+    terrain_of = {p["id"]: p["terrain"] for p in data.provinces}
+    sea = land_mask([tuple(p) for p in data.map["sea"]], cols, rows) if data.map.get("sea") else None
+    abroad = [f for f in data.map.get("foreign", []) if f["terrain"] != "sea"]
+    terrain, region = [], []
+    for r, row in enumerate(grid):
+        for c, pid in enumerate(row):
+            if pid is not None:
+                # the land's look wanders off the political borders
+                wc = c + round(_noise(c * 2.3, r * 2.3) * 7)
+                wr = r + round(_noise(r * 2.3 + 57, c * 2.3 + 13) * 7)
+                other = grid[wr][wc] if 0 <= wr < rows and 0 <= wc < cols else None
+                terrain.append(terrain_of[other if other is not None else pid])
+                region.append(LAND)
+            elif sea and sea[r][c]:
+                terrain.append("sea")
+                region.append(SEA)
+            else:
+                x, y = c * CELL, r * CELL
+                wx, wy = x + _noise(x / 3, y / 3) * WARP * 6, y + _noise(y / 3 + 311, x / 3 + 97) * WARP * 6
+                near = min(abroad, key=lambda f: (f["x"] - wx) ** 2 + (f["y"] - wy) ** 2) if abroad else None
+                terrain.append(near["terrain"] if near else "plains")
+                region.append(ABROAD)
+    if chains and any(chains):
+        for i, t in enumerate(terrain):
+            if t == "sea":
+                continue
+            if chains[i] > 0.5:
+                terrain[i] = "mountains"
+            elif chains[i] > 0.2:
+                terrain[i] = "forest" if t != "marsh" else t
+            elif t == "mountains":
+                terrain[i] = "hills"
+    return terrain, region, chains
+
+
 def _paint(data, grid):
     rows, cols = len(grid), len(grid[0])
     width, height = cols * CELL, rows * CELL
-    terrain_of = {p["id"]: p["terrain"] for p in data.provinces}
-    cell_terrain = [terrain_of[pid] for row in grid for pid in row]
+    cell_terrain, region, chains = _regions(data, grid)
+    depth = _blur([1.0 if k == SEA else 0.0 for k in region], cols, rows, 6)
 
     # 1. elevation, light and colour at grid resolution
-    raw = [HEIGHT[t] for t in cell_terrain]
+    relief, ridges = _fbm_field(cols, rows, 14, 11), _fbm_field(cols, rows, 7, 29)
+    waves, moisture = _fbm_field(cols, rows, 9, 53), _fbm_field(cols, rows, 20, 41)
+    raw = [HEIGHT[t] + 0.3 * k for t, k in zip(cell_terrain, chains)]
     elevation = _blur(raw, cols, rows, 3)
     for i, t in enumerate(cell_terrain):
-        r, c = divmod(i, cols)
-        n = _fbm(c / 14, r / 14, 11)
-        elevation[i] += (n - 0.5) * 0.16
+        elevation[i] += (relief[i] - 0.5) * 0.16
         if t == "mountains":
-            ridge = 1 - abs(_fbm(c / 7, r / 7, 29) * 2 - 1)
+            ridge = 1 - abs(ridges[i] * 2 - 1)
             elevation[i] += ridge * 0.35 * min(1.0, raw[i])
     small = pygame.Surface((cols, rows))
-    moisture_seed = 41
     for r in range(rows):
         for c in range(cols):
             i = r * cols + c
+            if region[i] == SEA:
+                k = min(1.0, max(0.0, (depth[i] - 0.5) * 2.2 + (waves[i] - 0.5) * 0.3))
+                small.set_at((c, r), tuple(int(SHALLOW[j] + (DEEP[j] - SHALLOW[j]) * k) for j in range(3)))
+                continue
             h = elevation[i]
             dx = elevation[i + 1 if c < cols - 1 else i] - elevation[i - 1 if c > 0 else i]
             dy = elevation[i + cols if r < rows - 1 else i] - elevation[i - cols if r > 0 else i]
             shade = 1.0 + SHADE_STRENGTH * (dx * LIGHT[0] + dy * LIGHT[1]) * -1
             shade = max(0.55, min(1.35, shade))
             base = COLOR[cell_terrain[i]]
-            wet = _fbm(c / 20, r / 20, moisture_seed) - 0.5
+            wet = moisture[i] - 0.5
             tint = (1 - 0.18 * wet, 1 + 0.10 * wet, 1 - 0.06 * wet)
             lift = 1 + (h - 0.4) * 0.25
             small.set_at((c, r), tuple(max(0, min(255, int(base[k] * tint[k] * lift * shade))) for k in range(3)))
@@ -171,6 +239,7 @@ def _paint(data, grid):
         return False
 
     # 3. the land's features
+    _waves(surface, rng, terrain_at, width, height)
     _hills(surface, rng, terrain_at, near_centre, width, height)
     _marsh(surface, rng, terrain_at, near_centre, width, height)
     _fields(surface, rng, terrain_at, data.provinces)
@@ -178,6 +247,9 @@ def _paint(data, grid):
     _roads(surface, data.provinces, rng)
     _forests(surface, rng, terrain_at, near_centre, width, height)
     _mountains(surface, rng, terrain_at, near_centre, width, height)
+
+    # 4b. the lands beyond the border fade out; the coast and the border are inked in
+    _frontiers(surface, grid, region, cols, rows)
 
     # 5. settlements
     capitals = {f["capital"] for f in data.factions.values() if f["capital"]}
@@ -190,12 +262,54 @@ def _paint(data, grid):
             image = figures.village(rng.random(), p["terrain"])
         surface.blit(image, image.get_rect(midbottom=(p["x"], p["y"] - 14)))
 
-    # 6. old-map tone and vignette
+    # 6. the names of the lands beyond, and an old-map tone
+    for f in data.map.get("foreign", []):
+        sea = f["terrain"] == "sea"
+        _label(surface, f["name"], (f["x"], f["y"]), (196, 214, 214) if sea else (70, 54, 40),
+               (40, 62, 76) if sea else (214, 202, 172))
     tone = pygame.Surface((width, height))
     tone.fill((255, 244, 222))
     surface.blit(tone, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
-    surface.blit(_vignette(width, height), (0, 0), special_flags=pygame.BLEND_RGB_MULT)
     return surface
+
+
+def _label(surface, name, pos, color, halo):
+    """A spaced-out italic name, as on an old atlas."""
+    spaced = " ".join(name.upper())
+    rect = theme.outlined(pygame.Surface((1, 1)), spaced, pos, 22, color, halo, style="italic", width=1)
+    area = surface.get_rect().inflate(-32, -32)
+    theme.outlined(surface, spaced, rect.clamp(area).center, 22, color, halo, style="italic", width=1)
+
+
+def _frontiers(surface, grid, region, cols, rows):
+    wash, ink = pygame.Surface((cols, rows), pygame.SRCALPHA), pygame.Surface((cols, rows), pygame.SRCALPHA)
+    for r in range(rows):
+        for c in range(cols):
+            k = region[r * cols + c]
+            if k == ABROAD:
+                wash.set_at((c, r), (196, 182, 150, 150))
+            for dc, dr in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nc, nr = c + dc, r + dr
+                if not (0 <= nc < cols and 0 <= nr < rows):
+                    continue
+                other = region[nr * cols + nc]
+                if k != SEA and other == SEA:
+                    ink.set_at((c, r), (52, 66, 70, 220))  # the coastline
+                elif k == LAND and other == ABROAD:
+                    ink.set_at((c, r), (120, 36, 28, 210))  # the realm's border
+    size = (cols * CELL, rows * CELL)
+    surface.blit(pygame.transform.smoothscale(wash, size), (0, 0))
+    surface.blit(pygame.transform.smoothscale(ink, size), (0, 0))
+
+
+def _waves(surface, rng, terrain_at, width, height):
+    for x, y in _jittered(rng, width, height, 46):
+        if terrain_at(x, y) != "sea" or terrain_at(x + 30, y) != "sea" or terrain_at(x - 30, y) != "sea":
+            continue
+        w = rng.uniform(10, 18)
+        for k in range(2):
+            rect = pygame.Rect(x + k * w - w, y, w, 7)
+            pygame.draw.arc(surface, (150, 176, 180), rect, 0.3, math.pi - 0.3, 1)
 
 
 def _grain(width, height):

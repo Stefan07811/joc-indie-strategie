@@ -34,7 +34,7 @@ def test_reachable_respects_move_points(game):
     vlad = army_at(game, "voievodat", "targoviste")
     reach = game.reachable(vlad)
     assert reach["arges"].cost == 2
-    assert reach["brasov"].cost == 4 and reach["brasov"].path == ["arges", "brasov"]
+    assert reach["iron_gates"].cost == 4 and reach["iron_gates"].path == ["craiova", "iron_gates"]
     assert "heart" not in reach  # 2 (Argeș) + 3 (mountains) > 4
     assert "targoviste" not in reach
 
@@ -42,19 +42,24 @@ def test_reachable_respects_move_points(game):
 def test_marching_stops_at_the_first_province_we_do_not_own(game):
     vlad = army_at(game, "voievodat", "targoviste")
     reach = game.reachable(vlad)
-    assert "black_marsh" in reach      # an enemy army: we may attack it...
-    assert "barlad" not in reach       # ...but not march past it
+    assert "retezat" in reach          # an enemy army: we may attack it...
+    assert "hunedoara" not in reach    # ...but not march past it
     assert "buzau" in reach and "bacau" not in reach  # neutral Buzău ends the march too
 
 
 def test_move_spends_points_and_can_continue(game):
     vlad = army_at(game, "voievodat", "targoviste")
+    game.move_army(vlad.id, "craiova")
+    assert (vlad.province, vlad.moves_left) == ("craiova", 3)
     game.move_army(vlad.id, "arges")
-    assert (vlad.province, vlad.moves_left) == ("arges", 2)
-    game.move_army(vlad.id, "brasov")  # neutral, with a garrison: the march ends in a siege
-    assert (vlad.province, vlad.moves_left) == ("brasov", 0)
+    assert (vlad.province, vlad.moves_left) == ("arges", 1)
     with pytest.raises(MoveError):
-        game.move_army(vlad.id, "bacau")
+        game.move_army(vlad.id, "heart")  # mountains cost 3
+    radu = army_at(game, "voievodat", "craiova")
+    game.move_army(radu.id, "vlasia")  # neutral, with a garrison: the march ends in a siege
+    assert (radu.province, radu.moves_left) == ("vlasia", 0)
+    with pytest.raises(MoveError):
+        game.move_army(radu.id, "dobrogea")
 
 
 def test_illegal_move_changes_nothing(game):

@@ -68,7 +68,10 @@ Fiecare unitate are: atac, apărare, viață, moral, cost de recrutare, întreț
 
 ## 3. Harta de campanie
 
-- **~20 de provincii** pe o **hartă fixă**, desenată de mână, stilizată a Carpaților (munți, păduri, câmpii, râuri, mlaștini).
+- **30 de provincii** pe o **hartă fixă** după geografia reală (longitudine/latitudine, `tools/geography.py`):
+  granițele de azi ale României, simplificate, Carpații, Dunărea și râurile mari, Marea Neagră.
+  Dincolo de graniță, ținuturile vecine sunt doar pictate (nu se joacă). Harta (1600×1240) e mai mare decât
+  ecranul: se derulează, iar o hartă mică arată tot.
 - Fiecare provincie are: **proprietar**, **oraș/așezare**, **3 sloturi de clădiri**, **ordine publică**, **tip de teren**.
 - Jocul e pe ture. **O tură = un anotimp** (primăvară → vară → toamnă → iarnă).
   - Iarna: armatele în afara orașelor pierd oameni (în afară de Strigoi, care devin mai puternici).
@@ -171,7 +174,7 @@ să propui o alianță, să declari război sau să rupi o alianță. AI-ul îț
 
 ## 7. Victoria
 
-- **Victorie prin cucerire:** controlezi 14 din 20 de provincii, **sau**
+- **Victorie prin cucerire:** controlezi 21 din 30 de provincii (70%), **sau**
 - **Victorie de legendă:** controlezi **Inima Munților** + capitala ta timp de 8 ture.
 - **Înfrângere:** îți pierzi toate provinciile.
 
@@ -195,7 +198,7 @@ La fiecare tură, fiecare AI:
 
 1. **Diplomație:** cere pace în războaiele care merg prost sau durează prea mult, caută aliați printre cei care
    îi sunt prieteni, rupe alianțele cu cei pe care a ajuns să-i urască și poate declara război unui vecin mai slab.
-   **Coaliția:** toți se întorc împotriva celui care se apropie de victorie (cea mai mare facțiune, de la 6 provincii,
+   **Coaliția:** toți se întorc împotriva celui care se apropie de victorie (cea mai mare facțiune, de la 30% din provincii,
    sau cine ține Inima de 3 anotimpuri) și nu fac pace cu el.
 2. **Economie:** o clădire pe tură (întâi clădirea facțiunii în provinciile neliniștite; ziduri la granițele de război
    când e bogată), apoi recrutează cât își permite fără să intre pe minus.
@@ -249,7 +252,7 @@ tests/                 # teste pentru reguli și AI
 | Întrebare | Decizie |
 |---|---|
 | Harta | **Fixă**, desenată de mână (`data/map.json`), aceeași în fiecare partidă |
-| Victoria | **Da**: cucerire (14/20 provincii) **sau** Inima Munților + capitala timp de 8 ture |
+| Victoria | **Da**: cucerire (21/30 provincii) **sau** Inima Munților + capitala timp de 8 ture |
 | Limba jocului | **Engleză** (textele din joc). Documentația poate rămâne în română |
 
 ### Încă deschise (până se hotărăște altceva, folosim varianta propusă)

@@ -9,7 +9,7 @@ from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
                     Rebellion, SiegeStarted, Victory, diplomacy)
 from ..game.save import load_game
-from . import theme
+from . import map_view, theme
 from .assets import Assets
 from .audio import Audio
 from .battle_screen import fight
@@ -124,6 +124,7 @@ class Campaign:
         self._dialog_from = 0
         self.pause = None  # the pause menu, while open
         self.menu_rect = pygame.Rect(theme.MAP_RECT.right - 180, 10, 164, 36)
+        self.dragging = None  # "map" (middle button) or "minimap" (left button) while the view is dragged
 
     # --- input -----------------------------------------------------------------------------
 
@@ -148,7 +149,18 @@ class Campaign:
                 self._report(self.game.events[self._dialog_from:])  # what we did in there
             return
         if event.type == pygame.MOUSEMOTION:
-            self.hovered = self.map.province_at(event.pos) if theme.MAP_RECT.collidepoint(event.pos) else None
+            if self.dragging == "map":
+                self.map.scroll(-event.rel[0], -event.rel[1])
+            elif self.dragging == "minimap":
+                self.map.center_on(*self.map.minimap_to_world(event.pos))
+            self.hovered = self.map.province_at(event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2):
+            self.dragging = None
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2:
+            self.dragging = "map"
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.map.on_minimap(event.pos):
+            self.dragging = "minimap"
+            self.map.center_on(*self.map.minimap_to_world(event.pos))
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self._click(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -162,6 +174,8 @@ class Campaign:
                 self.deselect()
             elif event.key == pygame.K_TAB:
                 self.select_next_army()
+            elif event.key in (pygame.K_HOME, pygame.K_c):
+                self.center_on_capital()
             elif event.key == pygame.K_m:
                 self.open_province()
             elif event.key == pygame.K_d:
@@ -279,6 +293,35 @@ class Campaign:
         nxt = ids[(ids.index(self.selected_army) + 1) % len(ids)] if self.selected_army in ids else ids[0]
         self.selected_army = nxt
         self.selected_province = self.game.armies[nxt].province
+        self.center_on(self.selected_province)
+
+    def center_on(self, pid):
+        p = self.game.provinces[pid]
+        self.map.center_on(p.x, p.y + 20)
+
+    def center_on_capital(self):
+        capital = self.game.data.factions[self.game.player]["capital"]
+        if capital in self.game.provinces:
+            self.center_on(capital)
+
+    def update(self, dt):
+        """Scroll the map with the arrow keys or with the mouse at its edges."""
+        if self.reports or self.pause or self.dialog or self.dragging:
+            return
+        keys = pygame.key.get_pressed()
+        dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        if pygame.mouse.get_focused():
+            x, y = pygame.mouse.get_pos()
+            area = self.map.rect
+            if area.collidepoint(x, y) and not self.map.on_minimap((x, y)):
+                dx += (x >= area.right - map_view.EDGE) - (x < area.left + map_view.EDGE)
+                dy += (y >= area.bottom - map_view.EDGE) - (y < area.top + map_view.EDGE)
+        dx, dy = max(-1, min(1, dx)), max(-1, min(1, dy))
+        if dx or dy:
+            step = map_view.SCROLL_SPEED * dt
+            self.map.scroll(dx * step, dy * step)
+            self.hovered = self.map.province_at(pygame.mouse.get_pos())
 
     def end_turn(self):
         if self.game.over:
@@ -375,8 +418,12 @@ class App:
         if self._backdrop is None:
             first = next(f for f, d in self.data.factions.items() if d["playable"])
             view = MapView(Game.new(self.data, first, seed=0), self.assets)
-            self._backdrop = pygame.Surface(view.size)
-            view.draw(self._backdrop)
+            world = pygame.Surface(view.size)
+            view.draw_world(world)
+            scale = max(w / s for w, s in zip(theme.WINDOW_SIZE, view.size))
+            world = pygame.transform.smoothscale(world, [round(s * scale) for s in view.size])
+            self._backdrop = pygame.Surface(theme.WINDOW_SIZE)
+            self._backdrop.blit(world, world.get_rect(center=self._backdrop.get_rect().center))
         return self._backdrop
 
     def apply_display(self):
@@ -393,6 +440,9 @@ class App:
                     break
                 self.scene.handle(event)
             self.audio.update()
+            dt = self.clock.get_time() / 1000
+            if hasattr(self.scene, "update"):
+                self.scene.update(min(dt, 0.1))
             self.scene.draw(self.screen)
             pygame.display.flip()
             self.clock.tick(60)

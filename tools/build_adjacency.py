@@ -11,14 +11,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from legendele.mapshape import adjacency, build_grid, components  # noqa: E402
+from legendele.mapshape import adjacency, components, map_grid  # noqa: E402
 
 MAP_PATH = ROOT / "legendele" / "data" / "map.json"
 
 
 def main():
     data = json.loads(MAP_PATH.read_text(encoding="utf-8"))
-    grid = build_grid(data["provinces"], data["width"], data["height"])
+    grid = map_grid(data)
     adj = adjacency(grid)
     for p in data["provinces"]:
         pieces = components(grid, p["id"])
@@ -29,7 +29,9 @@ def main():
 
     # Keep one province per line so the file stays easy to edit by hand.
     text = json.dumps(data, ensure_ascii=False, indent=2)
-    for key in ("provinces", "rivers", "start_armies"):
+    for key in ("provinces", "rivers", "ranges", "foreign", "start_armies"):
+        if key not in data:
+            continue
         compact = ",\n    ".join(json.dumps(item, ensure_ascii=False) for item in data[key])
         start = text.index(f'"{key}": [')
         end = _matching_bracket(text, text.index("[", start))

@@ -135,8 +135,8 @@ def test_fight_hook_takes_only_the_players_battles(data):
                            province=pid).finish()
     game.fight_hook = hook
     vlad = next(a for a in game.armies_of("voievodat") if a.province == "targoviste")
-    events = game.move_army(vlad.id, "black_marsh")
-    assert calls == [("voievodat", "strigoi", "black_marsh", "field")]
+    events = game.move_army(vlad.id, "retezat")
+    assert calls == [("voievodat", "zmei", "retezat", "field")]
     assert any(isinstance(e, Battle) for e in events)
     for _ in range(4):
         game.end_turn()
@@ -147,7 +147,7 @@ def test_hook_returning_none_keeps_the_auto_resolve(data):
     game = Game.new(data, "voievodat", seed=3)
     game.fight_hook = lambda *args: None
     vlad = next(a for a in game.armies_of("voievodat") if a.province == "targoviste")
-    assert any(isinstance(e, Battle) for e in game.move_army(vlad.id, "black_marsh"))
+    assert any(isinstance(e, Battle) for e in game.move_army(vlad.id, "retezat"))
 
 
 # --- the battle screen -------------------------------------------------------------------

@@ -15,6 +15,20 @@ def click(app, pos, button=1):
     app.scene.draw(app.screen)
 
 
+def on_map(app, x, y):
+    """Bring a world point into view; returns where it is on the screen."""
+    app.scene.map.center_on(x, y)
+    app.scene.draw(app.screen)
+    return app.scene.map.to_screen((x, y))
+
+
+def banner(app, army_id):
+    """Where an army's standard is on the screen (brought into view)."""
+    app.scene.draw(app.screen)
+    rect = next(r for r, aid in app.scene.map.army_rects if aid == army_id)
+    return on_map(app, *rect.center)
+
+
 @pytest.fixture(scope="module")
 def app(data):
     app = App(data)
@@ -31,12 +45,11 @@ def test_choose_faction_then_march(app):
 
     game = app.scene.game
     pajura = next(a for a in game.armies_of("zmei") if a.province == "retezat")
-    banner = next(rect for rect, aid in app.scene.map.army_rects if aid == pajura.id)
-    click(app, banner.center)
+    click(app, banner(app, pajura.id))
     assert app.scene.selected_army == pajura.id
 
     sibiu = game.provinces["sibiu"]
-    click(app, (sibiu.x, sibiu.y - 30))
+    click(app, on_map(app, sibiu.x, sibiu.y - 30))
     assert pajura.province == "sibiu"
     assert pajura.moves_left == 0  # marching into foreign land ends the turn's march
     assert game.besieging(pajura)  # Sibiu has an Outlaw garrison
@@ -72,11 +85,11 @@ def test_attacking_shows_a_battle_report(app):
     app.scene.draw(app.screen)
     game = app.scene.game
     vlad = next(a for a in game.armies_of("voievodat") if a.province == "targoviste")
-    click(app, next(r for r, aid in app.scene.map.army_rects if aid == vlad.id).center)
-    marsh = game.provinces["black_marsh"]
-    app.scene.hovered = "black_marsh"
+    click(app, banner(app, vlad.id))
+    retezat = game.provinces["retezat"]
+    app.scene.hovered = "retezat"
     app.scene.draw(app.screen)  # with the battle forecast in the panel
-    click(app, (marsh.x + 40, marsh.y - 40))
+    click(app, on_map(app, retezat.x + 40, retezat.y - 40))
     assert app.scene.reports and type(app.scene.reports[0]).__name__ == "Battle"
     date = game.date
     press(app, pygame.K_RETURN)  # Enter closes the report instead of ending the turn
@@ -107,7 +120,7 @@ def test_game_over_offers_the_main_menu(app):
         if p.owner is None:
             p.garrison = []
     game.provinces["heart"].owner = "zmei"
-    for p in list(game.provinces.values())[:14]:
+    for p in list(game.provinces.values())[:game.victory_rules["conquest_provinces"]]:
         p.owner = "zmei"
     game._check_end()
     app.scene._report(game.events)
@@ -122,9 +135,9 @@ def test_cannot_move_enemy_armies(app):
     app.scene.draw(app.screen)
     game = app.scene.game
     enemy = next(a for a in game.armies_of("strigoi") if a.province == "black_marsh")
-    click(app, next(r for r, aid in app.scene.map.army_rects if aid == enemy.id).center)
+    click(app, banner(app, enemy.id))
     buzau = game.provinces["buzau"]
-    click(app, (buzau.x, buzau.y - 30))
+    click(app, on_map(app, buzau.x, buzau.y - 30))
     assert enemy.province == "black_marsh"
 
 
@@ -143,7 +156,7 @@ def test_manage_a_province_build_and_recruit(app):
     app.scene.draw(app.screen)
     game = app.scene.game
     craiova = game.provinces["craiova"]
-    click(app, (craiova.x, craiova.y - 40))
+    click(app, on_map(app, craiova.x, craiova.y - 40))
     assert app.scene.panel.manage_rect is not None
     click(app, app.scene.panel.manage_rect.center)
     dialog = app.scene.dialog
@@ -276,3 +289,24 @@ def test_envoys_wait_for_an_answer(app, real_data):
     assert type(app.scene.reports[0]).__name__ == "Proposal"
     click(app, ACCEPT_RECT.center)
     assert diplomacy.relation(game, "voievodat", "zmei") == "peace" and not game.proposals
+
+
+def test_the_map_scrolls_and_the_minimap_jumps(app):
+    app.start_campaign("voievodat", seed=1)
+    view = app.scene.map
+    capital = app.scene.game.provinces["targoviste"]
+    assert view.view().collidepoint(capital.x, capital.y)  # the campaign opens on our capital
+    view.scroll(-10000, -10000)
+    assert view.camera == [0.0, 0.0]
+    view.scroll(10000, 10000)
+    assert view.view().bottomright == view.size
+    press(app, pygame.K_HOME)
+    assert view.view().collidepoint(capital.x, capital.y)
+
+    app.scene.handle(pygame.event.Event(pygame.MOUSEBUTTONDOWN, pos=view.minimap_rect.topleft, button=1))
+    app.scene.handle(pygame.event.Event(pygame.MOUSEBUTTONUP, pos=view.minimap_rect.topleft, button=1))
+    assert view.camera == [0.0, 0.0]
+    assert app.scene.selected_province is None  # a click on the minimap is not a click on the map
+
+    sea = next(f for f in app.data.map["foreign"] if f["terrain"] == "sea")
+    assert view.province_at(on_map(app, sea["x"], sea["y"])) is None

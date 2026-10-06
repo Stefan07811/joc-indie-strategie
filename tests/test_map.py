@@ -1,15 +1,15 @@
 import pytest
 
-from legendele.mapshape import adjacency, build_grid, components
+from legendele.mapshape import adjacency, components, map_grid
 
 
 @pytest.fixture(scope="module")
 def grid(data):
-    return build_grid(data.provinces, data.map["width"], data.map["height"])
+    return map_grid(data.map, data.provinces)
 
 
-def test_twenty_provinces(data):
-    assert len(data.provinces) == 20
+def test_thirty_provinces(data):
+    assert len(data.provinces) == 30
 
 
 def test_each_faction_capital_is_owned_by_it(data):
@@ -52,3 +52,8 @@ def test_every_province_is_one_piece_and_contains_its_centre(data, grid):
     for p in data.provinces:
         assert components(grid, p["id"]) == 1, p["id"]
         assert grid[p["y"] // 4][p["x"] // 4] == p["id"]
+
+
+def test_the_sea_and_the_lands_beyond_belong_to_no_province(data, grid):
+    for f in data.map["foreign"]:
+        assert grid[f["y"] // 4][f["x"] // 4] is None, f["name"]

@@ -115,9 +115,11 @@ def attitude(game, fid, other):
         parts.append(("Common enemy", 20))
     if game.heart_turns.get(other, 0):
         parts.append(("Holds the Heart", -8 * game.heart_turns[other]))
-    lead = len(game.provinces_of(other)) - 6
+    # Realms grow wary of anyone holding more than 30% of the land.
+    share = len(game.provinces_of(other)) / len(game.provinces)
+    lead = share - 0.3
     if lead > 0:
-        parts.append(("Too powerful", -4 * lead))
+        parts.append(("Too powerful", -round(80 * lead)))
     return sum(v for _, v in parts), parts
 
 

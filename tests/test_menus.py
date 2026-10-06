@@ -143,3 +143,9 @@ def test_custom_battle(app):
     f = screen.field()
     assert f.weather == "snow" and f.night and f.player_side == 0
     assert f.finish().kind == "assault"
+
+
+def test_every_legend_has_a_band():
+    from legendele.ui.audio import BANDS
+    assert set(BANDS) == set(MODES) >= {"battle", "outlaws", "solomonari"}
+    assert len(synth_music("battle", seconds=3.0)) == 2 * 3 * 22050

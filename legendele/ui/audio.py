@@ -4,7 +4,10 @@ A WAV/OGG file in assets/sounds/ (effects) or assets/music/ (themes) with the sa
 synthesised version, so real recordings can be dropped in later. Without an audio device the game
 simply stays silent.
 
-The music is a doina-like tune over a drone: each legend gets its own mode of the folk scales.
+The music follows the old village pair of dances: a free, slow doina over a drone, then a hora with a
+drum and a plucked cobza under the tune. Each legend gets its own mode of the folk scales and its own
+band (a fiddle for the outlaws, church bells for the Principality, thunder for the solomonari, ...).
+Themes take a second or two to synthesise, so they are made in the background.
 """
 
 import array
@@ -28,8 +31,21 @@ MODES = {
     "strigoi": [0, 1, 3, 5, 6, 8, 10],     # Locrian: hollow and grave
     "outlaws": [0, 2, 4, 5, 7, 9, 10],     # Mixolydian: a merry outlaw ballad
     "solomonari": [0, 2, 3, 5, 7, 8, 11],  # harmonic minor: a dark, learned spell
+    "battle": [0, 1, 4, 5, 7, 8, 10],      # Phrygian dominant, driven hard
 }
-TEMPO = {"menu": 84, "voievodat": 92, "zmei": 104, "iele": 112, "strigoi": 72, "outlaws": 120, "solomonari": 80}
+TEMPO = {"menu": 84, "voievodat": 92, "zmei": 104, "iele": 112, "strigoi": 72, "outlaws": 120, "solomonari": 80,
+         "battle": 138}
+# Each theme's band: the lead instrument, extra colours, and whether the hora half has a drum and a cobza.
+BANDS = {
+    "menu": {"lead": "flute", "drum": True, "cobza": True},
+    "voievodat": {"lead": "reed", "drum": True, "cobza": True, "bells": True},
+    "zmei": {"lead": "reed", "drum": True, "cobza": False, "low_drum": True},
+    "iele": {"lead": "flute", "drum": False, "cobza": True, "bells": True},
+    "strigoi": {"lead": "fiddle", "drum": True, "cobza": False, "bells": True, "low_drum": True},
+    "outlaws": {"lead": "fiddle", "drum": True, "cobza": True},
+    "solomonari": {"lead": "flute", "drum": False, "cobza": True, "thunder": True},
+    "battle": {"lead": "reed", "drum": True, "cobza": False, "low_drum": True, "hora_only": True},
+}
 D3 = 146.83
 
 
@@ -54,6 +70,9 @@ def _note(out, start, freq, dur, vol, timbre="flute", attack=0.01, release=0.08,
             s = math.sin(phase) + 0.25 * math.sin(2 * phase) + 0.1 * math.sin(3 * phase)
         elif timbre == "reed":
             s = math.sin(phase) + 0.5 * math.sin(2 * phase) + 0.33 * math.sin(3 * phase) + 0.2 * math.sin(5 * phase)
+        elif timbre == "fiddle":  # a bowed string: rich in harmonics, a slow swell
+            s = (math.sin(phase) + 0.5 * math.sin(2 * phase) + 0.33 * math.sin(3 * phase)
+                 + 0.25 * math.sin(4 * phase) + 0.18 * math.sin(5 * phase))
         elif timbre == "bell":
             s = math.sin(phase) + 0.6 * math.sin(2.76 * phase) + 0.3 * math.sin(5.4 * phase)
             env *= math.exp(-3.0 * k / n)
@@ -145,42 +164,114 @@ def synth_effect(name):
         out = _blank(1.6)
         for semis in (0, 4, 7):
             _note(out, 0, _freq(D3 * 2, semis), 1.5, 0.3, "flute", attack=0.2, release=0.6)
+    elif name == "horn":  # a war horn: the charge, the special orders, the start of a battle
+        out = _blank(1.2)
+        _note(out, 0, _freq(D3 / 2, 7), 0.35, 0.6, "reed", attack=0.08, release=0.1)
+        _note(out, t(0.32), _freq(D3, 0), 0.8, 0.7, "reed", attack=0.05, release=0.35, vibrato=0.008)
+    elif name == "volley":  # a cloud of arrows
+        out = _blank(0.6)
+        for i in range(6):
+            _noise(out, t(0.04 * i), 0.3, 0.25, decay=6, seed=30 + i)
+    elif name == "gunshot":
+        out = _blank(0.6)
+        _noise(out, 0, 0.5, 1.0, decay=12, seed=40)
+        _thump(out, 0, 60, 0.3, 0.8)
+    elif name == "spell":  # a solomonar's spark
+        out = _blank(0.7)
+        for i, semis in enumerate((12, 19, 24, 31)):
+            _note(out, t(0.05 * i), _freq(D3 * 2, semis), 0.5, 0.25, "bell")
+    elif name == "thunder":
+        out = _blank(1.6)
+        _noise(out, 0, 1.5, 1.0, decay=3, seed=50)
+        _thump(out, 0, 45, 1.2, 0.7)
+    elif name == "gate":  # the ram breaks through
+        out = _blank(0.9)
+        _thump(out, 0, 55, 0.6, 1.0)
+        _noise(out, 0, 0.7, 0.8, decay=5, seed=60)
+    elif name == "fanfare":  # an achievement
+        out = _blank(1.4)
+        for i, semis in enumerate((0, 7, 12, 16, 19)):
+            _note(out, t(0.11 * i), _freq(D3 * 2, semis), 1.2 - 0.11 * i, 0.35, "bell")
+        _note(out, t(0.44), _freq(D3 * 2, 12), 0.9, 0.3, "reed", release=0.4)
     else:
         raise KeyError(name)
     return _pcm(out)
 
 
-def synth_music(theme, seconds=24.0, seed=None):
-    """Raw samples for a looping theme: a drone of the root and fifth, under a wandering doina tune."""
+def synth_music(theme, seconds=32.0, seed=None):
+    """Raw samples for a looping theme: a free doina over a drone, then a hora (drum, cobza and tune).
+
+    Short themes (tests) are all hora. The loop ends on the root so the seam is soft."""
     mode = MODES[theme]
+    band = BANDS.get(theme, BANDS["menu"])
     rng = random.Random(seed if seed is not None else theme)
     beat = 60 / TEMPO[theme]
+    bar = beat * 4
     out = _blank(seconds)
     root = D3 / 2 if theme == "strigoi" else D3
     # the drone, re-struck every four bars so the loop seam is soft
-    bar = beat * 4
     at = 0.0
     while at < seconds - 0.01:
         length = min(bar * 4, seconds - at)
-        _note(out, int(at * RATE), root, length, 0.12, "reed", attack=0.3, release=0.3)
-        _note(out, int(at * RATE), root * 1.5, length, 0.07, "reed", attack=0.3, release=0.3)
+        _note(out, int(at * RATE), root, length, 0.11, "reed", attack=0.3, release=0.3)
+        _note(out, int(at * RATE), root * 1.5, length, 0.06, "reed", attack=0.3, release=0.3)
         at += bar * 4
-    # the tune: a random walk on the mode, phrases ending on the root
-    degree, at = 7, 0.0
-    while at < seconds - beat:
-        phrase_end = min(seconds - beat, at + bar * 2)
+    # the doina takes the first third, unless the theme is all dance (or too short for both)
+    doina_end = 0.0 if band.get("hora_only") or seconds < 12 else round(seconds / 3 / bar) * bar
+    _tune(out, rng, mode, root, 0.0, doina_end, beat * 1.6, band["lead"], free=True)
+    _tune(out, rng, mode, root, doina_end, seconds, beat, band["lead"], free=False)
+    # the hora's rhythm section
+    at, n = doina_end, 0
+    while at < seconds - 0.01:
+        start = int(at * RATE)
+        if band.get("drum"):
+            if n % 2 == 0:
+                _thump(out, start, 80 if band.get("low_drum") else 110, 0.22, 0.45)
+            _noise(out, start, 0.06, 0.12 if n % 2 else 0.2, decay=25, seed=n % 8)
+        if band.get("cobza"):
+            freq = root * (1 if n % 4 == 0 else 1.5 if n % 4 == 2 else 2)
+            _note(out, start, freq, beat * 0.9, 0.12, "pluck")
+        at += beat
+        n += 1
+    # colours: church bells, a toll for the dead, distant thunder
+    if band.get("bells"):
+        at = doina_end + bar
+        while at < seconds - bar:
+            _note(out, int(at * RATE), root * 4 if theme != "strigoi" else root * 2, bar * 1.5, 0.1, "bell")
+            at += bar * 4
+    if band.get("thunder"):
+        for at in (bar * 2, seconds * 0.55):
+            if at < seconds - 2:
+                _noise(out, int(at * RATE), 2.0, 0.25, decay=2.5, seed=int(at))
+                _thump(out, int(at * RATE), 40, 1.5, 0.2)
+    return _pcm(out)
+
+
+def _tune(out, rng, mode, root, start, end, beat, lead, free):
+    """The melody: a random walk on the mode in two-bar phrases, each ending on the root. The doina
+    (free) is slower, with long held notes and grace notes in the old style."""
+    degree, at = 7, start
+    while at < end - beat:
+        phrase_end = min(end - beat, at + beat * 8)
         while at < phrase_end:
-            length = beat * rng.choice((0.5, 0.5, 1, 1, 1.5, 2))
+            choices = (1, 1.5, 2, 3) if free else (0.5, 0.5, 1, 1, 1.5, 2)
+            length = beat * rng.choice(choices)
             degree = max(0, min(13, degree + rng.choice((-2, -1, -1, 0, 1, 1, 2))))
             octave, step = divmod(degree, 7)
             freq = _freq(root * 2, mode[step] + 12 * octave)
-            if rng.random() < 0.85:
-                _note(out, int(at * RATE), freq, length * 0.95, 0.22, "flute", attack=0.03, release=0.1, vibrato=0.006)
+            if rng.random() < 0.88:
+                if free and length > beat and rng.random() < 0.5:  # a grace note from above
+                    up_oct, up = divmod(degree + 1, 7)
+                    _note(out, int(at * RATE), _freq(root * 2, mode[up] + 12 * up_oct), 0.07, 0.16, lead,
+                          attack=0.01, release=0.02)
+                    at += 0.06
+                _note(out, int(at * RATE), freq, length * 0.95, 0.2, lead, attack=0.04 if free else 0.02,
+                      release=0.15 if free else 0.08, vibrato=0.012 if free else 0.006)
             at += length
-        _note(out, int(at * RATE), root * 2, beat * 1.5, 0.2, "flute", attack=0.05, release=0.4, vibrato=0.006)
+        if at < end - beat:
+            _note(out, int(at * RATE), root * 2, beat * 1.5, 0.18, lead, attack=0.05, release=0.4, vibrato=0.008)
         at += beat * 2
         degree = 7
-    return _pcm(out)
 
 
 class Audio:
@@ -189,6 +280,7 @@ class Audio:
     def __init__(self, settings):
         self.settings = settings
         self.enabled = False
+        self.wanted = None  # the theme asked for last (kept even without a device)
         try:
             pygame.mixer.init(RATE, -16, 1, 512)
             pygame.mixer.set_reserved(1)
@@ -199,7 +291,6 @@ class Audio:
         self._effects = {}
         self._themes = {}
         self._pending = {}  # theme -> raw bytes being synthesised in the background
-        self._wanted = None
         self._playing = None
 
     def play(self, name):
@@ -213,9 +304,9 @@ class Audio:
 
     def music(self, theme):
         """Switch to `theme` (synthesising it in the background the first time)."""
+        self.wanted = theme
         if not self.enabled:
             return
-        self._wanted = theme
         if theme not in self._themes and theme not in self._pending:
             loaded = self._load("music", theme)
             if loaded:
@@ -235,10 +326,10 @@ class Audio:
             if raw is not None:
                 self._themes[theme] = pygame.mixer.Sound(buffer=raw)
                 del self._pending[theme]
-        if self._wanted != self._playing and self._wanted in self._themes:
+        if self.wanted != self._playing and self.wanted in self._themes:
             self.music_channel.fadeout(400)
-            self.music_channel.play(self._themes[self._wanted], loops=-1, fade_ms=800)
-            self._playing = self._wanted
+            self.music_channel.play(self._themes[self.wanted], loops=-1, fade_ms=800)
+            self._playing = self.wanted
         self.music_channel.set_volume(self.settings["music"])
 
     def _load(self, folder, name):
@@ -250,4 +341,4 @@ class Audio:
 
 
 EFFECTS = ("click", "select", "march", "battle", "victory", "defeat", "build", "recruit", "turn", "alarm",
-           "coins", "peace")
+           "coins", "peace", "horn", "volley", "gunshot", "spell", "thunder", "gate", "fanfare")

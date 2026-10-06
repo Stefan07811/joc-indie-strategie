@@ -23,6 +23,7 @@ HUD = pygame.Rect(0, FIELD_H, theme.WINDOW_SIZE[0], theme.WINDOW_SIZE[1] - FIELD
 VIEW = pygame.Rect(0, 0, FIELD_W, FIELD_H)  # where the field is shown on the screen
 STEP = 1 / 30
 SPEEDS = (1, 2, 4)
+SOUND_GAP = {"volley": 0.7, "gunshot": 0.35, "spell": 0.5, "thunder": 2.5}  # battle seconds between repeats
 ZOOMS = (1.0, 1.5, 2.0)
 PAN_SPEED = 600
 
@@ -155,6 +156,8 @@ class BattleScreen:
         self.mouse = (0, 0)
         self.result = None
         self.clash_at = 0.0
+        self.heard = {}  # sound -> battle time it was last played (so a volley is not a hundred volleys)
+        self.notes_heard = 0
         self.shouts = []  # (unit id, words, until): special orders called out
         self.zoom = 1.0
         self.cam = [0.0, 0.0]  # the field point at the view's top-left corner
@@ -277,7 +280,7 @@ class BattleScreen:
         """The regiments are in place: let battle begin."""
         self.deploying = False
         self.paused = False
-        self.app.audio.play("alarm")
+        self.app.audio.play("horn")
 
     def special(self):
         used = self.field.use_ability(self.selected)
@@ -285,7 +288,7 @@ class BattleScreen:
             u = self.field.unit(uid)
             self.shouts.append((uid, self.field.ability(u)["name"], self.field.time + 2.0))
         if used:
-            self.app.audio.play("battle")
+            self.app.audio.play("horn")
 
     def _button(self, name):
         f = self.field
@@ -362,6 +365,15 @@ class BattleScreen:
         if any(u.fighting is not None for u in f.units) and f.time - self.clash_at > 2.5:
             self.clash_at = f.time
             self.app.audio.play("battle")
+        for name in self.effects.sounds:
+            if f.time - self.heard.get(name, -99) >= SOUND_GAP.get(name, 0.6):
+                self.heard[name] = f.time
+                self.app.audio.play(name)
+        self.effects.sounds.clear()
+        if len(f.notes) > self.notes_heard:
+            if any("breaks a gate" in n for n in f.notes[self.notes_heard:]):
+                self.app.audio.play("gate")
+            self.notes_heard = len(f.notes)
         if f.over:
             won = (f.result.winner == "attacker") == (self.me == 0)
             self.app.audio.play("victory" if won else "defeat")
@@ -383,6 +395,8 @@ class BattleScreen:
     def run(self):
         clock = pygame.time.Clock()
         self.app.audio.play("alarm")
+        before = self.app.audio.wanted
+        self.app.audio.music("battle")
         while self.result is None:
             dt = clock.tick(60) / 1000
             for event in pygame.event.get():
@@ -394,6 +408,8 @@ class BattleScreen:
             self.update(dt)
             self.app.audio.update()
             self.app.present(self.draw)
+        if before:
+            self.app.audio.music(before)
         return self.result
 
     # --- drawing -----------------------------------------------------------------------------

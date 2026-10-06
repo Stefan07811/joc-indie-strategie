@@ -328,3 +328,17 @@ def test_weather_and_assaults_are_drawn(app, data, weather, night):
         screen.update(1 / 10)
     screen.draw(app.screen)
     assert f.ram is not None
+
+
+def test_the_battle_is_heard(app, data, monkeypatch):
+    from legendele.ui.battle_screen import BattleScreen
+    played = []
+    monkeypatch.setattr(app.audio, "play", played.append)
+    game = Game.new(data, "voievodat", seed=1)
+    f = field(data, ["arcasi"] * 4, ["pui_de_zmeu"] * 3)
+    screen = BattleScreen(app, game, f)
+    screen.paused = False
+    for _ in range(600):
+        screen.update(1 / 30)
+    assert "volley" in played
+    assert played.count("volley") < 40  # the volleys are spaced out, not one per arrow

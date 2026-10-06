@@ -47,15 +47,22 @@ def test_marching_stops_at_the_first_province_we_do_not_own(game):
     assert "buzau" in reach and "bacau" not in reach  # neutral Buzău ends the march too
 
 
+def plain(army):
+    """No Swift or Drunkard general: the standard 4 moves."""
+    army.traits.clear()
+    army.moves_left = 4
+    return army
+
+
 def test_move_spends_points_and_can_continue(game):
-    vlad = army_at(game, "voievodat", "targoviste")
+    vlad = plain(army_at(game, "voievodat", "targoviste"))
     game.move_army(vlad.id, "craiova")
     assert (vlad.province, vlad.moves_left) == ("craiova", 3)
     game.move_army(vlad.id, "arges")
     assert (vlad.province, vlad.moves_left) == ("arges", 2)
     with pytest.raises(MoveError):
         game.move_army(vlad.id, "heart")  # mountains cost 3
-    radu = army_at(game, "voievodat", "craiova")
+    radu = plain(army_at(game, "voievodat", "craiova"))
     game.move_army(radu.id, "targoviste")
     game.move_army(radu.id, "buzau")  # neutral, with a garrison: the march ends in a siege
     assert (radu.province, radu.moves_left) == ("buzau", 0)
@@ -64,7 +71,7 @@ def test_move_spends_points_and_can_continue(game):
 
 
 def test_illegal_move_changes_nothing(game):
-    vlad = army_at(game, "voievodat", "targoviste")
+    vlad = plain(army_at(game, "voievodat", "targoviste"))
     with pytest.raises(MoveError):
         game.move_army(vlad.id, "maramures")
     assert (vlad.province, vlad.moves_left) == ("targoviste", 4)

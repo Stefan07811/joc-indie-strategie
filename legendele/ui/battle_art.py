@@ -367,6 +367,7 @@ FIGURES = {
     "wolf": (_wolf, (18, 17), 10, 5, 8.0),
 }
 GUNS = ("gun", "rifle")
+SHOT_SOUNDS = {"gun": "gunshot", "rifle": "gunshot", "staff": "spell", "cloud": "thunder"}  # others: "volley"
 STEPS = (0, 1, 0, -1)  # a walking cycle
 _figures = {}
 
@@ -533,6 +534,7 @@ class Effects:
         self.rng = random.Random(2)
         self.shots = []  # [x0, y0, x1, y1, start, duration, height, kind]
         self.puffs = []  # [x, y, vx, vy, start, life, r0, r1, color, alpha]
+        self.sounds = []  # names of sounds to play, collected for the battle screen
         self.timers = {}
         dust = {"marsh": (90, 110, 96), "forest": (110, 104, 80), "mountains": (150, 144, 132)}
         self.dust_color = dust.get(field.terrain, (176, 158, 116))
@@ -584,6 +586,7 @@ class Effects:
         x0, y0 = a.x + math.cos(u.facing) * 4, a.y - 9
         x1, y1 = b.x + self.rng.uniform(-6, 6), b.y + self.rng.uniform(-4, 4)
         dist = math.hypot(x1 - x0, y1 - y0)
+        self.sounds.append(SHOT_SOUNDS.get(icon, "volley"))
         if icon == "cloud":
             for _ in range(3):  # hail falls on them from a clear sky
                 hx, hy = x1 + self.rng.uniform(-10, 10), y1 + self.rng.uniform(-3, 3)

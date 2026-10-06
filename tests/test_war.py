@@ -116,6 +116,8 @@ def test_losing_every_province_eliminates_a_faction(game):
 
 def test_conquest_victory(game):
     no_ai(game)
+    for a in [a for a in game.armies.values() if a.faction != "voievodat"]:
+        del game.armies[a.id]
     capitals = {game.capital_of(f) for f in game.turn_order}
     others = [p for p in game.provinces.values()
               if p.owner != "voievodat" and p.id not in capitals and not game.armies_in(p.id)]

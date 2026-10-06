@@ -22,5 +22,17 @@
     "goal": {"kind": "provinces", "count": 12}},
   "full_moon": {"faction": "strigoi", "title": "Under the Full Moon", "hero": "pricolici",
     "text": "The werewolf lord follows only a winning pack. Win twelve battles.",
-    "goal": {"kind": "win_battles", "count": 12}}
+    "goal": {"kind": "win_battles", "count": 12}},
+  "rich_boyars": {"faction": "outlaws", "title": "Rob the Rich", "hero": "iancu_jianu",
+    "text": "Iancu Jianu rides only with a band that has emptied the boyars' chests. Take three provinces from the Principality.",
+    "goal": {"kind": "take_from", "faction": "voievodat", "count": 3}},
+  "silver_bullet": {"faction": "outlaws", "title": "The Silver Bullet", "hero": "pintea",
+    "text": "Pintea fears only a silver bullet, and follows only a captain who has never feared a fight. Win eight battles.",
+    "goal": {"kind": "win_battles", "count": 8}},
+  "lake_dragon": {"faction": "solomonari", "title": "The Dragon in the Lake", "hero": "balaurul_iezer",
+    "text": "The lake dragon sleeps under the mountain water. Hold three mountain provinces and he will rise to his bridle.",
+    "goal": {"kind": "terrain", "terrain": "mountains", "count": 3}},
+  "thirteenth": {"faction": "solomonari", "title": "The Thirteenth Scholar", "hero": "al_treisprezecelea",
+    "text": "Seven years under the earth teach the thirteenth scholar every secret. Gather seven hundred gold to pay for his books.",
+    "goal": {"kind": "gold", "count": 700}}
 }

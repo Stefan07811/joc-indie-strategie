@@ -41,7 +41,7 @@ def test_save_is_plain_json_with_a_summary(real_data, tmp_path):
     save_game(game, tmp_path / "s.json", extra={"saved_at": "now"})
     d = json.loads((tmp_path / "s.json").read_text(encoding="utf-8"))
     assert d["saved_at"] == "now"
-    assert summary(d) == {"player": "voievodat", "round": 0, "provinces": 3, "over": False}
+    assert summary(d) == {"player": "voievodat", "round": 0, "provinces": 3, "over": False, "era": 1400}
     assert not (tmp_path / "s.tmp").exists()
 
 

@@ -19,7 +19,7 @@ class Step:
 
 
 def _capital(c):
-    return c.game.data.factions[c.game.player]["capital"]
+    return c.game.capital_of(c.game.player)
 
 
 def _army_moved(c):

@@ -1,4 +1,4 @@
-"""The legends: each faction's unique powers, public order and Outlaw uprisings.
+"""The legends: each faction's unique powers, public order and rebel uprisings.
 
 Faction powers are switched on by "traits" in factions.json, so they can be tuned without code:
   church_bane      (Principality) creatures fighting in a province with a Church strike weaker
@@ -8,6 +8,9 @@ Faction powers are switched on by "traits" in factions.json, so they can be tune
   forest_hidden    (Fae Court)    their armies in forests are unseen unless an enemy army stands close
   raise_dead       (Revenants)    after a victory, part of the fallen rise as new regiments
   winter_fury      (Revenants)    they strike harder in winter
+  plunder          (Outlaws)      gold for every province taken
+  beloved          (Outlaws)      more order in every province
+  weather_lords    (Solomonari)   the enemy's arrows and guns strike weaker against them
 """
 
 from dataclasses import dataclass
@@ -51,6 +54,12 @@ def attack_modifier(game, fid, pid):
     if game.season == "Winter":
         mult *= traits(game, fid).get("winter_fury", 1.0)
     return mult
+
+
+def rob(game, fid, gold):
+    """The Outlaws fill their purse from the boyars they beat."""
+    if gold and fid in game.treasury:
+        game.treasury[fid].gold += gold
 
 
 def raise_dead(game, result, army=None, garrison_of=None):
@@ -190,10 +199,10 @@ def abduct(game, army):
     return event
 
 
-# --- public order and the Outlaws ------------------------------------------------------------
+# --- public order and the Rebels -------------------------------------------------------------
 
 def public_order(game, p):
-    """(order, [(reason, points), ...]) for a province with an owner. Below zero, the Outlaws may rise."""
+    """(order, [(reason, points), ...]) for a province with an owner. Below zero, the Rebels may rise."""
     rules = game.data.map["order"]
     fid = p.owner
     parts = [("Base", rules["base"])]
@@ -212,6 +221,9 @@ def public_order(game, p):
         parts.append(("Generals", camped))
     parts += events_order(game, p)
     from .techs import bonus
+    loved = traits(game, fid).get("beloved", 0)
+    if loved:
+        parts.append(("Loved by the poor", loved))
     learnt = bonus(game, fid, "order")
     if learnt:
         parts.append(("Traditions", learnt))
@@ -243,12 +255,12 @@ def rebellions(game):
         names = game.data.factions[REBELS]["general_names"]
         rebels = game.add_army(REBELS, p.id, names[game.round % len(names)],
                                [REBEL_UNITS[i % 2] for i in range(size)])
-        game._event(Rebellion(p.id, p.owner), f"Outlaws led by {rebels.general} rise up in {p.name}!")
+        game._event(Rebellion(p.id, p.owner), f"Rebels led by {rebels.general} rise up in {p.name}!")
         game._arrive(rebels, None)
 
 
 class RebelAI:
-    """Outlaws hold their ground and storm the walls once they think they can win."""
+    """Rebels hold their ground and storm the walls once they think they can win."""
 
     def take_turn(self, game):
         for army in [a for a in game.armies.values() if a.faction == REBELS]:

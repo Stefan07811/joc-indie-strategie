@@ -279,7 +279,7 @@ class Battlefield:
 
     def _ranged_mult(self, u):
         w = WEATHER[self.weather]
-        gun = self.data[u.regiment.unit]["icon"] == "gun"
+        gun = self.data[u.regiment.unit]["icon"] in ("gun", "rifle")
         return w.get("gun", w.get("ranged", 1.0)) if gun else w.get("ranged", 1.0)
 
     # --- special orders ------------------------------------------------------------------------
@@ -588,7 +588,7 @@ class Battlefield:
                         min(in_range, key=lambda e: _dist(u, e))
                     u.shooting = target.id
                     share = RANGED_SHARE * (FOREST_COVER if self.zone_at(target.x, target.y) == "forest" else 1.0)
-                    share *= self._ranged_mult(u) * self._buff(u, "volley")
+                    share *= self._ranged_mult(u) * self._buff(u, "volley") * self.sides[1 - u.side].storm
             if target is None:
                 continue
             dmg = self._blow(u, target, dt) * share

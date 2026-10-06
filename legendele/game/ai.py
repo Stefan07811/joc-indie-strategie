@@ -209,6 +209,8 @@ class SimpleAI:
         return threat > defence
 
     def _siege(self, game, army):
+        if army.moves_left <= 0:  # e.g. it fell back here before a new war made this land hostile
+            return
         forecast = game.forecast(army, army.province)
         if forecast and forecast[0] and forecast[1] >= MIN_SHARE_LEFT:
             game.assault(army.id)
@@ -343,7 +345,8 @@ class SimpleAI:
                 queued_upkeep = sum(units[u]["upkeep"] for q in game.provinces_of(fid) for u in q.recruits)
                 spare = bal.gold - queued_upkeep
                 options = [u for u in economy.recruitable_units(game, fid)
-                           if economy.unit_blocker(game, fid, p.id, u) is None
+                           if units[u]["ability"] != "scout"  # scouts only skirmish; the line needs fighters
+                           and economy.unit_blocker(game, fid, p.id, u) is None
                            and game.treasury[fid].gold - units[u]["cost"] >= GOLD_RESERVE
                            and units[u]["upkeep"] <= spare * 0.8]
                 if not options or game.treasury[fid].food + bal.food * 2 < 0:

@@ -13,7 +13,7 @@ from legendele.game import Game, GameData  # noqa: E402
 from legendele.game.ai import SimpleAI  # noqa: E402
 
 
-FACTIONS = ("voievodat", "zmei", "iele", "strigoi")
+FACTIONS = ("voievodat", "zmei", "iele", "strigoi", "outlaws", "solomonari")
 
 
 def play(data, seed, max_turns):

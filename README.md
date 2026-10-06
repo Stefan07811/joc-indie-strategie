@@ -1,8 +1,9 @@
 # Legendele Carpaților (*Legends of the Carpathians*)
 
-Joc indie de strategie în stilul Total War, inspirat din folclorul românesc. Patru legende își
-dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii), **The Fae Court** (Ielele)
-și **The Revenants** (Strigoii). Textele din joc sunt în engleză.
+Joc indie de strategie în stilul Total War, inspirat din folclorul românesc. Șase legende își
+dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii), **The Fae Court** (Ielele),
+**The Revenants** (Strigoii), **The Outlaws** (Haiducii) și **The Solomonari** (Solomonarii).
+Textele din joc sunt în engleză.
 
 ![Meniul principal](docs/title.png)
 
@@ -55,15 +56,15 @@ python -m legendele
 | Agenții | clic pe jetonul agentului, apoi clic pe o provincie luminată; acțiunile apar în panou |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M13 (legende)
+## Stadiul actual: etapa M14 (rejucabilitate)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
   Dunărea, Delta, Marea Neagră și râurile mari, cu ținuturile vecine (Ungaria, Polonia, Serbia, Sultanul)
   desenate estompat dincolo de graniță. Harta e mai mare decât ecranul și se derulează; o hartă mică arată tot.
 - Armatele au 4 puncte de mișcare pe tură. Câmpia costă 1, dealurile, pădurea și mlaștina 2, munții 3.
-  Fiecare facțiune se mișcă ieftin (cost 1) pe terenul ei: Dragonkin prin munți, Fae Court prin păduri,
-  Revenants prin mlaștini. Excepție: Inima Munților nu aparține niciunei legende.
+  Fiecare facțiune se mișcă ieftin (cost 1) pe terenul ei: Dragonkin și Solomonari prin munți, Fae Court și
+  Outlaws prin păduri, Revenants prin mlaștini. Excepție: Inima Munților nu aparține niciunei legende.
 - Prin provinciile tale treci liber. Intrarea în orice altă provincie oprește marșul.
   Cercul de pe hartă e **auriu** pentru un marș liber și **roșu** dacă te așteaptă o luptă sau un asediu.
 
@@ -72,14 +73,14 @@ python -m legendele
   generalul, terenul de acasă și moralul. O tabără fuge când pierde mai mult decât poate îndura.
   Înainte de atac, panoul îți arată o **prognoză**: victorie clară, victorie costisitoare sau înfrângere probabilă.
 - **Cucerire:** o provincie fără apărare devine a ta când intri în ea.
-- **Asedii:** provinciile neutre sunt păzite de haiduci, iar capitalele au ziduri și garnizoană.
+- **Asedii:** provinciile neutre sunt păzite de răsculați (Rebels), iar capitalele au ziduri și garnizoană.
   Armata ta rămâne la asediu și apărătorii slăbesc în fiecare anotimp. Poți da și asaltul (butonul **Assault the walls**).
 - **Retragere:** cine pierde se retrage într-o provincie vecină care e a lui. Dacă nu are unde, armata e distrusă.
 - Regimentele se refac câte puțin în fiecare tură pe teritoriul propriu.
 - **Raport de bătălie** după fiecare luptă la care participi.
 
 **Victorie și înfrângere**
-- **Cucerire:** 21 din 30 de provincii.
+- **Cucerire:** 21 din 30 de provincii (15 sau 26 într-un război scurt sau lung, vezi opțiunile de start).
 - **Victorie de legendă:** ții Inima Munților și capitala ta 8 ture la rând.
 - O facțiune care își pierde toate provinciile e eliminată. Dacă ești tu, ai pierdut.
 
@@ -113,22 +114,24 @@ Fiecare facțiune are o putere a ei. Pe ecranul de start o vezi scrisă cu auriu
 | **The Dragonkin** | **Comoara**: tezaurul aduce dobândă (5%, maximum 15 aur, +15 cu fiecare **Dragon Hoard**). **Răpirea**: o armată aflată lângă capitala unui rival îi poate fura moștenitorul, pentru 150 de aur răscumpărare (o dată la 6 anotimpuri; dacă eșuează, armata pierde oameni). |
 | **The Fae Court** | **Hora**: armatele dușmane aflate pe pământul lor pierd 4% din oameni în fiecare anotimp (dublu lângă un **Fairy Ring**). În păduri armatele lor nu se văd decât dacă ai o armată aproape. |
 | **The Revenants** | **Ridicarea morților**: după fiecare victorie, o parte din morții ambelor tabere se ridică drept Risen Dead (+1 lângă o **Crypt**). Nu simt frigul și iarna lovesc cu 15% mai tare. |
+| **The Outlaws** (M14) | **Jefuiesc bogații**: fiecare provincie cucerită le aduce 40 de aur. **Iubiți de popor**: +1 ordine în toate provinciile (+1 și cu **Greenwood Hideout**, +10 aur). Se simt acasă în păduri. |
+| **The Solomonari** (M14) | **Stăpânii vremii**: furtuna și grindina îi urmează, așa că săgețile și gloanțele dușmanilor lovesc cu 20% mai slab. Nu simt frigul, se simt acasă în munți și au **Weather Tower** (+1 ordine, +2 hrană). |
 
 **Abilitățile unităților** contează acum în luptă: Ranged, Charge, Frenzy, Monster Bane, Forest Ambush,
 Flying Fire (zidurile nu apără de foc), Life Drain (vampirii se vindecă), Dread, Enchanting Dance,
 Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 
-**Ordinea publică și Outlaws**
+**Ordinea publică și răsculații (Rebels)**
 - Fiecare provincie are o **ordine**, afișată în panou împreună cu motivele. Ordinea crește cu trupele staționate,
   cu clădirile (Church, Fairy Ring, Crypt, Dragon Hoard, Stone Walls) și în capitală.
   Scade în provinciile proaspăt cucerite, când e foamete și când tezaurul e pe minus.
-- Sub zero, provincia se poate **răscula**: apar Outlaws care atacă garnizoana. Dacă câștigă,
+- Sub zero, provincia se poate **răscula**: apar Rebels care atacă garnizoana. Dacă câștigă,
   provincia redevine liberă (neutră), iar rebelii îi devin garnizoană.
 - Concluzia: după o cucerire, lasă trupe în provincie câteva anotimpuri.
 
 **Diplomația (M5)**
 - Toți pornesc **în pace**. Pacea închide granițele: nu poți intra pe pământul cuiva cu care ești în pace
-  și nu-i poți ataca armatele. Pământul neutru și Outlaws rămân deschise oricui.
+  și nu-i poți ataca armatele. Pământul neutru și răsculații rămân deschiși oricui.
 - Fereastra **Diplomacy** (butonul din panou sau tasta `D`) arată, pentru fiecare facțiune, relația, personalitatea,
   **atitudinea față de tine** cu toate motivele ei și cu cine mai e în război. De acolo poți:
   - oferi pace (gratuit sau cu 100 de aur);
@@ -254,7 +257,7 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   Fără echipament, asaltul e mai slab și în rezolvarea automată.
 - **Zoom** pe câmpul de luptă.
 - **Bătălia personalizată** (din meniul principal): alegi cele două oști (inclusiv puterile străine sau
-  Outlaws), regimentele, terenul, asaltul, vremea, ora, echipamentul de asediu și partea pe care o conduci.
+  Rebels), regimentele, terenul, asaltul, vremea, ora, echipamentul de asediu și partea pe care o conduci.
 
   ![Asalt noaptea, pe zăpadă](docs/battle_night.png)
 
@@ -277,18 +280,45 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   - Principality: Făt-Frumos (5 victorii) și Greuceanu (ia 2 provincii de la zmei);
   - Dragonkin: Zgripțuroaica (900 de aur în vistierie) și Spânul (răpește un moștenitor);
   - Fae Court: Ileana Cosânzeana (10 provincii) și Regina Zânelor (4 provincii de pădure);
-  - Revenants: Baba Cloanța (12 provincii) și Marele Pricolici (12 victorii).
+  - Revenants: Baba Cloanța (12 provincii) și Marele Pricolici (12 victorii);
+  - Outlaws: Iancu Jianu (ia 3 provincii de la Principality) și Pintea Viteazul (8 victorii);
+  - Solomonari: Balaurul din lac (3 provincii de munte) și Al treisprezecelea școlar (700 de aur).
 
   Fereastra arată cât ai avansat și ce au câștigat celelalte curți.
 - **Agenți:** spioni și preoți, cu nume după legendă (Spy/Priest, Imp Spy/Sorcerer, Will-o'-the-wisp/Herb
-  Witch, Night Crow/Necromancer). Îi angajezi dintr-o provincie a ta, cel mult 2 din fiecare.
+  Witch, Night Crow/Necromancer, Lookout/Wandering Monk, Storm Raven/Solomonar). Îi angajezi dintr-o provincie a ta, cel mult 2 din fiecare.
   - Merg oriunde, 3 provincii pe anotimp.
   - Spionul vede armatele din provincia lui și din vecini (chiar și ielele ascunse în păduri) și poate
     sabota o provincie dușmană: întârzie lucrările și îmbolnăvește garnizoana.
   - Preotul liniștește o provincie a ta (+2 ordine) sau stârnește tulburări la rival (-2 ordine).
   - O acțiune ratată îl poate costa pe agent viața. AI-ul își folosește și el agenții.
 
-**Ce urmează:** M14–M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Rejucabilitate (M14)**
+- **Două legende noi**, jucabile:
+  - **The Outlaws** (Haiducii) au capitala în Codrii Vlăsiei: Haiduc Braves (ambuscadă în pădure), Village
+    Lads, Long Rifles, Mountain Riders și Haiduc Captain.
+  - **The Solomonari** au capitala în Apuseni: Apprentices (scântei din toiag), Cave Wardens, Hailcallers
+    (grindină din senin), Tamed Wyrms (balauri îmblânziți, zboară peste ziduri) și Elder Solomonar.
+
+  Fiecare are figuri pe câmpul de luptă, emblemă, muzică (o baladă haiducească, o vrajă în minor
+  armonic), două tradiții proprii, o clădire, două misiuni cu eroi și agenți.
+- Răsculații care păzesc pământul neutru se numesc acum **Rebels**.
+- **Opțiuni de start**, pe ecranul de alegere a legendei:
+  - **Rivals:** de la 1 la 5 rivali, aleși la întâmplare. Pământurile celor care lipsesc le țin răsculații.
+  - **Homelands:** istorice sau trase la sorți. La sorți, fiecare legendă primește patria, capitala și
+    locurile de start ale alteia.
+  - **Start:** 1400 (Epoca legendelor) sau 1450 (Epoca regilor): +200 de aur, două tradiții învățate,
+    Barracks în capitală și un regiment de elită în fiecare armată de start.
+  - **Lungimea războiului:** scurt (15 provincii), normal (21) sau lung (26).
+
+  ![Alegerea legendei și opțiunile de start](docs/menu.png)
+
+  ![Haiducii contra Solomonarilor, pe ploaie](docs/new_legends.png)
+
+**Echilibru (AI contra AI, 240 de partide):** Fae Court 22%, Dragonkin 18%, Revenants 17%, Outlaws 13%,
+Solomonari 13%, Principality 12%. Ajustarea finală vine în M15.
+
+**Ce urmează:** M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

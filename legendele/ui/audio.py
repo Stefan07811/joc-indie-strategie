@@ -26,8 +26,10 @@ MODES = {
     "zmei": [0, 1, 4, 5, 7, 8, 10],        # Phrygian dominant: fiery
     "iele": [0, 2, 4, 6, 7, 9, 11],        # Lydian: bright and uncanny
     "strigoi": [0, 1, 3, 5, 6, 8, 10],     # Locrian: hollow and grave
+    "outlaws": [0, 2, 4, 5, 7, 9, 10],     # Mixolydian: a merry outlaw ballad
+    "solomonari": [0, 2, 3, 5, 7, 8, 11],  # harmonic minor: a dark, learned spell
 }
-TEMPO = {"menu": 84, "voievodat": 92, "zmei": 104, "iele": 112, "strigoi": 72}
+TEMPO = {"menu": 84, "voievodat": 92, "zmei": 104, "iele": 112, "strigoi": 72, "outlaws": 120, "solomonari": 80}
 D3 = 146.83
 
 

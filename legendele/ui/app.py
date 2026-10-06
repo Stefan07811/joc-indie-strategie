@@ -9,6 +9,7 @@ from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
                     Raid, Rebellion, SiegeStarted, Tale, Victory, diplomacy,
                     agents, foreign)
+from ..game import start
 from ..game.economy import DIFFICULTY
 from ..game.state import Reach
 from ..game.save import load_game
@@ -32,40 +33,88 @@ TITLE = "Legends of the Carpathians"
 
 
 class FactionSelect:
-    """New campaign: the map in the background and one card per playable faction."""
+    """New campaign: the map in the background, one card per playable faction and the start options."""
 
     music = "menu"
+    CARD_W, CARD_H, GAP = 400, 200, 14
 
     def __init__(self, app):
         self.app = app
         self.cards = []
-        width, gap = 280, 20
-        left = (theme.WINDOW_SIZE[0] - (4 * width + 3 * gap)) // 2
+        cols = 3
+        left = (theme.WINDOW_SIZE[0] - (cols * self.CARD_W + (cols - 1) * self.GAP)) // 2
         for i, fid in enumerate(self._playable()):
-            self.cards.append((pygame.Rect(left + i * (width + gap), 200, width, 410), fid))
-        self.back_rect = pygame.Rect(theme.WINDOW_SIZE[0] // 2 - 230, 640, 200, 44)
-        self.difficulty_rect = pygame.Rect(theme.WINDOW_SIZE[0] // 2 + 10, 640, 260, 44)
+            col, row = i % cols, i // cols
+            self.cards.append((pygame.Rect(left + col * (self.CARD_W + self.GAP), 150 + row * (self.CARD_H + self.GAP),
+                                           self.CARD_W, self.CARD_H), fid))
+        widths, gap = [120] + [210] * 5, 10
+        x = (theme.WINDOW_SIZE[0] - sum(widths) - gap * (len(widths) - 1)) // 2
+        self.option_rects = []  # Back, then the options (see _option_list)
+        for w in widths:
+            self.option_rects.append(pygame.Rect(x, 640, w, 44))
+            x += w + gap
+        self.back_rect = self.option_rects[0]
 
     def _playable(self):
         return [f for f, d in self.app.data.factions.items() if d["playable"]]
+
+    @property
+    def start(self):
+        return {**start.DEFAULTS, **self.app.settings.get("start", {})}
+
+    def _set(self, key, value):
+        settings = self.app.settings
+        settings["start"] = {**self.start, key: value}
+        profile.store_settings(settings)
+
+    def _cycle(self, values, current):
+        values = list(values)
+        return values[(values.index(current) + 1) % len(values)] if current in values else values[0]
+
+    def _difficulty(self):
+        settings = self.app.settings
+        settings["difficulty"] = self._cycle(DIFFICULTY, settings.get("difficulty", "normal"))
+        profile.store_settings(settings)
 
     def handle(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.app.main_menu()
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.back_rect.collidepoint(event.pos):
-                self.app.audio.play("click")
-                self.app.main_menu()
-            if self.difficulty_rect.collidepoint(event.pos):
-                self.app.audio.play("click")
-                levels = list(DIFFICULTY)
-                settings = self.app.settings
-                settings["difficulty"] = levels[(levels.index(settings.get("difficulty", "normal")) + 1) % len(levels)]
-                profile.store_settings(settings)
+            for rect, (_, action, _) in zip(self.option_rects, self._option_list()):
+                if rect.collidepoint(event.pos):
+                    self.app.audio.play("click")
+                    action()
+                    return
             for rect, fid in self.cards:
                 if rect.collidepoint(event.pos):
                     self.app.audio.play("recruit")
-                    self.app.start_campaign(fid)
+                    self.app.start_campaign(fid, options=self.start)
+
+    def _option_list(self):
+        o = self.start
+        level = DIFFICULTY[self.app.settings.get("difficulty", "normal")]
+        rivals = len(self._playable()) - 1
+        era = start.ERAS[o["era"]]
+        name, share = start.VICTORY[o["victory"]]
+        need = round(len(self.app.data.provinces) * share)
+        return [
+            ("Back", self.app.main_menu, None),
+            (f"Difficulty: {level['name']}", self._difficulty,
+             ["Difficulty", "Click to change.",
+              (f"The other legends earn {round(level['ai_income'] * 100)}% of their taxes and start with "
+               f"{level['ai_gold']} gold; you start with {level['player_gold']}.", theme.TEXT_DIM)]),
+            (f"Rivals: {o['rivals']}", lambda: self._set("rivals", o["rivals"] % rivals + 1),
+             ["Rivals", "How many other legends take part (chosen at random).",
+              ("The lands of those who sit the war out are held by the Rebels.", theme.TEXT_DIM)]),
+            ("Homelands: " + ("shuffled" if o["shuffle"] else "historic"), lambda: self._set("shuffle", not o["shuffle"]),
+             ["Homelands", "Historic: every legend starts in its own lands.",
+              ("Shuffled: the legends draw lots for the homelands, capitals and all.", theme.TEXT_DIM)]),
+            (f"Start: {o['era']}", lambda: self._set("era", self._cycle(start.ERAS, o["era"])),
+             [era["name"], era["summary"]]),
+            (name, lambda: self._set("victory", self._cycle(start.VICTORY, o["victory"])),
+             ["Length of the war", f"Conquest needs {need} of {len(self.app.data.provinces)} provinces.",
+              ("Holding the Heart of the Mountains still wins too.", theme.TEXT_DIM)]),
+        ]
 
     def draw(self, surface):
         data = self.app.data
@@ -76,39 +125,39 @@ class FactionSelect:
         shade.fill((20, 14, 10, 170))
         surface.blit(shade, (0, 0))
         cx = theme.WINDOW_SIZE[0] // 2
-        theme.outlined(surface, TITLE, (cx, 90), 60, theme.GOLD, width=3)
-        theme.outlined(surface, "Choose the legend you will lead", (cx, 150), 26, theme.PARCHMENT, style="italic")
+        theme.outlined(surface, TITLE, (cx, 62), 52, theme.GOLD, width=3)
+        theme.outlined(surface, "Choose the legend you will lead", (cx, 114), 24, theme.PARCHMENT, style="italic")
         mouse = pygame.mouse.get_pos()
+        shuffled = self.start["shuffle"]
         for rect, fid in self.cards:
             f = data.factions[fid]
             color = tuple(f["color"])
             hovered = rect.collidepoint(mouse)
-            theme.frame(surface, rect, accent=color)
+            inner = theme.frame(surface, rect, accent=color)
             if hovered:
                 pygame.draw.rect(surface, theme.GOLD_LIGHT, rect.inflate(4, 4), 2)
-            banner = self.app.assets.get(f"army_{fid}", color, 4)
-            surface.blit(banner, banner.get_rect(midtop=(rect.centerx, rect.y + 14)))
-            theme.outlined(surface, f["name"], (rect.centerx, rect.y + 74), 26, color, anchor="midtop")
-            y = rect.y + 110
-            for line in theme.wrap(f["description"], 19, rect.width - 32):
-                theme.text(surface, line, (rect.x + 16, y), 19)
-                y += 20
-            y += 10
-            for line in theme.wrap(f["legend"], 18, rect.width - 32):
-                theme.text(surface, line, (rect.x + 16, y), 18, theme.GOLD)
-                y += 19
-            mastery = ", ".join(data.terrain[t]["name"] for t in f["terrain_mastery"]) or "none (strong cities)"
-            theme.text(surface, f"At home in: {mastery}", (rect.x + 16, rect.bottom - 52), 18, theme.TEXT_DIM)
-            theme.text(surface, f"Capital: {next(p['name'] for p in data.provinces if p['id'] == f['capital'])}",
-                       (rect.x + 16, rect.bottom - 30), 18, theme.TEXT_DIM)
-        theme.button(surface, self.back_rect, "Back", self.back_rect.collidepoint(mouse))
-        level = DIFFICULTY[self.app.settings.get("difficulty", "normal")]
-        theme.button(surface, self.difficulty_rect, f"Difficulty: {level['name']}",
-                     self.difficulty_rect.collidepoint(mouse))
-        theme.tip(self.difficulty_rect, ["Difficulty", "Click to change.",
-                                         (f"The other legends earn {round(level['ai_income'] * 100)}% of their "
-                                          f"taxes and start with {level['ai_gold']} gold; you start with "
-                                          f"{level['player_gold']}.", theme.TEXT_DIM)])
+            banner = self.app.assets.get(f"army_{fid}", color, 3)
+            surface.blit(banner, banner.get_rect(midtop=(inner.x + 36, inner.y + 10)))
+            x, width = inner.x + 76, inner.right - inner.x - 86
+            theme.outlined(surface, f["name"], (x, inner.y + 4), 24, color, anchor="topleft")
+            y = inner.y + 34
+            for line in theme.wrap(f["description"], 16, width)[:3]:
+                theme.text(surface, line, (x, y), 16)
+                y += 17
+            y += 4
+            for line in theme.wrap(f["legend"], 16, width)[:4]:
+                theme.text(surface, line, (x, y), 16, theme.GOLD)
+                y += 17
+            mastery = ", ".join(data.terrain[t]["name"] for t in f["terrain_mastery"]) or "none"
+            home = "drawn by lot" if shuffled else next(p["name"] for p in data.provinces if p["id"] == f["capital"])
+            theme.text(surface, f"At home in: {mastery}  ·  Capital: {home}", (inner.x + 10, inner.bottom - 20), 15,
+                       theme.TEXT_DIM)
+            theme.tip(rect, [f["name"], f["description"], (f["legend"], theme.GOLD),
+                             (f"Rival character: {f['ai']['personality']}. {f['ai']['summary']}", theme.TEXT_DIM)])
+        for rect, (label, _, tip) in zip(self.option_rects, self._option_list()):
+            theme.button(surface, rect, label, rect.collidepoint(mouse))
+            if tip:
+                theme.tip(rect, tip)
 
 
 # Which sound a batch of events makes (the first match wins, so a battle drowns out a siege).
@@ -132,10 +181,10 @@ def event_sound(game, events):
 
 
 class Campaign:
-    def __init__(self, app, faction=None, seed=None, game=None):
+    def __init__(self, app, faction=None, seed=None, game=None, options=None):
         self.app = app
         self.game = game or Game.new(app.data, faction, seed=seed,
-                                     difficulty=app.settings.get("difficulty", "normal"))
+                                     difficulty=app.settings.get("difficulty", "normal"), options=options)
         self.game.fight_hook = lambda g, attackers, defenders, pid, kind: fight(app, g, attackers, defenders, pid, kind)
         self.music = self.game.player
         self.map = MapView(self.game, app.assets)
@@ -418,7 +467,7 @@ class Campaign:
         self.map.center_on(p.x, p.y + 20)
 
     def center_on_capital(self):
-        capital = self.game.data.factions[self.game.player]["capital"]
+        capital = self.game.capital_of(self.game.player)
         if capital in self.game.provinces:
             self.center_on(capital)
 
@@ -567,8 +616,8 @@ class App:
     def new_campaign(self):
         self.scene = FactionSelect(self)
 
-    def start_campaign(self, faction, seed=None):
-        self.scene = Campaign(self, faction, seed)
+    def start_campaign(self, faction, seed=None, options=None):
+        self.scene = Campaign(self, faction, seed, options=options)
 
     def load_slot(self, slot):
         game = load_game(self.data, profile.save_path(slot))

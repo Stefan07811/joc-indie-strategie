@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import agents, battle, diplomacy, economy, events, foreign, generals, legends, quests, techs
+from . import agents, battle, diplomacy, economy, events, foreign, generals, legends, quests, start, techs
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -157,21 +157,38 @@ class Game:
     quests_done: dict = field(default_factory=dict)  # fid -> quests fulfilled
     agents: dict = field(default_factory=dict)  # agent id -> agents.Agent
     _next_agent_id: int = 1
+    # start options (start.py): the legends taking part, their capitals, the first year, land to win
+    options: dict = field(default_factory=dict)
+    factions: list = field(default_factory=list)
+    capitals: dict = field(default_factory=dict)
+    start_year: int = 1400
+    conquest: int = 0
 
     @classmethod
-    def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal"):
+    def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal", options=None):
         if not data.factions[player]["playable"]:
             raise ValueError(f"{player} is not a playable faction")
         game = cls(data=data, player=player, rng=random.Random(seed), difficulty=difficulty)
+        game.options = start.resolve(data, player, options, game.rng)
+        game.factions = list(game.options["factions"])
+        game.capitals = {fid: data.factions[home]["capital"] for fid, home in game.options["homes"].items()}
+        era = start.ERAS[game.options["era"]]
+        game.start_year = data.map["start_year"] + game.options["era"] - 1400
+        game.conquest = start.conquest(data, game.options)
         for p in data.provinces:
+            owner, garrison = start.province_start(data, game.options, p)
             game.provinces[p["id"]] = Province(
                 id=p["id"], name=p["name"], terrain=p["terrain"], x=p["x"], y=p["y"],
-                owner=p["owner"], neighbors=list(p.get("neighbors", ())), special=p.get("special"),
-                walls=p.get("walls", False), garrison=game._regiments(p.get("garrison", ())),
+                owner=owner, neighbors=list(p.get("neighbors", ())), special=p.get("special"),
+                walls=p.get("walls", False), garrison=game._regiments(garrison),
                 roads=list(p.get("roads", ())), crossings=dict(p.get("crossings", {})),
             )
-        for a in data.map["start_armies"]:
-            generals.birth(game, game.add_army(a["faction"], a["province"], a["general"], a["regiments"]))
+        for fid, pid, general, regiments in start.start_armies(data, game.options):
+            generals.birth(game, game.add_army(fid, pid, general, regiments))
+        for fid in game.factions:
+            game.techs[fid] = list(era["techs"])
+            capital = game.provinces[game.capitals[fid]]
+            capital.buildings += [b for b in era["buildings"] if b not in capital.buildings]
         for p in game.provinces.values():
             if p.owner:
                 game._muster(p)
@@ -182,7 +199,7 @@ class Game:
             game.heart_turns[fid] = 0
             level = DIFFICULTY[difficulty]
             gold = game.rules["start_gold"] * (level["player_gold"] if fid == player else level["ai_gold"]) // 200
-            game.treasury[fid] = Treasury(gold, game.rules["start_food"])
+            game.treasury[fid] = Treasury(gold + era["gold"], game.rules["start_food"])
             if fid != player:
                 game.ai[fid] = ai_factory(fid)
         game.log.append(f"{game.date}: {game.faction_name(player, True)} begin their campaign.")
@@ -195,7 +212,7 @@ class Game:
             fid: {"provinces": len(self.provinces_of(fid)),
                   "regiments": sum(len(a.regiments) for a in self.armies_of(fid)),
                   "gold": self.treasury[fid].gold if fid in self.treasury else 0}
-            for fid, f in self.data.factions.items() if f["playable"]}}
+            for fid in self.factions}}
         if self.history and self.history[-1]["round"] == self.round:
             self.history[-1] = snapshot
         else:
@@ -211,7 +228,7 @@ class Game:
     @property
     def turn_order(self):
         """Playable factions still in the game, the player first."""
-        others = [f for f, d in self.data.factions.items() if d["playable"] and f != self.player]
+        others = [f for f in self.factions if f != self.player]
         return [f for f in (self.player, *others) if f not in self.eliminated]
 
     @property
@@ -224,7 +241,7 @@ class Game:
 
     @property
     def year(self):
-        return self.data.map["start_year"] + self.round // 4
+        return self.start_year + self.round // 4
 
     @property
     def date(self):
@@ -232,7 +249,8 @@ class Game:
 
     @property
     def victory_rules(self):
-        return self.data.map["victory"]
+        return {**self.data.map["victory"], "conquest_provinces": self.conquest or
+                self.data.map["victory"]["conquest_provinces"]}
 
     @property
     def rules(self):
@@ -246,7 +264,7 @@ class Game:
         return name
 
     def capital_of(self, fid):
-        return self.data.factions[fid]["capital"]
+        return self.capitals.get(fid, self.data.factions[fid]["capital"])
 
     def armies_in(self, pid):
         return [a for a in self.armies.values() if a.province == pid]
@@ -381,6 +399,7 @@ class Game:
             creature=self.data.factions[fid]["creature"],
             walls=walls, ambush_ground=defending and p.terrain == "forest",
             creature_bane=generals.creature_bane(self, army),
+            storm=legends.traits(self, fid).get("weather_lords", 1.0),
         )
 
     def _attackers(self, armies, pid, assault=False, origin=None):
@@ -704,7 +723,7 @@ class Game:
         p.recruits = []
         p.captured_round = self.round
         if fid == REBELS:
-            # the Outlaws hold the province as free land: their army becomes its garrison
+            # the Rebels hold the province as free land: their army becomes its garrison
             p.owner = None
             for rebels in [a for a in self.armies_in(p.id) if a.faction == REBELS]:
                 p.garrison += rebels.regiments
@@ -720,6 +739,7 @@ class Game:
             self._tally(r.winning_faction, "won")
             self._tally(r.defender.faction if r.attacker_won else r.attacker.faction, "lost")
         elif isinstance(event, Captured):
+            legends.rob(self, event.faction, legends.traits(self, event.faction).get("plunder", 0))
             self._tally(event.faction, "taken")
             self._tally(event.previous, "fallen")
             if event.previous:

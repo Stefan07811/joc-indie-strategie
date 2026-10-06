@@ -1,4 +1,4 @@
-"""Faction powers, unit abilities, public order and Outlaw uprisings."""
+"""Faction powers, unit abilities, public order and rebel uprisings."""
 
 import random
 

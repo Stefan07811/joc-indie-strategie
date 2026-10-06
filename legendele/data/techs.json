@@ -18,5 +18,11 @@
   "fairy_rings":  {"name": "Fairy Rings", "faction": "iele", "cost": 260, "turns": 3, "defense": 1.08, "resolve": 0.05, "requires": ["drill"], "description": "Mushroom circles that confuse the enemy: +8% defence, steadier ranks."},
 
   "grave_tithes": {"name": "Grave Tithes", "faction": "strigoi", "cost": 200, "turns": 3, "upkeep": 0.9, "requires": ["markets"], "description": "The dead need no pay: -10% upkeep."},
-  "blood_rites":  {"name": "Blood Rites", "faction": "strigoi", "cost": 260, "turns": 3, "resolve": 0.08, "requires": ["drill"], "description": "Dark vows bind the ranks: much steadier regiments."}
+  "blood_rites":  {"name": "Blood Rites", "faction": "strigoi", "cost": 260, "turns": 3, "resolve": 0.08, "requires": ["drill"], "description": "Dark vows bind the ranks: much steadier regiments."},
+
+  "greenwood_paths": {"name": "Greenwood Paths", "faction": "outlaws", "cost": 200, "turns": 3, "moves": 1, "requires": ["drill"], "description": "Secret paths through every wood: +1 movement for every army."},
+  "fair_share":   {"name": "A Fair Share", "faction": "outlaws", "cost": 240, "turns": 3, "order": 1, "income": 1.1, "requires": ["markets"], "description": "The loot is shared with the villages: +1 order, +10% taxes."},
+
+  "book_of_storms": {"name": "Book of Storms", "faction": "solomonari", "cost": 240, "turns": 3, "attack": 1.06, "requires": ["drill"], "description": "Spells of thunder and hail: +6% attack."},
+  "hail_wards":   {"name": "Hail Wards", "faction": "solomonari", "cost": 200, "turns": 3, "food": 1.2, "defense": 1.05, "requires": ["three_field"], "description": "The hail is turned from your fields onto your foes: +20% food, +5% defence."}
 }

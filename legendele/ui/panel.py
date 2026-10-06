@@ -143,7 +143,7 @@ class Panel:
             theme.text(surface, f"Capital of {game.faction_name(capital_of[0])}  ·  walled", (x, y), 18, theme.GOLD)
             y += 20
         if p.garrison:
-            who = "Outlaws" if p.owner is None else "Garrison"
+            who = "Rebels" if p.owner is None else "Garrison"
             y = self._regiments(surface, f"{who} ({len(p.garrison)}):", p.garrison, x, y, width)
         if p.besieged_by is not None and p.besieged_by in game.armies:
             besieger = game.armies[p.besieged_by]

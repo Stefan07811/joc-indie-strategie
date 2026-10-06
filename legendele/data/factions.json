@@ -43,7 +43,7 @@
     "creature": true,
     "winter_hardy": false,
     "general_names": ["Ironscale", "Cinderjaw", "Old Gold-Hoarder", "Stormwing", "Ember-Eyes", "Sevenscale"],
-    "income_mult": 1.0,
+    "income_mult": 1.3,
     "traits": {
       "hoard_interest": 0.05,
       "hoard_cap": 15,
@@ -53,7 +53,7 @@
         "chance": 0.75
       }
     },
-    "legend": "The Hoard: gold breeds gold. Their lords can abduct a rival's heir and demand a ransom.",
+    "legend": "The Hoard: gold breeds gold (+30% income, and interest on the treasury). Their lords can abduct a rival's heir and demand a ransom.",
     "ai": {
       "personality": "Greedy",
       "summary": "Picks fights with the weak and can be bought with gold.",
@@ -149,9 +149,75 @@
       }
     }
   },
-  "haiduci": {
-    "name": "Outlaws",
+  "outlaws": {
+    "name": "The Outlaws",
     "adjective": "Outlaw",
+    "color": [132, 156, 46],
+    "capital": "vlasia",
+    "playable": true,
+    "terrain_mastery": ["forest"],
+    "description": "Haiduci of the deep woods, who rob the rich boyars and are sung of by the poor. Quick, poor and loved.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Gruia son of Novac", "Bujor", "Tunsu", "Codreanu", "Radu Anghel", "Mărgărita the Fierce"],
+    "income_mult": 1.0,
+    "traits": {"plunder": 40, "beloved": 1},
+    "legend": "Rob the rich: every province they take fills their purse with 40 gold. The poor love them: +1 order in every province.",
+    "ai": {
+      "personality": "Daring",
+      "summary": "Raids the rich and weak, makes friends among the poor.",
+      "friendliness": 5,
+      "aggression": 0.6,
+      "max_wars": 2,
+      "war_ratio": 1.1,
+      "peace_ratio": 0.7,
+      "loyalty": 0.8,
+      "greed": 1.5,
+      "alliance_threshold": 30,
+      "stay_near_home": false,
+      "targets": {
+        "neutral": 3.0,
+        "enemy": 3.5,
+        "heart": 5.0
+      }
+    }
+  },
+  "solomonari": {
+    "name": "The Solomonari",
+    "adjective": "Solomonar",
+    "color": [86, 158, 214],
+    "capital": "apuseni",
+    "playable": true,
+    "terrain_mastery": ["mountains"],
+    "description": "Wizards of the school under the earth, who ride dragons through the storm clouds and call down hail on their foes.",
+    "creature": false,
+    "winter_hardy": true,
+    "general_names": ["Master of the Thirteenth Seat", "Old Iezer", "Grey Cloak", "Thunder-Book", "The Hail Shepherd", "Lady of the Mists"],
+    "income_mult": 1.0,
+    "traits": {"weather_lords": 0.8},
+    "legend": "Lords of the weather: storm and hail follow them, so enemy arrows and guns strike 20% weaker. They feel no cold.",
+    "ai": {
+      "personality": "Aloof",
+      "summary": "Keeps to the mountains and strikes only when sure of victory.",
+      "friendliness": 0,
+      "aggression": 0.45,
+      "max_wars": 2,
+      "war_ratio": 1.3,
+      "peace_ratio": 0.8,
+      "loyalty": 0.7,
+      "greed": 1.0,
+      "alliance_threshold": 40,
+      "stay_near_home": true,
+      "targets": {
+        "neutral": 3.0,
+        "enemy": 3.0,
+        "heart": 6.0
+      }
+    }
+  },
+  "haiduci": {
+    "name": "Rebels",
+    "adjective": "Rebel",
     "color": [118, 106, 94],
     "capital": null,
     "playable": false,
@@ -159,7 +225,7 @@
     "description": "Brigands of the forests who rise wherever lords rule badly.",
     "creature": false,
     "winter_hardy": false,
-    "general_names": ["Iancu Jianu", "Pintea the Brave"],
+    "general_names": ["Gheorghe Doja", "Horea"],
     "income_mult": 1.0,
     "traits": {},
     "legend": "They rise wherever public order collapses."

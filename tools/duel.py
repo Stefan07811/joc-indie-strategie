@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from legendele.game import GameData  # noqa: E402
 from legendele.game.battle import Regiment, Side, resolve  # noqa: E402
 
-FACTIONS = ("voievodat", "zmei", "iele", "strigoi")
+FACTIONS = ("voievodat", "zmei", "iele", "strigoi", "outlaws", "solomonari")
 
 
 def army(data, fid, budget, tiers):
@@ -47,7 +47,8 @@ def main():
                 for seed, budget in ((s, b) for s in range(20) for b in budgets):
                     def side(fid, leader):
                         regs = [Regiment(u, data.units[u]["hp"]) for u in army(data, fid, budget, tiers)]
-                        return Side(fid, regs, leader, creature=data.factions[fid]["creature"])
+                        return Side(fid, regs, leader, creature=data.factions[fid]["creature"],
+                                    storm=data.factions[fid]["traits"].get("weather_lords", 1.0))
                     wins += resolve(side(a, "A"), side(d, "D"), data.units, random.Random(seed)).attacker_won
                 row.append(round(100 * wins / (20 * len(budgets))))
             print(f"{a[:10]:>10} " + "".join(f"{w:>10}" for w in row))

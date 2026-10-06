@@ -189,7 +189,7 @@ def _notice(surface, game, event):
         }[event.kind]
     elif isinstance(event, Rebellion):
         title, color = f"{game.provinces[event.province].name} rises up!", theme.DANGER
-        body = ("Unpaid, hungry or freshly conquered, the people have had enough: Outlaws take up arms. "
+        body = ("Unpaid, hungry or freshly conquered, the people have had enough: Rebels take up arms. "
                 "Keep troops in restless provinces and build to calm them.")
     elif isinstance(event, Abduction):
         place = game.provinces[event.province].name
@@ -344,7 +344,7 @@ class EndScreen:
         self.menu_rect = pygame.Rect(0, 0, 220, 44)
         self.map_rect.bottomright = (self.box.centerx - 10, self.box.bottom - 22)
         self.menu_rect.bottomleft = (self.box.centerx + 10, self.box.bottom - 22)
-        self.factions = [f for f, d in game.data.factions.items() if d["playable"]]
+        self.factions = list(game.factions)
 
     def handle(self, event):
         """None while open; "map" to look at the map; "menu" for the main menu."""
@@ -412,14 +412,14 @@ class EndScreen:
             pygame.draw.line(surface, (150, 110, 60), (x, gy), (min(x + 6, plot.right), gy), 1)
         theme.text(surface, f"Conquest: {goal}", (plot.x + 6, gy - 2), 15, (120, 84, 40), anchor="bottomleft",
                    lift=False)
-        first_year = game.data.map["start_year"] + history[0]["round"] // 4
-        last_year = game.data.map["start_year"] + history[-1]["round"] // 4
+        first_year = game.start_year + history[0]["round"] // 4
+        last_year = game.start_year + history[-1]["round"] // 4
         step = max(1, (last_year - first_year) // 6 or 1)
         for i, snap in enumerate(history):
-            if snap["round"] % 4 == 0 and (game.data.map["start_year"] + snap["round"] // 4 - first_year) % step == 0:
+            if snap["round"] % 4 == 0 and (game.start_year + snap["round"] // 4 - first_year) % step == 0:
                 x = at(i, 0)[0]
                 pygame.draw.line(surface, ink, (x, plot.bottom), (x, plot.bottom + 4), 1)
-                theme.text(surface, str(game.data.map["start_year"] + snap["round"] // 4), (x, plot.bottom + 6), 15,
+                theme.text(surface, str(game.start_year + snap["round"] // 4), (x, plot.bottom + 6), 15,
                            ink, anchor="midtop", lift=False)
         pygame.draw.line(surface, ink, plot.bottomleft, plot.bottomright, 1)
 
@@ -449,7 +449,7 @@ class EndScreen:
             x = at(i, 0)[0]
             pygame.draw.line(surface, ink, (x, plot.y), (x, plot.bottom), 1)
             snap = history[i]
-            lines = [f"{SEASONS[snap['round'] % 4]} {game.data.map['start_year'] + snap['round'] // 4}"]
+            lines = [f"{SEASONS[snap['round'] % 4]} {game.start_year + snap['round'] // 4}"]
             rows = sorted(self.factions, key=lambda f: -snap["factions"].get(f, {}).get("provinces", 0))
             for fid in rows:
                 row = snap["factions"].get(fid, {})

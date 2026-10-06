@@ -87,7 +87,8 @@ class CustomBattle:
             defending = i == 1
             walls = defending and self.kind == "assault"
             side = Side(s["faction"], regiments, "Commander", defense_mult=1.5 if walls else 1.0, walls=walls,
-                        creature=self.app.data.factions[s["faction"]]["creature"])
+                        creature=self.app.data.factions[s["faction"]]["creature"],
+                        storm=self.app.data.factions[s["faction"]].get("traits", {}).get("weather_lords", 1.0))
             if i == 0 and self.kind == "assault":
                 side.equipment = {"ladders": self.works != "none", "ram": self.works == "ram"}
             sides.append(side)
@@ -136,7 +137,7 @@ class CustomBattle:
         theme.button(surface, rect, data.factions[fid]["name"], rect.collidepoint(mouse))
         self.actions.append((rect, lambda i=i: self.set_faction(i)))
         theme.tip(rect, ["Faction", "Click to change." + ("" if i == self.you else
-                                                           " Your foe may also be a foreign power or the Outlaws.")])
+                                                           " Your foe may also be a foreign power or the Rebels.")])
         # the regiments picked
         theme.text(surface, f"Army ({len(side['army'])} / {MAX_REGIMENTS})  ·  click to remove",
                    (inner.x + 12, inner.y + 46), 16, theme.GOLD)

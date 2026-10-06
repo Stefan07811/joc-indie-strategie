@@ -15,8 +15,10 @@ COST = {"spy": 80, "priest": 90}
 MAX_EACH = 2
 MOVES = 3
 NAMES = {
-    "spy": {"voievodat": "Spy", "zmei": "Imp Spy", "iele": "Will-o'-the-wisp", "strigoi": "Night Crow"},
-    "priest": {"voievodat": "Priest", "zmei": "Sorcerer", "iele": "Herb Witch", "strigoi": "Necromancer"},
+    "spy": {"voievodat": "Spy", "zmei": "Imp Spy", "iele": "Will-o'-the-wisp", "strigoi": "Night Crow",
+            "outlaws": "Lookout", "solomonari": "Storm Raven"},
+    "priest": {"voievodat": "Priest", "zmei": "Sorcerer", "iele": "Herb Witch", "strigoi": "Necromancer",
+               "outlaws": "Wandering Monk", "solomonari": "Solomonar"},
 }
 ACTIONS = {
     # action: (agent kind, chance of success, chance of being caught on failure, description)

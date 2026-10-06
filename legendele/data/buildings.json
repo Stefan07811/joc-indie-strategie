@@ -8,5 +8,7 @@
   "church":   { "name": "Church",       "faction": "voievodat", "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. Creatures fighting here strike 20% weaker." },
   "hoard":    { "name": "Dragon Hoard", "faction": "zmei",      "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 1, "description": "+1 order. Raises the interest your treasury can earn by 15 gold." },
   "ring":     { "name": "Fairy Ring",   "faction": "iele",      "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. The Hora strikes twice as hard here." },
-  "crypt":    { "name": "Crypt",        "faction": "strigoi",   "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. One more of the fallen rises after victories won here." }
+  "crypt":    { "name": "Crypt",        "faction": "strigoi",   "cost": 150, "turns": 1, "gold": 0, "food": 0, "order": 2, "description": "+2 order. One more of the fallen rises after victories won here." },
+  "hideout":  { "name": "Greenwood Hideout", "faction": "outlaws", "cost": 150, "turns": 1, "gold": 10, "food": 0, "order": 1, "description": "+1 order, +10 gold each season from the loot hidden in the woods." },
+  "tower":    { "name": "Weather Tower", "faction": "solomonari", "cost": 150, "turns": 1, "gold": 0, "food": 2, "order": 1, "description": "+1 order, +2 food. The hail is kept away from your fields." }
 }

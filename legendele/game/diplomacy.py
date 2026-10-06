@@ -11,7 +11,7 @@
 - A legend beaten badly enough may be made a **vassal**: it becomes its overlord's ally, pays it a
   quarter of its taxes, and its provinces count towards the overlord's conquest. It is free again
   if either side breaks the alliance or goes to war.
-Neutral land and the Outlaws are always fair game.
+Neutral land and the Rebels are always fair game.
 """
 
 from dataclasses import dataclass
@@ -56,11 +56,13 @@ def rules(game):
 
 def setup(game):
     """Starting relations between the playable factions."""
-    playable = [f for f, d in game.data.factions.items() if d["playable"]]
+    playable = game.factions
     for i, a in enumerate(playable):
         for b in playable[i + 1:]:
             game.relations[key(a, b)] = rules(game)["start"]
     for a, b in rules(game)["start_wars"]:
+        if a not in playable or b not in playable:
+            continue
         game.relations[key(a, b)] = WAR
         game.war_since[key(a, b)] = 0
 

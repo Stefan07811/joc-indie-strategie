@@ -1,7 +1,7 @@
 """Start the game:  python -m legendele
 
 Extra options for development:
-  --faction ID        skip the faction screen (voievodat, zmei, iele, strigoi)
+  --faction ID        skip the faction screen (voievodat, zmei, iele, strigoi, outlaws, solomonari)
   --screenshot FILE   draw one frame to FILE and exit (works without a display)
 """
 

@@ -10,9 +10,9 @@ def army_at(game, fid, pid):
 def test_new_game_setup(game):
     assert game.date == "Spring 1400"
     assert game.turn_order[0] == "voievodat"
-    assert set(game.turn_order) == {"voievodat", "zmei", "iele", "strigoi"}
-    assert len(game.armies) == 8
-    assert set(game.ai) == {"zmei", "iele", "strigoi"}
+    assert set(game.turn_order) == {"voievodat", "zmei", "iele", "strigoi", "outlaws", "solomonari"}
+    assert len(game.armies) == 11
+    assert set(game.ai) == {"zmei", "iele", "strigoi", "outlaws", "solomonari"}
 
 
 def test_cannot_play_rebels(data):
@@ -56,10 +56,11 @@ def test_move_spends_points_and_can_continue(game):
     with pytest.raises(MoveError):
         game.move_army(vlad.id, "heart")  # mountains cost 3
     radu = army_at(game, "voievodat", "craiova")
-    game.move_army(radu.id, "vlasia")  # neutral, with a garrison: the march ends in a siege
-    assert (radu.province, radu.moves_left) == ("vlasia", 0)
+    game.move_army(radu.id, "targoviste")
+    game.move_army(radu.id, "buzau")  # neutral, with a garrison: the march ends in a siege
+    assert (radu.province, radu.moves_left) == ("buzau", 0)
     with pytest.raises(MoveError):
-        game.move_army(radu.id, "dobrogea")
+        game.move_army(radu.id, "bacau")
 
 
 def test_illegal_move_changes_nothing(game):
@@ -86,7 +87,8 @@ def test_ai_wages_war_and_never_shares_a_province_with_enemies(data):
     for _ in range(12):
         game.end_turn()
         for p in game.provinces:
-            assert len({a.faction for a in game.armies_in(p)}) <= 1, p
+            here = {a.faction for a in game.armies_in(p)}
+            assert not any(game.at_war(a, b) for a in here for b in here if a != b), p  # allies may camp together
         if game.over:
             break
     assert any(p.owner != data_owner for p, data_owner in

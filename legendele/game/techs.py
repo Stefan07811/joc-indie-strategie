@@ -101,12 +101,15 @@ def effects(game, tid):
     return out
 
 
+AI_RESERVE = 80  # gold the computer keeps back for war when it pays its scholars
+
+
 def ai_study(game, fid):
     """The computer's scholars: the cheapest tradition it can afford with gold to spare."""
     if game.studying.get(fid):
         return
     options = sorted(available(game, fid), key=lambda t: (game.data.techs[t]["cost"], t))
     for tid in options:
-        if game.treasury[fid].gold >= game.data.techs[tid]["cost"] + 150:
+        if game.treasury[fid].gold >= game.data.techs[tid]["cost"] + AI_RESERVE:
             start(game, fid, tid)
             return

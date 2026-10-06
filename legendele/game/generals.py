@@ -95,7 +95,10 @@ def give_trait(game, army, trait, quiet=False):
         return False
     if any({trait, t} == set(pair) for pair in OPPOSITES for t in army.traits):
         return False
+    fresh = army.moves_left == moves(game, army)
     army.traits.append(trait)
+    # a fresh army marches by its new nature; one already on the road keeps what is left, up to that
+    army.moves_left = moves(game, army) if fresh else min(army.moves_left, moves(game, army))
     if army.faction == game.player and not quiet:
         t = game.data.traits[trait]
         game.log.append(f"{army.general} is now known as {t['name']}: {t['description']}")

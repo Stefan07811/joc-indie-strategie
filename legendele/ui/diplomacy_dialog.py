@@ -5,9 +5,9 @@ import pygame
 from ..game import MoveError, diplomacy
 from . import theme, tips
 
-BOX = pygame.Rect(0, 0, 880, 660)
+BOX = pygame.Rect(0, 0, 900, 700)
 BOX.center = theme.MAP_RECT.center
-ROW = 164
+ROW = 110
 BRIBE = 100
 
 
@@ -83,14 +83,14 @@ class DiplomacyDialog:
         veil.fill((10, 8, 6, 160))
         surface.blit(veil, theme.MAP_RECT)
         theme.frame(surface, BOX)
-        x, y = BOX.x + 24, BOX.y + 18
+        x, y = BOX.x + 24, BOX.y + 14
         theme.outlined(surface, "Diplomacy", (x, y - 2), 32, theme.GOLD, anchor="topleft")
         theme.text(surface, f"Treasury: {game.treasury[game.player].gold} gold", (BOX.right - 24, y + 8), 22,
                    theme.GOLD, anchor="topright")
         theme.text(surface, "Peace closes borders. Breaking a truce or an alliance is treachery, and every "
-                            "legend remembers it.", (x, y + 38), 17, theme.TEXT_DIM)
-        y += 66
-        others = [f for f, d in game.data.factions.items() if d["playable"] and f != game.player]
+                            "legend remembers it.", (x, y + 36), 17, theme.TEXT_DIM)
+        y += 60
+        others = [f for f in game.factions if f != game.player]
         for fid in others:
             theme.divider(surface, x, BOX.right - 24, y)
             self._row(surface, fid, x, y + 10, mouse)
@@ -106,9 +106,9 @@ class DiplomacyDialog:
         color = theme.faction_color(game, fid)
         banner = self.assets.get(f"army_{fid}", color)
         surface.blit(banner, (x, y))
-        theme.outlined(surface, game.faction_name(fid), (x + 44, y - 2), 22, color, anchor="topleft")
+        name = theme.outlined(surface, game.faction_name(fid), (x + 44, y - 4), 21, color, anchor="topleft")
         if fid in game.eliminated:
-            theme.text(surface, "Destroyed", (x + width, y + 4), 22, theme.TEXT_DIM, anchor="topright")
+            theme.text(surface, "Destroyed", (x + width, y), 20, theme.TEXT_DIM, anchor="topright")
             return
         rel = diplomacy.relation(game, me, fid)
         status = {"war": ("At war", theme.DANGER), "peace": ("At peace", theme.PARCHMENT),
@@ -117,19 +117,20 @@ class DiplomacyDialog:
         truce = game.truce_until.get(diplomacy.key(me, fid), 0) - game.round
         if rel != "war" and truce > 0:
             label += f"  ·  truce for {truce} more season{'s' if truce > 1 else ''}"
-        r = theme.text(surface, label, (x + width, y + 4), 22, status[1], anchor="topright")
+        r = theme.text(surface, label, (x + width, y), 20, status[1], anchor="topright")
         theme.tip(r, tips.RELATIONS[rel])
 
         ai = game.data.factions[fid].get("ai", {})
-        theme.text(surface, f"{ai.get('personality', '')}: {ai.get('summary', '')}", (x + 44, y + 28), 17,
-                   theme.TEXT_DIM)
+        r = theme.text(surface, ai.get("personality", ""), (name.right + 12, y + 2), 16, theme.TEXT_DIM)
+        theme.tip(r, [ai.get("personality", ""), ai.get("summary", "")])
         score, parts = diplomacy.attitude(game, fid, me)
         word, wcolor = mood_word(score)
-        r = theme.text(surface, f"Attitude towards you: {word} ({score:+})", (x + 44, y + 50), 19, wcolor)
+        r = theme.text(surface, f"Attitude towards you: {word} ({score:+})", (x + 44, y + 22), 18, wcolor)
         theme.tip(r, tips.attitude(game, fid))
         reasons = ", ".join(f"{name} {points:+}" for name, points in parts) or "nothing in particular"
-        for i, line in enumerate(theme.wrap(reasons, 16, width - 44)[:2]):
-            theme.text(surface, line, (x + 44, y + 72 + 17 * i), 16, theme.TEXT_DIM)
+        reasons = theme.wrap(reasons, 15, width - r.width - 70)
+        theme.text(surface, reasons[0] + (" ..." if len(reasons) > 1 else ""), (r.right + 14, y + 25), 15,
+                   theme.TEXT_DIM)
         wars = [game.faction_name(f) for f in diplomacy.at_war_with(game, fid) if f != me]
         allies = [game.faction_name(f) for f in diplomacy.allies_of(game, fid) if f != me]
         line = "At war with: " + (", ".join(wars) or "no one else")
@@ -147,7 +148,7 @@ class DiplomacyDialog:
             bonds.append("your overlord")
         if bonds:
             line += "  ·  " + ", ".join(bonds).capitalize()
-        theme.text(surface, line, (x + 44, y + 106), 16, theme.GOLD if bonds else theme.TEXT_DIM)
+        theme.text(surface, line, (x + 44, y + 44), 15, theme.GOLD if bonds else theme.TEXT_DIM)
 
         buttons = []
         treachery = truce > 0 or k in game.marriages
@@ -169,14 +170,14 @@ class DiplomacyDialog:
             buttons.append(("Declare war" + (" (treachery!)" if treachery else ""), lambda: self._war(fid)))
         bx = x + 44
         for label, action in buttons:
-            w = theme.serif(16).size(label)[0] + 50
-            rect = pygame.Rect(bx, y + 124, w, 30)
+            w = theme.serif(16).size(label)[0] + 44
+            rect = pygame.Rect(bx, y + 64, w, 28)
             self._button(surface, rect, label, mouse)
             self.actions.append((rect, label, action))
             bx += w + 10
         if fid in self.feedback:
             message, colour = self.feedback[fid]
-            theme.text(surface, message, (x + width, y + 130), 19, colour, anchor="topright")
+            theme.text(surface, message, (x + width, y + 68), 18, colour, anchor="topright")
 
     def _button(self, surface, rect, label, mouse):
         theme.button(surface, rect, label, rect.collidepoint(mouse))

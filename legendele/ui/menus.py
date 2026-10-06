@@ -67,14 +67,14 @@ class MainMenu:
     def draw(self, surface):
         _backdrop(self.app, surface)
         cx = theme.WINDOW_SIZE[0] // 2
-        emblems = ("voievodat", "zmei", "iele", "strigoi")
+        emblems = [f for f, d in self.app.data.factions.items() if d["playable"]]
         for i, fid in enumerate(emblems):
             color = tuple(self.app.data.factions[fid]["color"])
             banner = self.app.assets.get(f"army_{fid}", color, 5)
-            x = cx + (i - 1.5) * 90
+            x = cx + (i - (len(emblems) - 1) / 2) * 90
             surface.blit(banner, banner.get_rect(midbottom=(x, 150)))
         theme.outlined(surface, "Legends of the Carpathians", (cx, 200), 66, theme.GOLD, width=3)
-        theme.outlined(surface, "Four legends. One Heart of the Mountains.", (cx, 256), 26, theme.PARCHMENT,
+        theme.outlined(surface, "Six legends. One Heart of the Mountains.", (cx, 256), 26, theme.PARCHMENT,
                        style="italic")
         mouse = pygame.mouse.get_pos()
         box = self.buttons[0][0].unionall([r for r, _ in self.buttons]).inflate(70, 50)
@@ -84,15 +84,17 @@ class MainMenu:
         if self.continue_slot:
             info = profile.slot_info(self.continue_slot)
             faction = self.app.data.factions[info["player"]]["name"]
-            theme.text(surface, f"{faction}, {_date(self.app, info['round'])}",
+            theme.text(surface, f"{faction}, {_date(self.app, info)}",
                        (cx, self.buttons[0][0].bottom + 2), 16, theme.TEXT_DIM, anchor="midtop")
         theme.text(surface, f"v{VERSION}", (theme.WINDOW_SIZE[0] - 12, theme.WINDOW_SIZE[1] - 10), 16,
                    theme.TEXT_DIM, anchor="bottomright")
 
 
-def _date(app, round_no):
+def _date(app, info):
     seasons = ("Spring", "Summer", "Autumn", "Winter")
-    return f"{seasons[round_no % 4]} {app.data.map['start_year'] + round_no // 4}"
+    round_no = info["round"]
+    first = app.data.map["start_year"] + info.get("era", 1400) - 1400
+    return f"{seasons[round_no % 4]} {first + round_no // 4}"
 
 
 class SlotScreen:
@@ -155,7 +157,7 @@ class SlotScreen:
                 theme.text(surface, "Unreadable save", (rect.x + 18, rect.y + 42), 19, theme.DANGER)
             else:
                 f = self.app.data.factions[info["player"]]
-                theme.text(surface, f"{f['name']}  ·  {_date(self.app, info['round'])}  ·  "
+                theme.text(surface, f"{f['name']}  ·  {_date(self.app, info)}  ·  "
                                     f"{info['provinces']} provinces" + ("  ·  war over" if info["over"] else ""),
                            (rect.x + 18, rect.y + 42), 19, tuple(f["color"]))
                 stamp = time.strftime("%d %b %Y, %H:%M", time.localtime(info["saved_at"]))

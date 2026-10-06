@@ -84,6 +84,7 @@ def to_dict(game):
         "quests_done": game.quests_done,
         "agents": [asdict(a) for a in game.agents.values()],
         "next_agent_id": game._next_agent_id,
+        "options": game.options,
     }
 
 
@@ -92,7 +93,10 @@ def from_dict(data, d, ai_factory=None):
         raise SaveError(f"This save was made by another version of the game ({d.get('version')}).")
     if d.get("map") != data.map["name"]:
         raise SaveError(f"This save is for the map {d.get('map')!r}.")
-    game = Game.new(data, d["player"], ai_factory=ai_factory, difficulty=d.get("difficulty", "normal"))
+    # saves from before the start options: the legends that were at war then, each in its own homeland
+    options = d.get("options") or {"factions": [f for f in data.factions if f in d["treasury"]]}
+    game = Game.new(data, d["player"], ai_factory=ai_factory, difficulty=d.get("difficulty", "normal"),
+                    options=options)
     game.round = d["round"]
     for pid, saved in d["provinces"].items():
         p = game.provinces[pid]
@@ -153,7 +157,7 @@ def summary(d):
     """What a save slot shows without loading the whole campaign."""
     return {"player": d["player"], "round": d["round"], "provinces": sum(
         1 for p in d["provinces"].values() if p["owner"] == d["player"]), "over": bool(d["winner"])
-        or d["player"] in d["eliminated"]}
+        or d["player"] in d["eliminated"], "era": (d.get("options") or {}).get("era", 1400)}
 
 
 def save_game(game, path, extra=None):

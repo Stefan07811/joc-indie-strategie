@@ -131,6 +131,58 @@ def _outlaw(p, color, step, strike):
     p.poly(METAL, [(hx + 2.4, sh - 4 + lift), (hx + 4.2, sh - 3.4 + lift), (hx + 3.2, sh - 1.4 + lift)])
 
 
+def _peasant(p, color, step, strike):
+    _shadow(p, 6, 17, 8)
+    sh, hx, hy = _man(p, 6, 17, (222, 214, 194), step, hat=(70, 56, 40))
+    p.line(color, (4.2, sh + 4.6), (7.8, sh + 4.6), 0.9)  # sash
+    reach = 2.2 if strike else 0
+    p.line(WOOD, (hx - 4 + reach, hy + 3), (hx + 2 + reach, sh - 6), 0.8)
+    for k in (-0.7, 0, 0.7):  # the fork's tines
+        p.line(METAL, (hx + 2 + reach + k, sh - 6), (hx + 2.6 + reach + k, sh - 8.2), 0.4)
+
+
+def _rifleman(p, color, step, strike):
+    _shadow(p, 6, 17, 8)
+    sh, hx, hy = _man(p, 6, 17, (214, 204, 182), step, hat=(52, 40, 30), cloak=_shade(color, 0.7))
+    kick = -0.8 if strike else 0
+    p.line(WOOD, (hx - 3 + kick, hy + 1.5), (hx + 1 + kick, hy - 0.5), 1.2)
+    p.line((64, 64, 70), (hx + 1 + kick, hy - 0.5), (hx + 8 + kick, hy - 3.2), 0.7)
+    if strike:
+        p.circle((255, 220, 120), hx + 8.6, hy - 3.5, 0.9)
+
+
+def _scholar(p, color, step, strike, cloud=False):
+    _shadow(p, 6, 18, 8)
+    robe = _shade(color, 0.55)
+    sh, hx, hy = _man(p, 6, 18, robe, step, tall=12, cloak=_shade(color, 0.35))
+    p.poly(robe, [(4.2, 10.5), (7.8, 10.5), (9.0, 17.4), (3.0, 17.4)])  # long robe
+    p.poly((230, 228, 220), [(5.8, sh - 0.6), (7.6, sh - 0.6), (6.8, sh + 3.2)])  # white beard
+    p.poly(_shade(color, 0.4), [(4.4, sh - 3.0), (8.2, sh - 3.0), (6.4, sh - 8.0)])  # tall hat
+    lift = -2.5 if strike else 0
+    p.line(WOOD, (hx + 0.5, hy + 5), (hx + 1.6, sh - 6 + lift), 0.8)
+    glow = (190, 230, 255) if strike else (150, 190, 230)
+    p.circle(glow, hx + 1.6, sh - 6.4 + lift, 1.1)
+    if cloud:
+        dark = (110, 116, 128) if strike else (150, 156, 166)
+        for cx, cy, r in ((3.0, 2.6, 2.2), (6.0, 1.8, 2.6), (9.0, 2.8, 2.0)):
+            p.circle(dark, cx, cy, r)
+
+
+def _hailcaller(p, color, step, strike):
+    _scholar(p, color, step, strike, cloud=True)
+
+
+def _warden(p, color, step, strike):
+    _shadow(p, 6, 17, 8)
+    sh, hx, hy = _man(p, 6, 17, _shade(color, 0.45), step, head=(60, 60, 70), cloak=_shade(color, 0.3))
+    p.ellipse(_shade(color, 0.45), 4.2, sh - 4.0, 4.2, 4.2)  # the hood
+    p.circle((40, 40, 46), 6.6, sh - 1.8, 1.1)  # the face in its shadow
+    reach = 2.5 if strike else 0
+    p.line(WOOD, (hx - 4 + reach, hy + 3), (hx + 2 + reach, sh - 6), 0.9)
+    p.poly(METAL, [(hx + 2 + reach, sh - 6), (hx + 2.8 + reach, sh - 8.2), (hx + 2.9 + reach, sh - 5.4)])
+    p.ellipse((96, 98, 106), 6.4, sh + 0.2, 3.4, 5.0)
+
+
 def _rider(p, color, step, strike):
     _shadow(p, 9, 19, 15)
     horse = (104, 72, 46)
@@ -294,6 +346,11 @@ FIGURES = {
     "gun": (_gunner, (14, 19), 16, 4, 8.0),
     "stake": (_hunter, (12, 19), 16, 4, 8.0),
     "axe": (_outlaw, (12, 19), 16, 4, 8.0),
+    "fork": (_peasant, (12, 19), 20, 5, 7.0),
+    "rifle": (_rifleman, (16, 19), 16, 4, 8.0),
+    "staff": (_scholar, (12, 20), 16, 4, 8.0),
+    "cloud": (_hailcaller, (12, 20), 12, 4, 8.0),
+    "hood": (_warden, (12, 19), 20, 5, 7.0),
     "horse": (_rider, (20, 21), 10, 5, 8.0),
     "whelp": (_whelp, (16, 17), 9, 3, 11.0),
     "mace": (_drake, (14, 21), 6, 3, 11.0),
@@ -309,6 +366,7 @@ FIGURES = {
     "ghost": (_wraith, (12, 19), 12, 4, 8.0),
     "wolf": (_wolf, (18, 17), 10, 5, 8.0),
 }
+GUNS = ("gun", "rifle")
 STEPS = (0, 1, 0, -1)  # a walking cycle
 _figures = {}
 
@@ -501,6 +559,9 @@ class Effects:
                 pygame.draw.line(decals, (70, 52, 36), (x, y), (x - 2, y - 4), 1)
             elif s[7] == "shot":
                 self.puffs.append([s[2], s[3], 0, -3, now, 0.5, 1, 5, self.dust_color, 90])
+            elif s[7] in ("hail", "spark"):
+                color = (236, 244, 255) if s[7] == "hail" else (170, 220, 255)
+                self.puffs.append([s[2], s[3], 0, -2, now, 0.4, 1, 4, color, 160])
         self.shots = [s for s in self.shots if now < s[4] + s[5]]
         self.puffs = [p for p in self.puffs if now < p[4] + p[5]]
 
@@ -512,8 +573,9 @@ class Effects:
 
     def _shoot(self, u, t, now):
         icon = self.units[u.regiment.unit]["icon"]
-        gun = icon == "gun"
-        if not self._due(("shot", u.id), now, 0.5 if gun else 0.13):
+        gun = icon in GUNS
+        every = 0.5 if gun else 0.3 if icon == "cloud" else 0.2 if icon == "staff" else 0.13
+        if not self._due(("shot", u.id), now, every):
             return
         mine, theirs = self.troops.front(u), self.troops.front(t)
         if not mine or not theirs:
@@ -522,7 +584,13 @@ class Effects:
         x0, y0 = a.x + math.cos(u.facing) * 4, a.y - 9
         x1, y1 = b.x + self.rng.uniform(-6, 6), b.y + self.rng.uniform(-4, 4)
         dist = math.hypot(x1 - x0, y1 - y0)
-        if gun:
+        if icon == "cloud":
+            for _ in range(3):  # hail falls on them from a clear sky
+                hx, hy = x1 + self.rng.uniform(-10, 10), y1 + self.rng.uniform(-3, 3)
+                self.shots.append([hx, hy - 80, hx, hy, now + self.rng.uniform(0, 0.2), 0.35, 0, "hail"])
+        elif icon == "staff":
+            self.shots.append([x0, y0 - 4, x1, y1 - 6, now, 0.25 + dist / 900, dist * 0.08, "spark"])
+        elif gun:
             self.shots.append([x0, y0, x1, y1 - 6, now, 0.12, 0, "shot"])
             self.puffs.append([x0 + math.cos(u.facing) * 3, y0, math.cos(u.facing) * 10, -6, now, 1.6, 2, 10,
                                (226, 226, 220), 150])
@@ -557,8 +625,17 @@ class Effects:
     def draw(self, surface):
         now = self.field.time
         for x0, y0, x1, y1, start, dur, h, kind in self.shots:
+            if now < start:
+                continue
             p = max(0.0, min(1.0, (now - start) / dur))
             x, y = x0 + (x1 - x0) * p, y0 + (y1 - y0) * p - math.sin(p * math.pi) * h
+            if kind == "hail":
+                surface.fill((240, 246, 255), (x - 1, y - 1, 2, 3))
+                continue
+            if kind == "spark":
+                pygame.draw.circle(surface, (120, 190, 255), (x, y), 2.5)
+                pygame.draw.circle(surface, (240, 250, 255), (x, y), 1.2)
+                continue
             if kind == "shot":
                 pygame.draw.line(surface, (255, 236, 180), (x, y), (x - (x1 - x0) * 0.08, y - (y1 - y0) * 0.08), 1)
                 continue

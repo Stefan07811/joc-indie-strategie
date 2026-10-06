@@ -9,9 +9,9 @@ def test_bundled_data_is_valid(data):
     data.validate()
 
 
-def test_four_playable_factions_with_five_units_each(data):
+def test_six_playable_factions_with_five_units_each(data):
     playable = [f for f, d in data.factions.items() if d["playable"]]
-    assert sorted(playable) == ["iele", "strigoi", "voievodat", "zmei"]
+    assert sorted(playable) == ["iele", "outlaws", "solomonari", "strigoi", "voievodat", "zmei"]
     for fid in playable:
         assert sum(u["faction"] == fid and u["tier"] > 0 for u in data.units.values()) == 5
         quests = [q for q in data.quests.values() if q["faction"] == fid]

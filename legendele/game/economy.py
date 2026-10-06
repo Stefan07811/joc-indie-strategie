@@ -40,7 +40,7 @@ class Balance:
 
 
 def is_capital(game, pid):
-    return any(f["capital"] == pid for f in game.data.factions.values())
+    return pid in game.capitals.values()
 
 
 def province_yield(game, p):

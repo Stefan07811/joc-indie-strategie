@@ -91,7 +91,7 @@ class MapView:
         self._minimap_key = None
         self._minimap = None
         self._vignette = painter._vignette(*self.rect.size)
-        capital = data.factions.get(game.player, {}).get("capital")
+        capital = game.capital_of(game.player)
         if capital in game.provinces:
             self.center_on(game.provinces[capital].x, game.provinces[capital].y)
         else:

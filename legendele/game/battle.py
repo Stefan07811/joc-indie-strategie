@@ -58,6 +58,7 @@ class Side:
     river: str | None = None  # the river the attackers crossed to get here
     late: list = field(default_factory=list)  # regiments (also in `regiments`) of armies marching in to help
     equipment: dict | None = None  # siege works of an assaulting side: {"ladders": bool, "ram": bool}
+    storm: float = 1.0  # the Solomonari's weather: the enemy's arrows and guns strike this much
 
 
 @dataclass
@@ -205,6 +206,8 @@ def _strikes(side, enemy, units, rng, round_no, attack_mod):
                 attack *= FOREST_AMBUSH
         if ability == "bane_of_creatures" and enemy.creature:
             attack *= BANE_OF_CREATURES
+        if ability == "ranged":
+            attack *= enemy.storm
         defense_mult = enemy.defense_mult
         if ability == "flying_fire" and enemy.walls:
             defense_mult /= WALLS_DEFENSE

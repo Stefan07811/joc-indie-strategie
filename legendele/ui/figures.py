@@ -199,6 +199,14 @@ def army(faction, color, emblem=None):
     elif faction == "strigoi":
         pygame.draw.circle(s, INK, (fx - 3, head[1] - 1), 2)
         pygame.draw.circle(s, INK, (fx + 3, head[1] - 1), 2)
+    elif faction == "outlaws":  # a tall sheepskin cap with a feather
+        pygame.draw.rect(s, (70, 54, 38), (fx - 8, head[1] - 17, 16, 11), border_radius=4)
+        pygame.draw.line(s, (236, 230, 210), (fx + 6, head[1] - 14), (fx + 13, head[1] - 24), 2)
+    elif faction == "solomonari":  # a wizard's pointed hat and a white beard
+        hat = [(fx - 10, head[1] - 4), (fx + 2, head[1] - 26), (fx + 10, head[1] - 4)]
+        pygame.draw.polygon(s, dark, hat)
+        pygame.draw.polygon(s, INK, hat, 2)
+        pygame.draw.polygon(s, (236, 232, 222), [(fx - 5, head[1] + 4), (fx + 5, head[1] + 4), (fx, head[1] + 14)])
     else:
         pygame.draw.ellipse(s, (90, 64, 40), (fx - 12, head[1] - 12, 24, 8))
         pygame.draw.line(s, (200, 60, 50), (fx + 6, head[1] - 10), (fx + 12, head[1] - 20), 2)

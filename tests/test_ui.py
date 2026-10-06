@@ -53,7 +53,7 @@ def test_choose_faction_then_march(app):
     click(app, on_map(app, sibiu.x, sibiu.y - 30))
     assert pajura.province == "sibiu"
     assert pajura.moves_left == 0  # marching into foreign land ends the turn's march
-    assert game.besieging(pajura)  # Sibiu has an Outlaw garrison
+    assert game.besieging(pajura)  # Sibiu has a rebel garrison
 
     click(app, (10, 10), button=3)
     assert app.scene.selected_army is None
@@ -277,7 +277,7 @@ def test_diplomacy_window(app, real_data):
     dialog = app.scene.dialog
     assert dialog is not None
     labels = [label for _, label, _ in dialog.actions]
-    assert labels.count("Declare war") == 3 and labels.count("Propose alliance") == 3
+    assert labels.count("Declare war") == 5 and labels.count("Propose alliance") == 5
     war_on_zmei = [r for r, label, _ in dialog.actions if label == "Declare war"][0]  # rows follow factions.json
     click(app, war_on_zmei.center)
     assert game.at_war("voievodat", "zmei")

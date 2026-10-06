@@ -9,7 +9,7 @@
 
 ## 1. Ideea pe scurt
 
-Carpații sunt împărțiți între patru puteri din legende. Fiecare vrea să stăpânească
+Carpații sunt împărțiți între șase puteri din legende (patru la început, două adăugate în M14). Fiecare vrea să stăpânească
 **Inima Munților**, o provincie din centrul hărții. Joci o facțiune, îți conduci armatele
 pe harta de campanie, construiești în provincii, faci pace sau război cu celelalte
 facțiuni și cucerești pământuri.
@@ -29,9 +29,12 @@ Numele din joc sunt în engleză. În paranteză e legenda românească din care
 | **The Dragonkin** (Zmeii) | Munți | Puține armate, dar foarte puternice și scumpe | **Comoara:** venitul crește cu aurul strâns (dobândă); un general Dragonkin poate **răpi** moștenitorul unui conducător, pentru răscumpărare sau ca ostatic |
 | **The Fae Court** (Ielele) | Păduri și poieni | Rapide, slabe în luptă directă, magie | **Hora:** armatele inamice care intră în provinciile lor pierd moral și oameni în fiecare tură; nu pot fi văzute în păduri |
 | **The Revenants** (Strigoii) | Mlaștini și cimitire | Ieftini, mulți, lenți; nu suferă de frig | **Ridicarea morților:** după fiecare bătălie, o parte din morți (de ambele tabere) se ridică în rândurile lor; mai puternici iarna |
+| **The Outlaws** (Haiducii, M14) | Codrii Vlăsiei, Dobrogea, Delta | Mulți, ieftini, iuți; ambuscade în pădure | **Jefuiesc bogații:** 40 de aur la fiecare provincie cucerită; **iubiți de popor:** +1 ordine peste tot |
+| **The Solomonari** (Solomonarii, M14) | Apuseni, Cluj, Crișana | Magi cu toiag, grindină și balauri îmblânziți | **Stăpânii vremii:** săgețile și gloanțele dușmanilor lovesc cu 20% mai slab; nu simt frigul |
 
-**Outlaws** (Haiducii) sunt o forță neutră, nu o facțiune jucabilă. Păzesc provinciile neutre și
-se ridică la răscoală în provinciile cu ordine publică sub zero.
+**Rebels** (răsculații) sunt o forță neutră, nu o facțiune jucabilă. Păzesc provinciile neutre și
+se ridică la răscoală în provinciile cu ordine publică sub zero. (Până la M14 se numeau Outlaws; numele
+a trecut la haiducii jucabili.)
 
 **Cum arată legendele în joc (M4):**
 - **Principality:** clădirea **Church** (+2 ordine; creaturile lovesc cu 20% mai slab în provincie),
@@ -58,7 +61,11 @@ Eroii (★) sunt unici: unul singur pe facțiune.
   Wrathful Sprites (Rusalii) 2, Mother of the Forest (Muma Pădurii) 3★
 - **The Revenants:** Risen Dead (Morți ridicați) 1, Vampires (Strigoi) 2, Dread Wraiths (Moroi) 2,
   Werewolves (Vârcolaci) 2, The Elder Vampire (Strigoiul Bătrân) 3★
-- **Outlaws:** Outlaw Brigands, Outlaw Marksmen (doar garnizoane)
+- **The Outlaws:** Haiduc Braves (Haiduci voinici) 1, Village Lads (Flăcăi) 1, Long Rifles (Pușcași) 2,
+  Mountain Riders (Călăreți haiduci) 2, The Haiduc Captain (Căpitanul de haiduci) 3★
+- **The Solomonari:** Apprentices (Ucenici) 1, Cave Wardens (Paznici) 1, Hailcallers (Grindinari) 2,
+  Tamed Wyrms (Balauri îmblânziți) 3, The Elder Solomonar (Solomonarul bătrân) 3★
+- **Rebels:** Rebel Peasants, Rebel Hunters (doar garnizoane și răscoale)
 
 Fiecare unitate are: atac, apărare, viață, moral, cost de recrutare, întreținere în aur, hrană
 (unitățile mari mănâncă mai mult) și eventual o abilitate. Costurile sunt măsurate prin simulare
@@ -270,7 +277,7 @@ tests/                 # teste pentru reguli și AI
 | **M11 — Bătălii tactice** ✅ | desfășurare, abilități active, vreme și noapte, zoom, întăriri, asedii, bătălie personalizată |
 | **M12 — Stat** ✅ | tehnologii, comerț, vasali, căsătorii |
 | **M13 — Legende** ✅ | eroi și misiuni, agenți |
-| **M14 — Rejucabilitate** | Outlaws jucabili, Solomonarii, opțiuni de start |
+| **M14 — Rejucabilitate** ✅ | Outlaws jucabili, Solomonarii, opțiuni de start (rivali, patrii la sorți, anul 1450, lungimea războiului) |
 | **M15 — Finisaj** | joc în română, muzică și sunete, realizări, executabil |
 
 ## 11. Decizii luate

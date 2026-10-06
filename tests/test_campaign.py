@@ -33,10 +33,10 @@ def test_terrain_costs_and_mastery(game):
 def test_reachable_respects_move_points(game):
     vlad = army_at(game, "voievodat", "targoviste")
     reach = game.reachable(vlad)
-    assert reach["arges"].cost == 2
+    assert reach["arges"].cost == 1  # hills, but a road runs between our own provinces
+    assert reach["heart"].cost == 4 and reach["heart"].path == ["arges", "heart"]  # 1 + 3 for the peaks
     assert reach["iron_gates"].cost == 4 and reach["iron_gates"].path == ["craiova", "iron_gates"]
-    assert "heart" not in reach  # 2 (Argeș) + 3 (mountains) > 4
-    assert "targoviste" not in reach
+    assert "sibiu" not in reach and "targoviste" not in reach
 
 
 def test_marching_stops_at_the_first_province_we_do_not_own(game):
@@ -52,7 +52,7 @@ def test_move_spends_points_and_can_continue(game):
     game.move_army(vlad.id, "craiova")
     assert (vlad.province, vlad.moves_left) == ("craiova", 3)
     game.move_army(vlad.id, "arges")
-    assert (vlad.province, vlad.moves_left) == ("arges", 1)
+    assert (vlad.province, vlad.moves_left) == ("arges", 2)
     with pytest.raises(MoveError):
         game.move_army(vlad.id, "heart")  # mountains cost 3
     radu = army_at(game, "voievodat", "craiova")
@@ -115,3 +115,21 @@ def test_the_war_is_remembered_season_by_season(data):
     battles = sum(1 for e in game.events if type(e).__name__ == "Battle" and e.result.attacker.faction != "haiduci"
                   and e.result.defender.faction != "haiduci")
     assert fought >= battles
+
+
+def test_roads_rivers_and_bridges(game):
+    assert game.enter_cost("voievodat", "arges", "targoviste") == 1  # road between our own lands
+    assert game.enter_cost("voievodat", "brasov", "targoviste") == 2  # a road, but into foreign land
+    assert game.river_between("targoviste", "brasov") == "Ialomița"  # ...over a bridge: no extra cost
+    assert "banat" not in game.provinces["iron_gates"].roads
+    assert game.enter_cost("voievodat", "banat", "iron_gates") == 2  # the Timiș, and no bridge
+    assert game.river_between("dobrogea", "vlasia") == "Danube"
+
+
+def test_attacking_across_a_river_is_harder(game):
+    vlad = army_at(game, "voievodat", "targoviste")
+    across = game._attackers([vlad], "vlasia", origin="targoviste")  # over the Ialomița
+    dry = game._attackers([vlad], "vlasia")
+    assert across.attack_mult < dry.attack_mult
+    danube = game._attackers([vlad], "dobrogea", origin="vlasia")
+    assert danube.attack_mult < across.attack_mult

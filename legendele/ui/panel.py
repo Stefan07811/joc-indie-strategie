@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import diplomacy, economy, generals, legends
+from ..game import diplomacy, economy, generals, legends, state
 from . import theme, tips
 
 PAD = 16
@@ -241,6 +241,18 @@ class Panel:
         elif mine and target is not None:
             y = self._forecast(surface, game.forecast(army, target, seen_only=True), x, y,
                                game.provinces[target].name)
+            reach = game.reachable(army).get(target)
+            origin = ([army.province] + reach.path)[-2] if reach else army.province
+            river = game.river_between(origin, target)
+            if river:
+                bridge = target in game.provinces[origin].roads
+                malus = round((1 - state.RIVER_ATTACK.get(river, 0.9)) * 100)
+                r = theme.text(surface, f"Across the {river}: -{malus}% attack" + ("" if bridge else ", no bridge"),
+                               (x, y), 17, theme.HIGHLIGHT)
+                theme.tip(r, [f"The {river}", "Attacking across a river is hard: the men wade in under the enemy's "
+                                              "blows." + ("" if bridge else " With no road there is no bridge, and the "
+                                                                            "crossing costs a movement point more.")])
+                y += 20
         return y + 6
 
     def _abduction(self, surface, army, x, y, width, mouse):

@@ -40,7 +40,8 @@ CHARGES = {"charge": 1.5, "frenzy": 1.5, "mace_throw": 1.3}
 RANGED_SHARE = 0.8
 FOREST_COVER = 0.7
 HILL_DEFENSE = 1.2
-SLOW = {"forest": 0.7, "marsh": 0.6}
+SLOW = {"forest": 0.7, "marsh": 0.6, "river": 0.45}
+RIVER_DEFENSE = 0.85  # caught wading: easier to hit
 AURA = 160
 HEAL_RATE = 0.004  # share of full strength per second per healer nearby (Midsummer Maidens)
 ROUT_SPEED = 1.3
@@ -137,6 +138,10 @@ class Battlefield:
         else:
             scatter("forest", 2, 40, 70)
             scatter("hill", 1, 80, 110)
+        if self.kind == "field" and getattr(self.sides[0], "river", None):
+            # the attackers come over a river: a band of water across the field, waded at half pace
+            water = [Zone("river", FIELD_W * 0.42 + math.sin(y / 90) * 40, y, 34) for y in range(-20, FIELD_H + 40, 26)]
+            zones = water + [z for z in zones if all(math.hypot(z.x - w.x, z.y - w.y) > z.r + w.r for w in water)]
         if self.kind == "assault":
             gates = (FIELD_H * 0.3, FIELD_H * 0.7)
             edges = [0, gates[0] - GATE_HALF, gates[0] + GATE_HALF, gates[1] - GATE_HALF, gates[1] + GATE_HALF, FIELD_H]
@@ -415,8 +420,11 @@ class Battlefield:
         defense_mult = them.defense_mult
         if them.walls and not (self.behind_walls(target) and unit["ability"] != "flying_fire"):
             defense_mult /= battle.WALLS_DEFENSE
-        if self.zone_at(target.x, target.y) == "hill":
+        ground = self.zone_at(target.x, target.y)
+        if ground == "hill":
             defense_mult *= HILL_DEFENSE
+        elif ground == "river":
+            defense_mult *= RIVER_DEFENSE
         defense = foe["defense"] * defense_mult * veteran_mult(target.regiment)
         vigour = 0.5 + 0.5 * u.regiment.hp / unit["hp"]
         roll = 0.8 + 0.4 * self.rng.random()

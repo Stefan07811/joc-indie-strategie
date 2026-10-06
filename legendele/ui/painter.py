@@ -473,14 +473,12 @@ def _roads(surface, provinces, rng):
     by_id = {p["id"]: p for p in provinces}
     done = set()
     for p in provinces:
-        for nid in p.get("neighbors", ()):
+        for nid in p.get("roads", ()):
             pair = tuple(sorted((p["id"], nid)))
             if pair in done:
                 continue
             done.add(pair)
             q = by_id[nid]
-            if "mountains" in (p["terrain"], q["terrain"]) and p.get("special") != "heart" and q.get("special") != "heart":
-                continue  # only passes through the high peaks lead to the Heart
             a, b = (p["x"], p["y"]), (q["x"], q["y"])
             mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
             nx, ny = -(b[1] - a[1]), b[0] - a[0]

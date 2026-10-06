@@ -10,6 +10,7 @@ from .economy import Treasury
 
 SEASONS = ("Spring", "Summer", "Autumn", "Winter")
 HEAL_RATE = 0.1  # share of full strength regiments recover each season on friendly ground
+RIVER_ATTACK = {"Danube": 0.8}  # attacking across a river: the attackers' blows, by river (others: 0.9)
 SIEGE_ATTRITION = 0.15  # share of full strength a besieged garrison loses each season
 REBELS = legends.REBELS
 DIFFICULTY = economy.DIFFICULTY
@@ -36,6 +37,8 @@ class Province:
     construction: dict | None = None  # {"building": id, "turns_left": n}
     recruits: list[str] = field(default_factory=list)  # unit ids arriving next season
     captured_round: int | None = None  # when it last changed hands (fresh conquests are restless)
+    roads: list[str] = field(default_factory=list)  # neighbours joined by a road
+    crossings: dict = field(default_factory=dict)  # neighbour -> river in between
 
 
 @dataclass
@@ -148,6 +151,7 @@ class Game:
                 id=p["id"], name=p["name"], terrain=p["terrain"], x=p["x"], y=p["y"],
                 owner=p["owner"], neighbors=list(p.get("neighbors", ())), special=p.get("special"),
                 walls=p.get("walls", False), garrison=game._regiments(p.get("garrison", ())),
+                roads=list(p.get("roads", ())), crossings=dict(p.get("crossings", {})),
             )
         for a in data.map["start_armies"]:
             generals.birth(game, game.add_army(a["faction"], a["province"], a["general"], a["regiments"]))
@@ -239,12 +243,23 @@ class Game:
     def heart_holder(self):
         return next((p.owner for p in self.provinces.values() if p.special == "heart"), None)
 
-    def enter_cost(self, fid, pid):
-        """Movement points faction `fid` spends to enter province `pid`."""
+    def enter_cost(self, fid, pid, frm=None):
+        """Movement points faction `fid` spends to enter province `pid` (coming from `frm`, if given):
+        the terrain's cost (1 on mastered ground), 1 less along a road between friendly provinces,
+        1 more over a river with no bridge (no road)."""
         terrain = self.provinces[pid].terrain
-        if self.at_home(fid, pid):
-            return 1
-        return self.data.terrain[terrain]["move_cost"]
+        cost = 1 if self.at_home(fid, pid) else self.data.terrain[terrain]["move_cost"]
+        if frm is not None:
+            road = pid in self.provinces[frm].roads
+            if road and self.friendly_land(fid, frm) and self.friendly_land(fid, pid):
+                cost = max(1, cost - 1)
+            elif not road and self.river_between(frm, pid):
+                cost += 1
+        return cost
+
+    def river_between(self, a, b):
+        """The river between two neighbouring provinces, or None."""
+        return self.provinces[a].crossings.get(b)
 
     def at_home(self, fid, pid):
         """Does `fid` master the terrain of `pid`? The Heart of the Mountains belongs to no legend."""
@@ -300,7 +315,7 @@ class Game:
             if pid != army.province and not self.passable(army.faction, pid):
                 continue  # a destination only, the march stops here
             for nid in self.provinces[pid].neighbors:
-                ncost = cost + self.enter_cost(army.faction, nid)
+                ncost = cost + self.enter_cost(army.faction, nid, pid)
                 if ncost > army.moves_left or self.blocked(army.faction, nid):
                     continue
                 if nid not in best or ncost < best[nid].cost:
@@ -318,7 +333,7 @@ class Game:
             if cost > dist[pid]:
                 continue
             for nid in self.provinces[pid].neighbors:
-                ncost = cost + self.enter_cost(fid, nid)
+                ncost = cost + self.enter_cost(fid, nid, pid)
                 if ncost < dist.get(nid, float("inf")):
                     dist[nid] = ncost
                     heapq.heappush(queue, (ncost, nid))
@@ -350,10 +365,15 @@ class Game:
             creature_bane=generals.creature_bane(self, army),
         )
 
-    def _attackers(self, armies, pid, assault=False):
+    def _attackers(self, armies, pid, assault=False, origin=None):
         regiments = [r for a in armies for r in a.regiments]
-        return self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False, army=armies[0],
+        side = self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False, army=armies[0],
                           assault=assault)
+        river = self.river_between(origin, pid) if origin and origin != pid else None
+        if river:
+            side.attack_mult *= RIVER_ATTACK.get(river, 0.9)
+            side.river = river
+        return side
 
     def _field_defenders(self, fid, pid, seen_by=None):
         enemies = [a for a in self.armies_in(pid) if a.faction != fid and self.at_war(fid, a.faction)
@@ -371,7 +391,9 @@ class Game:
     def forecast(self, army, pid, seen_only=False):
         """Predicted result of `army` marching into / assaulting `pid`: (wins?, share of army left),
         or None if no fight would happen. With `seen_only`, hidden enemies are left out of the sums."""
-        attackers = self._attackers([army], pid)
+        reach = self.reachable(army).get(pid) if pid != army.province else None
+        origin = ([army.province] + reach.path)[-2] if reach else army.province
+        attackers = self._attackers([army], pid, origin=origin)
         if pid != army.province:
             defenders, _ = self._field_defenders(army.faction, pid, army.faction if seen_only else None)
             if defenders:
@@ -521,8 +543,11 @@ class Game:
         p = self.provinces[army.province]
         defenders, enemy_armies = self._field_defenders(army.faction, p.id)
         if defenders:
-            attackers = self._attackers([army], p.id)
+            attackers = self._attackers([army], p.id, origin=origin)
             result = self._resolve(attackers, defenders, p.id, "field")
+            river = self.river_between(origin, p.id) if origin else None
+            if river:
+                result.notes.append(f"The attackers had to cross the {river}.")
             self._record_battle(result)
             self._remember(result, attackers, defenders, army, enemy_armies[0])
             for a in [army, *enemy_armies]:

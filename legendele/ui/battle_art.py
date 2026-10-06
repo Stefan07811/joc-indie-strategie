@@ -644,6 +644,7 @@ def paint_field(field):
         if z.kind == "hill":
             _contours(ground, z, base)
     _tufts(ground, rng, base)
+    _river(ground, rng, field)
     _road(ground, rng, field)
     for z in field.zones:
         if z.kind == "marsh":
@@ -692,6 +693,26 @@ def _tufts(ground, rng, base):
     for _ in range(140):  # wild flowers
         x, y = rng.uniform(0, FIELD_W), rng.uniform(0, FIELD_H)
         ground.fill(rng.choice(((236, 220, 120), (230, 230, 236), (200, 120, 160))), (x, y, 2, 2))
+
+
+def _river(ground, rng, field):
+    water = [(z.x, z.y) for z in field.zones if z.kind == "river"]
+    if len(water) < 2:
+        return
+    pygame.draw.lines(ground, (96, 92, 62), False, water, 78)  # muddy banks
+    pygame.draw.lines(ground, (66, 98, 112), False, water, 64)
+    pygame.draw.lines(ground, (84, 120, 134), False, water, 34)
+    for _ in range(90):  # ripples
+        i = rng.randrange(len(water) - 1)
+        (x0, y0), (x1, y1) = water[i], water[i + 1]
+        k = rng.random()
+        x, y = x0 + (x1 - x0) * k + rng.uniform(-24, 24), y0 + (y1 - y0) * k
+        pygame.draw.arc(ground, (150, 180, 188), (x - 6, y - 2, 12, 5), 0.3, 2.8, 1)
+    for x, y in water[::3]:  # reeds on the banks
+        for side in (-1, 1):
+            bx = x + side * rng.uniform(30, 38)
+            for k in range(4):
+                pygame.draw.line(ground, (70, 90, 50), (bx + k * 2, y + k), (bx + k * 2 + rng.uniform(-1, 1), y + k - 7), 1)
 
 
 def _road(ground, rng, field):

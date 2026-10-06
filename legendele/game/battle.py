@@ -55,6 +55,7 @@ class Side:
     walls: bool = False  # defending behind walls (Flying Fire ignores them)
     ambush_ground: bool = False  # defending a forest (Forest Ambush)
     creature_bane: float = 1.0  # a Monster Slayer general: harder blows against creatures
+    river: str | None = None  # the river the attackers crossed to get here
 
 
 @dataclass

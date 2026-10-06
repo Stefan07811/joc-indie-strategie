@@ -238,3 +238,13 @@ def test_soldiers_fall_as_their_regiment_bleeds(app, data):
     troops.update(0.1, effects)
     assert not any(m.alive for m in troops.men[spearmen.id])
     assert len(troops.sprites(f.time)) == sum(m.alive for m in troops.men[f.units[1].id])
+
+
+def test_a_river_runs_across_the_field_when_the_attackers_crossed_one(data):
+    dry = field(data, ["oteni"], ["pui_de_zmeu"])
+    assert not any(z.kind == "river" for z in dry.zones)
+    a = Side("voievodat", regs(data, "oteni"), "Vlad", river="Olt")
+    d = Side("zmei", regs(data, "pui_de_zmeu"), "Pajura", creature=True)
+    wet = Battlefield(a, d, data.units, "plains", "field", random.Random(1), province="cluj")
+    water = [z for z in wet.zones if z.kind == "river"]
+    assert water and wet.zone_at(water[3].x, water[3].y) == "river"

@@ -61,6 +61,8 @@ class GameData:
         for uid, u in self.units.items():
             if u["faction"] not in self.factions:
                 raise DataError(f"unit {uid}: unknown faction {u['faction']!r}")
+            if not u.get("icon"):
+                raise DataError(f"unit {uid}: no icon")
             if u["ability"] and u["ability"] not in self.abilities:
                 raise DataError(f"unit {uid}: unknown ability {u['ability']!r}")
         for bid, b in self.buildings.items():

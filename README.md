@@ -4,6 +4,8 @@ Joc indie de strategie în stilul Total War, inspirat din folclorul românesc. P
 dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii), **The Fae Court** (Ielele)
 și **The Revenants** (Strigoii). Textele din joc sunt în engleză.
 
+![Meniul principal](docs/title.png)
+
 ![Alegerea legendei](docs/menu.png)
 
 ![Harta campaniei](docs/screenshot.png)
@@ -34,11 +36,12 @@ python -m legendele
 | Treci la următoarea armată | `Tab` |
 | Inspectezi o provincie | clic pe ea (sau ții mouse-ul deasupra) |
 | Deselectezi | clic dreapta sau `Esc` |
+| Meniul (salvare, încărcare, setări) | butonul **Menu** sau `Esc` când nu e nimic selectat |
 | Administrezi o provincie | **Manage province** sau `M` |
 | Diplomația | **Diplomacy** sau `D` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M5 (AI și diplomație)
+## Stadiul actual: etapa M6 (aspectul)
 
 **Harta și mișcarea**
 - Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
@@ -131,7 +134,21 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   împotriva celui care se apropie de victorie.
 - Pe câmpul de luptă, armatele se întorc să-și apere capitala amenințată și se unesc când ajung în aceeași provincie.
 
-**Ce urmează (M6):** aspectul: pixel art, sunete, meniu, salvare și încărcare.
+**Aspectul (M6)**
+- **Meniul principal:** Continue (reia ultima salvare), New Campaign, Load Game, Settings, Quit.
+- **Salvare și încărcare:** 3 sloturi plus o **salvare automată** la fiecare tură. Meniul din joc se deschide
+  cu butonul **Menu** sau cu `Esc`, când nu e nimic selectat. Salvările sunt fișiere JSON în `~/.legendele/saves/`.
+- **Setări:** volumul efectelor, volumul muzicii și ecranul complet. Se păstrează în `~/.legendele/settings.json`.
+- **Sunet generat din cod, fără fișiere audio:**
+  - efecte pentru clicuri, marșuri, bătălii, construcții, recrutări, tura nouă, alarme, aur și pace;
+  - **muzică** în stil de doină, pe dronă, cu câte un mod popular pentru fiecare legendă.
+  Fără placă de sunet, jocul merge în liniște.
+- **Pixel art:** steagurile poartă emblema facțiunii (cruce, flacără, floare, craniu), fiecare unitate are
+  pictograma ei, iar armatele alunecă pe hartă când mărșăluiesc.
+- Orice sprite, sunet sau temă muzicală se poate înlocui cu propriile fișiere: vezi
+  [legendele/assets/README.md](legendele/assets/README.md).
+
+**Ce urmează (opțional, M7):** bătălii în timp real.
 
 ## Pentru dezvoltare
 
@@ -150,7 +167,8 @@ python tools/fair_costs.py            # cât valorează fiecare unitate în lupt
 ```
 legendele/
   game/        regulile jocului (fără pygame): date, stare, bătălii, economie, legende, diplomație, AI
-  ui/          ecranele pygame: alegerea facțiunii, harta, panoul lateral
+  ui/          ecranele pygame: meniuri, harta, panoul, ferestrele; sunetul (audio.py)
+  profile.py   setările și salvările jucătorului (~/.legendele)
   data/        JSON: factions.json, units.json, buildings.json, abilities.json, map.json
   assets/      sprite-uri opționale (vezi assets/README.md)
   mapshape.py  forma provinciilor, calculată din punctele din map.json

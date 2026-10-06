@@ -4,6 +4,7 @@ Everything map-like is drawn at grid resolution (one cell = mapshape.CELL screen
 and scaled up, which gives the pixel-art look and keeps the drawing cheap.
 """
 
+import time
 from functools import lru_cache
 
 import pygame
@@ -51,6 +52,7 @@ class MapView:
         self._owner_layer = None
         self._snow_layer = None
         self.army_rects = []  # (rect, army id), refreshed every frame for clicks
+        self.marching = {}  # army id -> (points, start time, seconds per step): banners on the move
 
     # --- static layers ---------------------------------------------------------------------
 
@@ -148,6 +150,26 @@ class MapView:
 
     # --- per frame -------------------------------------------------------------------------
 
+    def march(self, army_id, provinces, step=0.16):
+        """Slide an army's banner along the provinces it just marched through."""
+        points = [self._banner_spot(self.game.provinces[pid]) for pid in provinces]
+        if len(points) > 1:
+            self.marching[army_id] = (points, time.monotonic(), step)
+
+    def _banner_spot(self, p):
+        return (p.x, p.y + 46)
+
+    def _marching_spot(self, army_id):
+        points, start, step = self.marching[army_id]
+        t = (time.monotonic() - start) / step
+        if t >= len(points) - 1:
+            del self.marching[army_id]
+            return None
+        i = int(t)
+        (x0, y0), (x1, y1) = points[i], points[i + 1]
+        f = t - i
+        return (x0 + (x1 - x0) * f, y0 + (y1 - y0) * f)
+
     def province_at(self, pos):
         x, y = pos
         c, r = int(x) // CELL, int(y) // CELL
@@ -181,7 +203,7 @@ class MapView:
             surface.blit(self._tinted("outline", selected_province, (*theme.HIGHLIGHT, 255)), (0, 0))
 
         if path:
-            points = [(game.provinces[pid].x, game.provinces[pid].y + 24) for pid in path]
+            points = [(game.provinces[pid].x, game.provinces[pid].y + 28) for pid in path]
             pygame.draw.lines(surface, theme.INK, False, points, 5)
             pygame.draw.lines(surface, theme.HIGHLIGHT, False, points, 3)
             pygame.draw.circle(surface, theme.HIGHLIGHT, points[-1], 6)
@@ -215,7 +237,7 @@ class MapView:
         if reach and p.id in reach:
             # gold: a free march; red: a battle, a siege or an assault awaits
             color = theme.DANGER if game.looks_defended(attacker, p.id) else theme.HIGHLIGHT
-            badge = (p.x, p.y + 52)
+            badge = (p.x, p.y + 60)
             pygame.draw.circle(surface, theme.INK, badge, 10)
             pygame.draw.circle(surface, color, badge, 10, 2)
             theme.text(surface, str(reach[p.id].cost), (badge[0] + 1, badge[1] + 1), 18, color, anchor="center")
@@ -226,8 +248,11 @@ class MapView:
         for i, army in enumerate(armies):
             color = theme.faction_color(self.game, army.faction)
             sprite = self.assets.get(f"army_{army.faction}", color)
-            x = p.x + (i - (len(armies) - 1) / 2) * 26
-            rect = sprite.get_rect(midbottom=(x, p.y + 40))
+            x, y = self._banner_spot(p)
+            x += (i - (len(armies) - 1) / 2) * 30
+            if army.id in self.marching:
+                x, y = self._marching_spot(army.id) or (x, y)
+            rect = sprite.get_rect(midbottom=(x, y))
             if army.id == selected_army:
                 pygame.draw.ellipse(surface, theme.HIGHLIGHT, rect.inflate(14, 4).move(0, 4), 3)
             elif army.faction == self.game.player and army.moves_left == 0:

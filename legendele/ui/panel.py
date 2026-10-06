@@ -15,6 +15,7 @@ class Panel:
         rect = theme.PANEL_RECT
         self.end_turn_rect = pygame.Rect(rect.x + PAD, rect.bottom - 64, rect.width - 2 * PAD, 44)
         self.diplomacy_rect = pygame.Rect(rect.x + PAD, rect.bottom - 132, rect.width - 2 * PAD, 34)
+        self.menu_rect = pygame.Rect(rect.right - PAD - 72, rect.y + PAD, 72, 28)
         self.assault_rect = None  # set while the selected army can storm walls
         self.merge_rect = None  # set while the selected army has comrades to absorb
         self.manage_rect = None  # set while one of our provinces is shown
@@ -30,6 +31,10 @@ class Panel:
         self.assault_rect = self.merge_rect = self.manage_rect = self.abduct_rect = None
 
         theme.text(surface, game.date, (x, y), 30, theme.GOLD)
+        hovered = self.menu_rect.collidepoint(mouse)
+        pygame.draw.rect(surface, (92, 70, 44) if hovered else (66, 52, 38), self.menu_rect, border_radius=4)
+        pygame.draw.rect(surface, theme.GOLD, self.menu_rect, 1, border_radius=4)
+        theme.text(surface, "Menu", self.menu_rect.center, 20, theme.TEXT, anchor="center")
         y += 30
         y = self._progress(surface, x, y, width)
         y = self._treasury(surface, x, y, width)
@@ -241,7 +246,9 @@ class Panel:
             y += 20
         for r in regiments:
             u = units[r.unit]
-            theme.text(surface, u["name"], (x, y), 18)
+            icon = self.assets.get(f"unit_{u['icon']}", theme.faction_color(self.game, u["faction"]), 2)
+            surface.blit(icon, icon.get_rect(center=(x + 8, y + 7)))
+            theme.text(surface, u["name"], (x + 20, y), 18)
             bar = pygame.Rect(x + width - 90, y + 4, 90, 8)
             share = max(0.0, min(1.0, r.hp / u["hp"]))
             pygame.draw.rect(surface, theme.PANEL_LINE, bar)

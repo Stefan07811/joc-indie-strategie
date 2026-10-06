@@ -11,9 +11,11 @@ COLUMN = 404
 
 
 class ProvinceDialog:
-    def __init__(self, game, pid):
+    def __init__(self, game, pid, audio=None, assets=None):
         self.game = game
         self.pid = pid
+        self.audio = audio
+        self.assets = assets
         self.actions = []  # (rect, callable) rebuilt every frame
         self.done_rect = pygame.Rect(BOX.right - 150, BOX.bottom - 52, 126, 36)
 
@@ -94,7 +96,7 @@ class ProvinceDialog:
             self._row(surface, rect, f"{b['name']}", f"{b['cost']} gold · {b['turns']} season"
                       + ("s" if b["turns"] > 1 else ""), b["description"], reason, mouse)
             if reason is None:
-                self.actions.append((rect, lambda bid=bid: game.build(game.player, p.id, bid)))
+                self.actions.append((rect, self._sounding(lambda bid=bid: game.build(game.player, p.id, bid), "build")))
             y += 50
 
     # --- right: recruitment ----------------------------------------------------------------
@@ -113,9 +115,10 @@ class ProvinceDialog:
             if u["ability"] and u["ability"] != "hero":
                 stats += f" · {game.data.abilities[u['ability']]['name']}"
             self._row(surface, rect, u["name"] + ("  (hero)" if u["ability"] == "hero" else ""), f"{u['cost']} gold",
-                      stats, reason, mouse)
+                      stats, reason, mouse, icon=f"unit_{u['icon']}")
             if reason is None:
-                self.actions.append((rect, lambda uid=uid: game.recruit(game.player, p.id, uid)))
+                self.actions.append((rect, self._sounding(lambda uid=uid: game.recruit(game.player, p.id, uid),
+                                                          "recruit")))
             y += 46
         y += 6
         limit = game.rules["recruits_per_turn"]
@@ -129,19 +132,34 @@ class ProvinceDialog:
             theme.text(surface, f"• {units[uid]['name']}", (x, y), 19, theme.HIGHLIGHT)
             theme.text(surface, "click to cancel (refund)" if hovered else "", (x + COLUMN, y + 2), 17,
                        theme.DANGER, anchor="topright")
-            self.actions.append((rect, lambda i=i: game.cancel_recruit(p.id, i)))
+            self.actions.append((rect, self._sounding(lambda i=i: game.cancel_recruit(p.id, i), "click")))
             y += 24
 
-    def _row(self, surface, rect, title, price, detail, reason, mouse):
+    def _sounding(self, action, sound):
+        def act():
+            action()  # raises MoveError when refused, and then there is no sound
+            if self.audio:
+                self.audio.play(sound)
+        return act
+
+    def _row(self, surface, rect, title, price, detail, reason, mouse, icon=None):
         enabled = reason is None
         hovered = enabled and rect.collidepoint(mouse)
         pygame.draw.rect(surface, (78, 60, 40) if hovered else (52, 42, 34), rect, border_radius=4)
         pygame.draw.rect(surface, theme.GOLD if hovered else theme.PANEL_LINE, rect, 1, border_radius=4)
+        left = rect.x + 10
+        if icon and self.assets:
+            image = self.assets.get(icon, theme.faction_color(self.game, self.game.player), 3)
+            if not enabled:
+                image = image.copy()
+                image.set_alpha(110)
+            surface.blit(image, image.get_rect(center=(rect.x + 22, rect.centery)))
+            left = rect.x + 42
         color = theme.PARCHMENT if enabled else theme.TEXT_DIM
-        theme.text(surface, title, (rect.x + 10, rect.y + 5), 20, color)
+        theme.text(surface, title, (left, rect.y + 5), 20, color)
         theme.text(surface, price, (rect.right - 10, rect.y + 6), 18, theme.GOLD if enabled else theme.TEXT_DIM,
                    anchor="topright")
         if enabled:
-            theme.text(surface, detail, (rect.x + 10, rect.y + 25), 16, theme.TEXT_DIM)
+            theme.text(surface, detail, (left, rect.y + 25), 16, theme.TEXT_DIM)
         else:
-            theme.text(surface, reason, (rect.x + 10, rect.y + 25), 16, theme.DANGER)
+            theme.text(surface, reason, (left, rect.y + 25), 16, theme.DANGER)

@@ -223,7 +223,7 @@ tests/                 # teste pentru reguli și AI
 | **M3 — Economie** ✅ | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
 | **M4 — Legende** ✅ | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
 | **M5 — AI și diplomație** ✅ | Personalități, pace/alianță | Adversari credibili |
-| **M6 — Aspect** | Pixel art, sunete, meniu, salvare/încărcare | Arată ca un joc |
+| **M6 — Aspect** ✅ | Pixel art, sunete, meniu, salvare/încărcare | Arată ca un joc |
 | *(opțional)* **M7** | Bătălii în timp real | Ce lipsește ca să fie un Total War complet |
 
 ---

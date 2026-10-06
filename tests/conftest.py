@@ -1,6 +1,10 @@
 import copy
+import os
 
 import pytest
+
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
 from legendele.game import Game, GameData
 
@@ -23,3 +27,10 @@ def data(real_data):
 @pytest.fixture
 def game(data):
     return Game.new(data, "voievodat")
+
+
+@pytest.fixture(autouse=True)
+def player_home(tmp_path, monkeypatch):
+    """Settings and saves go to a temporary folder, never to the real ~/.legendele."""
+    monkeypatch.setenv("LEGENDELE_HOME", str(tmp_path / "home"))
+    return tmp_path / "home"

@@ -7,7 +7,7 @@ import pytest
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 pygame = pytest.importorskip("pygame")
 
-from legendele.ui.app import App, Campaign  # noqa: E402
+from legendele.ui.app import App, Campaign, FactionSelect  # noqa: E402
 
 
 def click(app, pos, button=1):
@@ -21,7 +21,7 @@ def app(data):
 
 
 def test_choose_faction_then_march(app):
-    app.scene = app.scene.__class__(app)  # fresh faction screen
+    app.scene = FactionSelect(app)
     app.scene.draw(app.screen)
     zmei_card = next(rect for rect, fid in app.scene.cards if fid == "zmei")
     click(app, zmei_card.center)

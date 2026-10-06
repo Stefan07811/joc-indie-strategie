@@ -33,6 +33,18 @@
     "max_revolt_chance": 0.6,
     "max_rebels": 4
   },
+  "diplomacy": {
+    "start": "peace",
+    "start_wars": [],
+    "never_allied": [
+      ["voievodat", "strigoi"]
+    ],
+    "truce_turns": 6,
+    "proposal_cooldown": 4,
+    "treachery_penalty": 15,
+    "grudge_penalty": 40,
+    "weariness_turns": 10
+  },
   "seasons": {
     "Spring": {"food": 1.0},
     "Summer": {"food": 1.5},

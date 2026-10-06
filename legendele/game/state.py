@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, economy, legends
+from . import battle, diplomacy, economy, legends
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -111,6 +111,14 @@ class Game:
     _generals_named: dict[str, int] = field(default_factory=dict)
     abduct_ready: dict[str, int] = field(default_factory=dict)  # round from which a faction may abduct again
     rebels: object = field(default_factory=legends.RebelAI)
+    # diplomacy (see diplomacy.py)
+    relations: dict = field(default_factory=dict)  # frozenset({a, b}) -> "war" / "peace" / "alliance"
+    war_since: dict = field(default_factory=dict)
+    truce_until: dict = field(default_factory=dict)
+    treachery: dict[str, int] = field(default_factory=dict)  # broken treaties per faction
+    grudges: set = field(default_factory=set)  # (victim, traitor)
+    last_proposal: dict = field(default_factory=dict)
+    proposals: list = field(default_factory=list)  # offers waiting for the human player's answer
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None):
@@ -130,6 +138,7 @@ class Game:
                 game._muster(p)
         if ai_factory is None:
             from .ai import SimpleAI as ai_factory
+        diplomacy.setup(game)
         for fid in game.turn_order:
             game.heart_turns[fid] = 0
             game.treasury[fid] = Treasury(game.rules["start_gold"], game.rules["start_food"])
@@ -204,13 +213,28 @@ class Game:
         p = self.provinces[pid]
         return p.special != "heart" and p.terrain in self.data.factions[fid]["terrain_mastery"]
 
+    def at_war(self, a, b):
+        return diplomacy.relation(self, a, b) == diplomacy.WAR
+
+    def friendly_land(self, fid, pid):
+        """Our own province or an ally's."""
+        owner = self.provinces[pid].owner
+        return owner is not None and diplomacy.relation(self, fid, owner) in ("self", diplomacy.ALLIANCE)
+
     def has_enemy_army(self, fid, pid):
-        return any(a.faction != fid for a in self.armies_in(pid))
+        return any(a.faction != fid and self.at_war(fid, a.faction) for a in self.armies_in(pid))
+
+    def blocked(self, fid, pid):
+        """Land and armies of factions at peace with us are off limits."""
+        p = self.provinces[pid]
+        if p.owner is not None and diplomacy.relation(self, fid, p.owner) == diplomacy.PEACE:
+            return True
+        return any(diplomacy.relation(self, fid, a.faction) == diplomacy.PEACE for a in self.armies_in(pid))
 
     def defended(self, fid, pid):
         """Would an army of `fid` entering `pid` have to fight or besiege?"""
         p = self.provinces[pid]
-        return self.has_enemy_army(fid, pid) or (p.owner != fid and bool(p.garrison))
+        return self.has_enemy_army(fid, pid) or (not self.friendly_land(fid, pid) and bool(p.garrison))
 
     def armies_seen(self, viewer, pid):
         """The armies in `pid` that faction `viewer` can see (the Fae hide in forests)."""
@@ -219,12 +243,13 @@ class Game:
     def looks_defended(self, fid, pid):
         """Like defended(), but only counting what `fid` can see."""
         p = self.provinces[pid]
-        return any(a.faction != fid for a in self.armies_seen(fid, pid)) or (p.owner != fid and bool(p.garrison))
+        return (any(a.faction != fid and self.at_war(fid, a.faction) for a in self.armies_seen(fid, pid))
+                or (not self.friendly_land(fid, pid) and bool(p.garrison)))
 
     def passable(self, fid, pid):
         """Armies may march on through their own provinces as long as no enemy stands there.
         Entering any other province ends the march (to capture, fight or besiege)."""
-        return self.provinces[pid].owner == fid and not self.has_enemy_army(fid, pid)
+        return self.friendly_land(fid, pid) and not self.has_enemy_army(fid, pid)
 
     def reachable(self, army):
         """Every province `army` can reach this turn, as {province id: Reach}."""
@@ -238,7 +263,7 @@ class Game:
                 continue  # a destination only, the march stops here
             for nid in self.provinces[pid].neighbors:
                 ncost = cost + self.enter_cost(army.faction, nid)
-                if ncost > army.moves_left:
+                if ncost > army.moves_left or self.blocked(army.faction, nid):
                     continue
                 if nid not in best or ncost < best[nid].cost:
                     best[nid] = Reach(ncost, best[pid].path + [nid])
@@ -289,7 +314,7 @@ class Game:
         return self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False)
 
     def _field_defenders(self, fid, pid, seen_by=None):
-        enemies = [a for a in self.armies_in(pid) if a.faction != fid
+        enemies = [a for a in self.armies_in(pid) if a.faction != fid and self.at_war(fid, a.faction)
                    and (seen_by is None or legends.visible_to(self, seen_by, a))]
         if not enemies:
             return None, []
@@ -308,10 +333,10 @@ class Game:
             defenders, _ = self._field_defenders(army.faction, pid, army.faction if seen_only else None)
             if defenders:
                 return battle.predict(attackers, defenders, self.data.units)
-            if self.provinces[pid].owner == army.faction:
+            if self.friendly_land(army.faction, pid):
                 return None
         p = self.provinces[pid]
-        if p.owner == army.faction or not p.garrison:
+        if self.friendly_land(army.faction, pid) or not p.garrison:
             return None
         return battle.predict(attackers, self._garrison_side(pid), self.data.units, kind="assault")
 
@@ -382,6 +407,27 @@ class Game:
         self._check_end()
         return self.events[start:]
 
+    def declare_war(self, fid, other):
+        start = len(self.events)
+        try:
+            diplomacy.declare_war(self, fid, other)
+        except diplomacy.DiplomacyError as e:
+            raise MoveError(str(e)) from None
+        return self.events[start:]
+
+    def propose(self, kind, fid, other, gold=0):
+        """Offer peace or an alliance; returns True/False from an AI, None if a human must answer."""
+        try:
+            return diplomacy.propose(self, diplomacy.Proposal(kind, fid, other, gold))
+        except diplomacy.DiplomacyError as e:
+            raise MoveError(str(e)) from None
+
+    def break_alliance(self, fid, other):
+        try:
+            diplomacy.break_alliance(self, fid, other)
+        except diplomacy.DiplomacyError as e:
+            raise MoveError(str(e)) from None
+
     def build(self, fid, pid, bid):
         reason = economy.building_blocker(self, fid, pid, bid)
         if reason:
@@ -448,7 +494,7 @@ class Game:
                     self._retreat(a, None)
             if p.besieged_by is not None and p.besieged_by not in self.armies:
                 p.besieged_by = None
-        if p.owner == army.faction:
+        if self.friendly_land(army.faction, p.id):
             return
         if p.garrison:
             if p.besieged_by is None:
@@ -473,7 +519,7 @@ class Game:
         """Fall back to a friendly neighbouring province, or be destroyed if there is none."""
         options = [prefer] if prefer and self._safe_for(army.faction, prefer) else []
         here = self.provinces[army.province]
-        options += sorted(n for n in here.neighbors if self.provinces[n].owner == army.faction
+        options += sorted(n for n in here.neighbors if self.friendly_land(army.faction, n)
                           and self._safe_for(army.faction, n))
         if options:
             self._leave(army)

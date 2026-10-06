@@ -49,8 +49,10 @@ def press(app, key):
 
 
 def close_reports(app):
+    """Read every pop-up; envoys are politely sent away."""
     while app.scene.reports:
-        press(app, pygame.K_RETURN)
+        is_offer = type(app.scene.reports[0]).__name__ == "Proposal"
+        press(app, pygame.K_n if is_offer else pygame.K_RETURN)
 
 
 def test_end_turn_button_and_key(app):
@@ -229,3 +231,46 @@ def test_rebellion_shows_a_report_and_order_in_the_panel(app):
     app.scene.selected_province = "arges"
     app.scene.draw(app.screen)
     assert rebels.id in game.armies
+
+
+def start_peaceful(app, real_data, faction, seed):
+    """Start a campaign with the shipped data (the other UI tests use the total-war variant)."""
+    shared = app.data
+    app.data = real_data
+    try:
+        app.start_campaign(faction, seed=seed)
+    finally:
+        app.data = shared
+
+
+def test_diplomacy_window(app, real_data):
+    start_peaceful(app, real_data, "voievodat", 3)
+    game = app.scene.game
+    press(app, pygame.K_d)
+    dialog = app.scene.dialog
+    assert dialog is not None
+    labels = [label for _, label, _ in dialog.actions]
+    assert labels.count("Declare war") == 3 and labels.count("Propose alliance") == 3
+    war_on_zmei = [r for r, label, _ in dialog.actions if label == "Declare war"][0]  # rows follow factions.json
+    click(app, war_on_zmei.center)
+    assert game.at_war("voievodat", "zmei")
+    assert any(label.startswith("Peace + ") for _, label, _ in app.scene.dialog.actions)
+    press(app, pygame.K_ESCAPE)
+    assert app.scene.dialog is None
+    assert app.scene.reports and type(app.scene.reports[0]).__name__ == "DiplomacyChange"
+
+
+def test_envoys_wait_for_an_answer(app, real_data):
+    from legendele.game import diplomacy
+    from legendele.ui.reports import ACCEPT_RECT
+    start_peaceful(app, real_data, "voievodat", 3)
+    game = app.scene.game
+    game.declare_war("zmei", "voievodat")
+    game.propose("peace", "zmei", "voievodat")
+    app.scene._report(game.events)
+    while type(app.scene.reports[0]).__name__ != "Proposal":
+        app.scene.reports.pop(0)
+    press(app, pygame.K_RETURN)  # Enter does not dismiss envoys
+    assert type(app.scene.reports[0]).__name__ == "Proposal"
+    click(app, ACCEPT_RECT.center)
+    assert diplomacy.relation(game, "voievodat", "zmei") == "peace" and not game.proposals

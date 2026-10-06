@@ -13,13 +13,13 @@
 
   "iele_dansatoare":  { "faction": "iele", "tier": 1, "name": "Dancing Fae",           "attack": 6,  "defense": 3,  "hp": 70,  "morale": 55, "speed": 8, "cost": 60,  "upkeep": 6,  "ability": "enchanting_dance" },
   "valve":            { "faction": "iele", "tier": 1, "name": "Woodland Spirits",           "attack": 5,  "defense": 6,  "hp": 100, "morale": 55, "speed": 5, "cost": 70,  "upkeep": 7,  "ability": "forest_ambush" },
-  "sanziene":         { "faction": "iele", "tier": 2, "name": "Midsummer Maidens",               "attack": 3,  "defense": 4,  "hp": 70,  "morale": 60, "speed": 6, "cost": 40,  "upkeep": 4,  "ability": "heal" },
-  "rusalii":          { "faction": "iele", "tier": 2, "name": "Wrathful Sprites",                "attack": 10, "defense": 3,  "hp": 80,  "morale": 65, "speed": 7, "cost": 90,  "upkeep": 9,  "ability": "frenzy" },
+  "sanziene":         { "faction": "iele", "tier": 2, "name": "Midsummer Maidens",               "attack": 3,  "defense": 4,  "hp": 70,  "morale": 60, "speed": 6, "cost": 50,  "upkeep": 5,  "ability": "heal" },
+  "rusalii":          { "faction": "iele", "tier": 2, "name": "Wrathful Sprites",                "attack": 10, "defense": 3,  "hp": 80,  "morale": 65, "speed": 7, "cost": 95,  "upkeep": 10, "ability": "frenzy" },
   "muma_padurii":     { "faction": "iele", "tier": 3, "name": "Mother of the Forest",           "attack": 12, "defense": 9,  "hp": 220, "morale": 90, "speed": 5, "cost": 240, "upkeep": 24, "ability": "hero" },
 
   "morti":            { "faction": "strigoi", "tier": 1, "name": "Risen Dead",          "attack": 3,  "defense": 3,  "hp": 80,  "morale": 100, "speed": 3, "cost": 50,  "upkeep": 5,  "ability": "fearless" },
   "strigoi":          { "faction": "strigoi", "tier": 2, "name": "Vampires",             "attack": 7,  "defense": 5,  "hp": 110, "morale": 70, "speed": 5, "cost": 105, "upkeep": 10, "ability": "life_drain" },
-  "moroi":            { "faction": "strigoi", "tier": 2, "name": "Dread Wraiths",               "attack": 5,  "defense": 4,  "hp": 80,  "morale": 70, "speed": 6, "cost": 70,  "upkeep": 7,  "ability": "dread" },
+  "moroi":            { "faction": "strigoi", "tier": 2, "name": "Dread Wraiths",               "attack": 5,  "defense": 4,  "hp": 80,  "morale": 70, "speed": 6, "cost": 75,  "upkeep": 8,  "ability": "dread" },
   "varcolaci":        { "faction": "strigoi", "tier": 2, "name": "Werewolves",           "attack": 9,  "defense": 4,  "hp": 100, "morale": 65, "speed": 8, "cost": 100, "upkeep": 10, "ability": "charge" },
   "strigoi_batran":   { "faction": "strigoi", "tier": 3, "name": "The Elder Vampire",   "attack": 13, "defense": 9,  "hp": 230, "morale": 100, "speed": 5, "cost": 260, "upkeep": 26, "ability": "hero" },
 

@@ -17,7 +17,7 @@ from . import battle
 REBELS = "haiduci"
 REBEL_UNITS = ("haiduc_brigands", "haiduc_marksmen")
 HOARD_BONUS = 15
-HEALER_RATE, MAX_HEALERS = 0.05, 3
+HEALER_RATE, MAX_HEALERS = 0.03, 2
 FAILED_ABDUCTION_LOSS = 0.15
 
 
@@ -85,7 +85,7 @@ def hora(game):
     """Enemy armies standing on Fae land are danced to exhaustion."""
     for army in list(game.armies.values()):
         p = game.provinces[army.province]
-        if p.owner is None or p.owner == army.faction:
+        if p.owner is None or not game.at_war(p.owner, army.faction):
             continue
         rate = traits(game, p.owner).get("hora", 0.0)
         if not rate:
@@ -149,9 +149,10 @@ def abduction_target(game, army):
     for pid in sorted({here.id, *here.neighbors}):
         p = game.provinces[pid]
         victim = p.owner
-        if victim and victim != army.faction and victim in game.turn_order and game.capital_of(victim) == pid:
+        if (victim and victim != army.faction and victim in game.turn_order and game.capital_of(victim) == pid
+                and game.at_war(army.faction, victim)):
             return pid, None
-    return None, "No rival capital within reach"
+    return None, "No enemy capital within reach"
 
 
 def abduction_chance(game, army, pid):

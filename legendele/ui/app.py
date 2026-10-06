@@ -2,13 +2,14 @@
 
 import pygame
 
-from ..game import Game, GameData, MoveError
+from ..game import Game, GameData, MoveError, Proposal, diplomacy
 from . import theme
 from .assets import Assets
 from .map_view import MapView
 from .panel import Panel
 from .province_dialog import ProvinceDialog
-from .reports import concerns_player, draw_game_over, draw_report
+from .diplomacy_dialog import DiplomacyDialog
+from .reports import ACCEPT_RECT, DECLINE_RECT, concerns_player, draw_game_over, draw_report
 
 TITLE = "Legends of the Carpathians"
 
@@ -81,13 +82,17 @@ class Campaign:
         self.selected_province = None
         self.hovered = None
         self.reports = []  # pop-ups waiting to be read, oldest first
-        self.dialog = None  # the province window, while open
+        self.dialog = None  # the province or diplomacy window, while open
+        self._dialog_from = 0
         self.menu_rect = pygame.Rect(theme.MAP_RECT.right - 180, 10, 164, 36)
 
     # --- input -----------------------------------------------------------------------------
 
     def handle(self, event):
         if self.reports:
+            if isinstance(self.reports[0], Proposal):
+                self._answer(event)
+                return
             closes = (event.type == pygame.MOUSEBUTTONDOWN or
                       event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER,
                                                                      pygame.K_SPACE, pygame.K_ESCAPE))
@@ -97,6 +102,7 @@ class Campaign:
         if self.dialog:
             if self.dialog.handle(event):
                 self.dialog = None
+                self._report(self.game.events[self._dialog_from:])  # what we did in there
             return
         if event.type == pygame.MOUSEMOTION:
             self.hovered = self.map.province_at(event.pos) if theme.MAP_RECT.collidepoint(event.pos) else None
@@ -105,6 +111,8 @@ class Campaign:
                 self.app.scene = FactionSelect(self.app)
             elif self.panel.end_turn_rect.collidepoint(event.pos):
                 self.end_turn()
+            elif self.panel.diplomacy_rect.collidepoint(event.pos):
+                self.open_diplomacy()
             elif self.panel.assault_rect and self.panel.assault_rect.collidepoint(event.pos):
                 self.assault()
             elif self.panel.abduct_rect and self.panel.abduct_rect.collidepoint(event.pos):
@@ -127,6 +135,8 @@ class Campaign:
                 self.select_next_army()
             elif event.key == pygame.K_m:
                 self.open_province()
+            elif event.key == pygame.K_d:
+                self.open_diplomacy()
 
     def click_map(self, pos):
         game = self.game
@@ -161,10 +171,31 @@ class Campaign:
     def _report(self, events):
         self.reports += [e for e in events if concerns_player(self.game, e)]
 
+    def open_diplomacy(self):
+        if not self.game.over:
+            self.dialog = DiplomacyDialog(self.game, self.app.assets)
+            self._dialog_from = len(self.game.events)
+
+    def _answer(self, event):
+        offer = self.reports[0]
+        accept = None
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            accept = True if ACCEPT_RECT.collidepoint(event.pos) else False if DECLINE_RECT.collidepoint(event.pos) else None
+        elif event.type == pygame.KEYDOWN:
+            accept = {pygame.K_y: True, pygame.K_n: False}.get(event.key)
+        if accept is None:
+            return
+        self.reports.pop(0)
+        if offer in self.game.proposals:
+            start = len(self.game.events)
+            diplomacy.answer(self.game, offer, accept)
+            self._report(self.game.events[start:])
+
     def open_province(self):
         p = self.game.provinces.get(self.selected_province)
         if p is not None and p.owner == self.game.player and not self.game.over:
             self.dialog = ProvinceDialog(self.game, p.id)
+            self._dialog_from = len(self.game.events)
 
     def deselect(self):
         self.selected_army = None
@@ -213,7 +244,7 @@ class Campaign:
         if self.dialog:
             self.dialog.draw(surface, mouse)
         if self.reports:
-            draw_report(surface, self.game, self.app.assets, self.reports[0])
+            draw_report(surface, self.game, self.app.assets, self.reports[0], mouse)
         elif self.game.over:
             draw_game_over(surface, self.game, self.menu_rect, mouse)
 

@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import economy, legends
+from ..game import diplomacy, economy, legends
 from . import theme
 
 PAD = 16
@@ -14,6 +14,7 @@ class Panel:
         self.assets = assets
         rect = theme.PANEL_RECT
         self.end_turn_rect = pygame.Rect(rect.x + PAD, rect.bottom - 64, rect.width - 2 * PAD, 44)
+        self.diplomacy_rect = pygame.Rect(rect.x + PAD, rect.bottom - 132, rect.width - 2 * PAD, 34)
         self.assault_rect = None  # set while the selected army can storm walls
         self.merge_rect = None  # set while the selected army has comrades to absorb
         self.manage_rect = None  # set while one of our provinces is shown
@@ -47,7 +48,9 @@ class Panel:
             y += 6
         y = self._rule(surface, y)
 
-        self._chronicle(surface, x, y, width, self.end_turn_rect.top - 34)
+        self._chronicle(surface, x, y, width, self.diplomacy_rect.top - 8)
+        theme.button(surface, self.diplomacy_rect, "Diplomacy  (D)", self.diplomacy_rect.collidepoint(mouse),
+                     enabled=not game.over)
         theme.text(surface, "Enter: end turn  ·  Tab: next army  ·  Esc: deselect", (rect.centerx, rect.bottom - 82),
                    16, theme.TEXT_DIM, anchor="center")
         theme.button(surface, self.end_turn_rect, "End Turn", self.end_turn_rect.collidepoint(mouse),
@@ -90,6 +93,11 @@ class Panel:
         y += 28
         theme.text(surface, f"Owner: {game.faction_name(p.owner)}", (x, y), 20,
                    theme.faction_color(game, p.owner) if p.owner else theme.TEXT_DIM)
+        if p.owner and p.owner != game.player:
+            rel = diplomacy.relation(game, game.player, p.owner)
+            label, color = {"war": ("at war", theme.DANGER), "peace": ("at peace", theme.TEXT_DIM),
+                            "alliance": ("allies", theme.GOOD)}[rel]
+            theme.text(surface, label, (x + width, y + 2), 18, color, anchor="topright")
         y += 22
         bonus = round((terrain["defense"] - 1) * 100)
         theme.text(surface, f"{terrain['name']}  ·  march cost {game.enter_cost(game.player, p.id)}"

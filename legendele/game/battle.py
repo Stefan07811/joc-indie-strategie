@@ -26,7 +26,7 @@ BANE_OF_CREATURES = 1.3
 LIFE_DRAIN = 1 / 3
 HERO_ATTACK, HERO_RESOLVE = 1.1, 0.1
 DREAD, MAX_DREAD = 0.05, 3  # each Dread Wraith makes the enemy break this much sooner
-DANCE, MAX_DANCE = 0.04, 4  # each Dancing Fae weakens the enemy's blows this much
+DANCE, MAX_DANCE = 0.03, 3  # each Dancing Fae weakens the enemy's blows this much
 
 
 @dataclass

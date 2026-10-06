@@ -40,8 +40,14 @@ def main():
     start = text.index('"terrain": {')
     end = text.index('\n  },', start)
     text = text[:start] + f'"terrain": {{\n    {compact}\n  }},' + text[end + 5:]
-    # Tiny objects such as {"food": 1.0} also go on one line.
+    # Tiny objects such as {"food": 1.0} and short lists also go on one line.
     text = re.sub(r"\{\n\s+([^{}\[\]\n]+)\n\s+\}", r"{\1}", text)
+    while True:
+        compacted = re.sub(r"\[\n\s+([^{}\[\]]+?)\n\s+\]",
+                           lambda m: "[" + ", ".join(x.strip() for x in m.group(1).split(",\n")) + "]", text)
+        if compacted == text:
+            break
+        text = compacted
     MAP_PATH.write_text(text + "\n", encoding="utf-8")
 
 

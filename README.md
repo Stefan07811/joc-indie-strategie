@@ -12,6 +12,8 @@ dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii
 
 ![Administrarea unei provincii](docs/province.png)
 
+![Diplomația](docs/diplomacy.png)
+
 Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 
 ## Cum pornești jocul
@@ -32,9 +34,11 @@ python -m legendele
 | Treci la următoarea armată | `Tab` |
 | Inspectezi o provincie | clic pe ea (sau ții mouse-ul deasupra) |
 | Deselectezi | clic dreapta sau `Esc` |
+| Administrezi o provincie | **Manage province** sau `M` |
+| Diplomația | **Diplomacy** sau `D` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M4 (legendele)
+## Stadiul actual: etapa M5 (AI și diplomație)
 
 **Harta și mișcarea**
 - Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
@@ -103,7 +107,31 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   provincia redevine liberă (neutră), iar rebelii îi devin garnizoană.
 - Concluzia: după o cucerire, lasă trupe în provincie câteva anotimpuri.
 
-**Ce urmează (M5):** un AI mai isteț, cu personalități, și diplomație (pace, alianțe).
+**Diplomația (M5)**
+- Toți pornesc **în pace**. Pacea închide granițele: nu poți intra pe pământul cuiva cu care ești în pace
+  și nu-i poți ataca armatele. Pământul neutru și Outlaws rămân deschise oricui.
+- Fereastra **Diplomacy** (butonul din panou sau tasta `D`) arată, pentru fiecare facțiune, relația, personalitatea,
+  **atitudinea față de tine** cu toate motivele ei și cu cine mai e în război. De acolo poți:
+  - oferi pace (gratuit sau cu 100 de aur);
+  - propune o alianță;
+  - declara război;
+  - rupe o alianță.
+- **Alianțele** deschid drumurile prin teritoriul aliatului și sunt defensive: cine îți atacă aliatul intră în război și cu tine.
+- **Armistițiul și trădarea:** după pace urmează un armistițiu de 6 anotimpuri. Dacă îl rupi, sau îți ataci aliatul,
+  e trădare, și toate facțiunile te vor plăcea mai puțin.
+- **Solii AI-ului** vin cu oferte de pace sau alianță. Răspunzi cu **Accept (Y)** sau **Decline (N)**.
+
+**AI-ul (M5)**
+- Fiecare facțiune are o **personalitate**:
+  - Principality: **Steadfast**, își ține cuvântul;
+  - Dragonkin: **Greedy**, atacă vecinii slabi, dar se lasă cumpărată cu aur;
+  - Fae Court: **Guarded**, pornește rar războaie;
+  - Revenants: **Relentless**, mereu flămânzi de pământ.
+- Calculatorul cere pace când pierde, caută aliați, declară război vecinilor mai slabi și formează **coaliții**
+  împotriva celui care se apropie de victorie.
+- Pe câmpul de luptă, armatele se întorc să-și apere capitala amenințată și se unesc când ajung în aceeași provincie.
+
+**Ce urmează (M6):** aspectul: pixel art, sunete, meniu, salvare și încărcare.
 
 ## Pentru dezvoltare
 
@@ -121,7 +149,7 @@ python tools/fair_costs.py            # cât valorează fiecare unitate în lupt
 
 ```
 legendele/
-  game/        regulile jocului (fără pygame): date, stare, bătălii, economie, legende, AI
+  game/        regulile jocului (fără pygame): date, stare, bătălii, economie, legende, diplomație, AI
   ui/          ecranele pygame: alegerea facțiunii, harta, panoul lateral
   data/        JSON: factions.json, units.json, buildings.json, abilities.json, map.json
   assets/      sprite-uri opționale (vezi assets/README.md)

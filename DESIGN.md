@@ -129,11 +129,27 @@ Mai târziu, se poate adăuga un **ecran de luptă în timp real**. Formula auto
 
 ---
 
-## 6. Diplomația (simplă)
+## 6. Diplomația
 
-Relații între facțiuni: **Război / Pace / Alianță**. Fiecare facțiune AI are o „atitudine”
-față de tine, influențată de granițe comune, putere militară, istoric (ai rupt pacea?) și
-tensiunile din legende (Voievodatul și Strigoii nu fac niciodată alianță).
+Relații între fiecare două facțiuni: **Război / Pace / Alianță**. Toată lumea pornește în pace.
+
+- **Război:** armatele pot intra pe pământul celuilalt și se pot lupta.
+- **Pace:** granițele sunt închise armatelor; nu poți ataca nici armatele lor de pe pământ neutru.
+  La încheierea păcii, armatele de pe pământul celuilalt se întorc acasă. Pacea începe cu un **armistițiu** de 6 anotimpuri.
+- **Alianță:** armatele trec liber prin teritoriul aliatului. Alianța e defensivă: cine îți atacă aliatul
+  intră automat în război și cu tine.
+- **Trădare:** a declara război în timpul armistițiului sau unui aliat e trădare. Toate facțiunile țin minte
+  (atitudine −15 pentru fiecare trădare), iar victima nu uită niciodată (−40).
+- Pământul neutru și Outlaws pot fi atacați oricând.
+
+**Atitudinea** unei facțiuni AI față de alta e suma unor motive vizibile în fereastra Diplomacy:
+firea personalității, dușmănii străvechi (Principatul și Revenants: −50, nu se aliază niciodată),
+război, alianță, trădări, graniță comună, un dușman comun (+20), Inima Munților ținută (−8 pe anotimp)
+și o putere prea mare (−4 pentru fiecare provincie peste 6).
+
+Ce poți face (fereastra **Diplomacy**, tasta `D`): să oferi pace (eventual cu 100 de aur),
+să propui o alianță, să declari război sau să rupi o alianță. AI-ul îți răspunde pe loc.
+Și AI-ul îți trimite soli cu oferte de pace sau alianță, la care răspunzi cu Accept / Decline.
 
 ---
 
@@ -147,14 +163,32 @@ tensiunile din legende (Voievodatul și Strigoii nu fac niciodată alianță).
 
 ## 8. AI-ul
 
-Pentru fiecare facțiune AI, la fiecare tură:
+Fiecare facțiune AI are o **personalitate** (în `factions.json`, câmpul `ai`):
 
-1. **Economie:** construiește după o listă de priorități specifică facțiunii.
-2. **Recrutare:** menține armate proporționale cu amenințarea de la granițe.
-3. **Armate:** alege ținte (provincii slab apărate, armate dușmane mai slabe) și evaluează riscul prin aceeași formulă ca la rezolvarea automată a bătăliilor.
-4. **Diplomație:** cere pace când pierde, declară război când e mult mai puternică.
+| Facțiune | Personalitate | Pe scurt |
+|---|---|---|
+| The Principality | **Steadfast** | Își ține cuvântul, apără ce e al ei, declară război doar când e clar mai puternică. |
+| The Dragonkin | **Greedy** | Atacă vecinii slabi, poartă până la două războaie, dar se lasă cumpărată cu aur. |
+| The Fae Court | **Guarded** | Pornește rar războaie și face pace ușor. |
+| The Revenants | **Relentless** | Mereu flămânzi de pământ; urăsc Principatul. |
 
-Fiecare facțiune are o „personalitate” (Zmeii: lacomi și agresivi; Ielele: defensive; Strigoii: se extind constant).
+Parametrii: prietenie, agresivitate, numărul maxim de războaie, cât de puternică trebuie să fie ca să declare război,
+când cere pace, loialitate față de tratate, cât contează aurul, pragul pentru alianțe și ce ținte prețuiește.
+
+La fiecare tură, fiecare AI:
+
+1. **Diplomație:** cere pace în războaiele care merg prost sau durează prea mult, caută aliați printre cei care
+   îi sunt prieteni, rupe alianțele cu cei pe care a ajuns să-i urască și poate declara război unui vecin mai slab.
+   **Coaliția:** toți se întorc împotriva celui care se apropie de victorie (cea mai mare facțiune, de la 6 provincii,
+   sau cine ține Inima de 3 anotimpuri) și nu fac pace cu el.
+2. **Economie:** o clădire pe tură (întâi clădirea facțiunii în provinciile neliniștite; ziduri la granițele de război
+   când e bogată), apoi recrutează cât își permite fără să intre pe minus.
+3. **Armate:** fiecare armată alege cea mai valoroasă țintă pe care o poate lua, își calculează șansele cu aceeași
+   formulă ca jocul și pornește. Se întoarce acasă dacă dușmanii din jurul capitalei sunt mai puternici decât apărarea ei,
+   păzește provinciile care s-ar răscula fără ea și dă asaltul când șansele sunt bune.
+4. **Adunare:** armatele care au ajuns în aceeași provincie se unesc.
+
+Limită cunoscută: AI-ul vede și armatele Fae ascunse în păduri.
 
 ---
 
@@ -188,7 +222,7 @@ tests/                 # teste pentru reguli și AI
 | **M2 — Război** ✅ | Bătălii automate, cucerire, asedii simple, condiții de victorie | Prima partidă jucabilă cap-coadă (2 facțiuni) |
 | **M3 — Economie** ✅ | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
 | **M4 — Legende** ✅ | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
-| **M5 — AI și diplomație** | Personalități, pace/alianță | Adversari credibili |
+| **M5 — AI și diplomație** ✅ | Personalități, pace/alianță | Adversari credibili |
 | **M6 — Aspect** | Pixel art, sunete, meniu, salvare/încărcare | Arată ca un joc |
 | *(opțional)* **M7** | Bătălii în timp real | Ce lipsește ca să fie un Total War complet |
 

@@ -37,11 +37,11 @@
   },
   "enchanting_dance": {
     "name": "Enchanting Dance",
-    "description": "The enemy strikes 4% weaker (stacks up to four times)."
+    "description": "The enemy strikes 3% weaker (stacks up to three times)."
   },
   "heal": {
     "name": "Healing",
-    "description": "The whole army recovers 5% more each season, even abroad (up to 15%)."
+    "description": "The whole army recovers 3% more each season, even abroad (up to 6%)."
   },
   "fearless": {
     "name": "Fearless",

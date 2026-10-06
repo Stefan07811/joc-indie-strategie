@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import Abduction, Battle, Captured, Eliminated, Rebellion, Victory
+from ..game import Abduction, Battle, Captured, DiplomacyChange, Eliminated, Proposal, Rebellion, Victory
 from . import theme
 
 BOX = pygame.Rect(0, 0, 560, 340)
@@ -19,6 +19,10 @@ def concerns_player(game, event):
         return event.faction == game.player
     if isinstance(event, Abduction):
         return game.player in (event.faction, event.victim)
+    if isinstance(event, DiplomacyChange):
+        return game.player in (event.faction, event.other)
+    if isinstance(event, Proposal):
+        return event.other == game.player
     return isinstance(event, (Eliminated, Victory))
 
 
@@ -33,14 +37,42 @@ def _frame(surface, rect, color):
     pygame.draw.rect(surface, color, rect, 3, border_radius=8)
 
 
-def draw_report(surface, game, assets, event):
+ACCEPT_RECT = pygame.Rect(0, 0, 160, 40)
+DECLINE_RECT = pygame.Rect(0, 0, 160, 40)
+ACCEPT_RECT.midbottom = (BOX.centerx - 90, BOX.bottom - 44)
+DECLINE_RECT.midbottom = (BOX.centerx + 90, BOX.bottom - 44)
+
+
+def draw_report(surface, game, assets, event, mouse=(0, 0)):
     _shade(surface)
     if isinstance(event, Battle):
         _battle(surface, game, assets, event.result)
+    elif isinstance(event, Proposal):
+        _proposal(surface, game, event, mouse)
+        return
     else:
         _notice(surface, game, event)
     theme.text(surface, "Click or press Enter to continue", (BOX.centerx, BOX.bottom - 22), 17, theme.TEXT_DIM,
                anchor="center")
+
+
+def _proposal(surface, game, offer, mouse):
+    color = theme.faction_color(game, offer.faction)
+    _frame(surface, BOX, color)
+    theme.text(surface, f"Envoys from {game.faction_name(offer.faction, True)}", (BOX.centerx, BOX.y + 40), 34,
+               color, anchor="midtop")
+    if offer.kind == "peace":
+        body = "They are tired of this war and offer peace."
+        if offer.gold:
+            body += f" They will pay {offer.gold} gold."
+    else:
+        body = "They propose an alliance: open roads between us, and each defends the other."
+    y = BOX.y + 110
+    for line in theme.wrap(body, 24, BOX.width - 80):
+        theme.text(surface, line, (BOX.centerx, y), 24, theme.PARCHMENT, anchor="midtop")
+        y += 28
+    theme.button(surface, ACCEPT_RECT, "Accept  (Y)", ACCEPT_RECT.collidepoint(mouse))
+    theme.button(surface, DECLINE_RECT, "Decline  (N)", DECLINE_RECT.collidepoint(mouse))
 
 
 def _battle(surface, game, assets, result):
@@ -83,6 +115,19 @@ def _notice(surface, game, event):
     if isinstance(event, Captured):
         title, color = f"{game.provinces[event.province].name} has fallen", theme.DANGER
         body = f"{game.faction_name(event.faction)} have taken it from us."
+    elif isinstance(event, DiplomacyChange):
+        other = event.other if event.faction == game.player else event.faction
+        name = game.faction_name(other, True)
+        mine = event.faction == game.player
+        title, color, body = {
+            "war": ((f"War with {name}", theme.DANGER,
+                     ("We have declared war." if mine else f"{game.faction_name(other)} have declared war on us!")
+                     + (" It is treachery, and it will not be forgotten." if event.treachery else ""))),
+            "peace": (f"Peace with {name}", theme.GOOD, "The borders between us are closed to armies."),
+            "alliance": (f"Alliance with {name}", theme.GOOD, "Our armies may cross each other's land, "
+                                                             "and we stand together if attacked."),
+            "break": (f"The alliance with {name} is over", theme.GOLD, "We are merely at peace now."),
+        }[event.kind]
     elif isinstance(event, Rebellion):
         title, color = f"{game.provinces[event.province].name} rises up!", theme.DANGER
         body = ("Unpaid, hungry or freshly conquered, the people have had enough: Outlaws take up arms. "

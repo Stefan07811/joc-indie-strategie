@@ -154,7 +154,7 @@ class SimpleAI:
         if reason:
             return False
         victim = game.provinces[pid].owner
-        if legends.abduction_chance(game, army, pid) < 0.5 or game.treasury[victim].gold < 60:
+        if legends.abduction_chance(game, army, pid) < 0.4 or game.treasury[victim].gold < 60:
             return False
         game.abduct(army.id)
         return True

@@ -7,18 +7,20 @@ import pytest
 
 from legendele.game import Battle, Game, battle, diplomacy
 from legendele.game.battle import Regiment, Side
-from legendele.game.realtime import FIELD_H, TIME_LIMIT, WALL_X, Battlefield
+from legendele.game.realtime import FIELD_H, REINFORCE_TIME, TIME_LIMIT, WALL_X, Battlefield
 
 
 def regs(data, *unit_ids):
     return [Regiment(u, data.units[u]["hp"]) for u in unit_ids]
 
 
-def field(data, attackers, defenders, terrain="plains", kind="field", seed=1, walls=False, player_side=None):
-    a = Side("voievodat", regs(data, *attackers), "Vlad")
+def field(data, attackers, defenders, terrain="plains", kind="field", seed=1, walls=False, player_side=None,
+          equipment=None, **weather):
+    a = Side("voievodat", regs(data, *attackers), "Vlad", equipment=equipment)
     d = Side("zmei", regs(data, *defenders), "Pajura", defense_mult=1.5 if walls else 1.0, walls=walls,
              resolve_bonus=battle.WALLS_RESOLVE if walls else 0.0, creature=True)
-    return Battlefield(a, d, data.units, terrain, kind, random.Random(seed), province="cluj", player_side=player_side)
+    return Battlefield(a, d, data.units, terrain, kind, random.Random(seed), province="cluj", player_side=player_side,
+                       **weather)
 
 
 @pytest.mark.parametrize("terrain", ["plains", "forest", "hills", "marsh", "mountains"])
@@ -55,12 +57,25 @@ def test_agrees_with_the_auto_resolve_on_clear_fights(data):
 
 
 def test_assault_goes_through_the_gates(data):
-    f = field(data, ["oteni"] * 6, ["oteni"] * 2, kind="assault", walls=True)
-    assert any(b.kind == "wall" for b in f.blocks)
+    f = field(data, ["oteni"] * 6, ["oteni"] * 2, kind="assault", walls=True, equipment={"ram": True})
+    assert any(b.kind == "wall" for b in f.blocks) and any(b.kind == "gate" for b in f.blocks)
     result = f.finish()
     assert result.attacker_won and result.kind == "assault"
+    assert "The ram breaks a gate open!" in result.notes
     survivors = [u for u in f.units if u.side == 0 and u.ready]
     assert any(u.x > WALL_X for u in survivors)  # someone got inside
+
+
+def test_shut_gates_hold_without_siege_works(data):
+    f = field(data, ["oteni"] * 6, ["oteni"] * 2, kind="assault", walls=True)
+    result = f.finish()
+    assert not result.attacker_won and all(u.x < WALL_X for u in f.units if u.side == 0)
+
+
+def test_ladders_get_men_over_the_walls(data):
+    f = field(data, ["oteni"] * 6, ["oteni"] * 2, kind="assault", walls=True, equipment={"ladders": True})
+    f.finish()
+    assert any(u.x > WALL_X for u in f.units if u.side == 0 and u.state != "dead")
 
 
 def test_walls_protect_only_those_behind_them(data):
@@ -248,3 +263,44 @@ def test_a_river_runs_across_the_field_when_the_attackers_crossed_one(data):
     wet = Battlefield(a, d, data.units, "plains", "field", random.Random(1), province="cluj")
     water = [z for z in wet.zones if z.kind == "river"]
     assert water and wet.zone_at(water[3].x, water[3].y) == "river"
+
+
+def test_weather_and_night_shorten_the_archers_reach(data):
+    clear = field(data, ["arcasi"], ["oteni"])
+    foggy = field(data, ["arcasi"], ["oteni"], weather="fog")
+    dark = field(data, ["arcasi"], ["oteni"], weather="fog", night=True)
+    assert clear.range > foggy.range > dark.range
+    wet = field(data, ["tunari"], ["oteni"], weather="rain")
+    assert wet._ranged_mult(wet.units[0]) < field(data, ["arcasi"], ["oteni"], weather="rain")._ranged_mult(
+        field(data, ["arcasi"], ["oteni"], weather="rain").units[0])
+
+
+def test_special_orders_have_a_cooldown(data):
+    f = field(data, ["calareti", "oteni"], ["oteni"], player_side=0)
+    horse, foot = f.units[0], f.units[1]
+    assert f.ability(horse)["name"] == "Charge!" and f.ability(foot)["name"] == "Brace!"
+    assert f.use_ability([horse.id, foot.id]) == [horse.id, foot.id]
+    assert f._buff(horse, "attack") > 1 and f._buff(foot, "defense") > 1
+    assert f.use_ability([horse.id]) == []  # not again so soon
+    for _ in range(30 * 45):
+        f.time += 1 / 30
+    assert f.can_use(horse)
+
+
+def test_reinforcements_march_in_later(data):
+    a = Side("voievodat", regs(data, "oteni", "oteni"), "Vlad")
+    a.late = [a.regiments[1]]
+    d = Side("zmei", regs(data, "pui_de_zmeu"), "Pajura", creature=True)
+    f = Battlefield(a, d, data.units, "plains", "field", random.Random(1), province="cluj", player_side=0)
+    late = next(u for u in f.units if u.regiment is a.regiments[1])
+    assert late.state == "waiting" and f.coming(0)
+    while f.time < REINFORCE_TIME + 0.1:
+        f.step(1 / 30)
+    assert late.state != "waiting"
+
+
+def test_deployment_stays_in_the_zone(data):
+    f = field(data, ["oteni", "arcasi"], ["oteni"], player_side=0)
+    f.place([f.units[0].id], 1000, 300)  # too far forward
+    zx, zy, zw, zh = f.deploy_zone(0)
+    assert f.units[0].x <= zx + zw

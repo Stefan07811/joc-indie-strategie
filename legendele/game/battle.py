@@ -56,6 +56,8 @@ class Side:
     ambush_ground: bool = False  # defending a forest (Forest Ambush)
     creature_bane: float = 1.0  # a Monster Slayer general: harder blows against creatures
     river: str | None = None  # the river the attackers crossed to get here
+    late: list = field(default_factory=list)  # regiments (also in `regiments`) of armies marching in to help
+    equipment: dict | None = None  # siege works of an assaulting side: {"ladders": bool, "ram": bool}
 
 
 @dataclass

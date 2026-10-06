@@ -124,8 +124,8 @@
     "traits": {
       "raise_dead": {
         "unit": "morti",
-        "hp_per_regiment": 200,
-        "max": 3
+        "hp_per_regiment": 250,
+        "max": 2
       },
       "winter_fury": 1.15
     },

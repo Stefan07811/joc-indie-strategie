@@ -243,9 +243,9 @@ def test_rebels_besiege_a_garrison_and_can_be_crushed(game):
 
 def test_ai_uses_its_legends(data):
     seen = set()
-    for seed in range(6):
+    for seed in range(8):
         g = Game.new(data, "voievodat", seed=seed)
-        for _ in range(20):
+        for _ in range(30):
             g.end_turn()
             if g.over:
                 break

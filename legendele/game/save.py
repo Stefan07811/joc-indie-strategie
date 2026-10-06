@@ -41,6 +41,7 @@ def to_dict(game):
                 "owner": p.owner, "walls": p.walls, "garrison": [asdict(r) for r in p.garrison],
                 "besieged_by": p.besieged_by, "buildings": p.buildings, "construction": p.construction,
                 "recruits": p.recruits, "captured_round": p.captured_round, "mods": p.mods,
+                "siege_turns": p.siege_turns,
             }
             for pid, p in game.provinces.items()
         },
@@ -95,6 +96,7 @@ def from_dict(data, d, ai_factory=None):
         p.recruits = list(saved["recruits"])
         p.captured_round = saved["captured_round"]
         p.mods = [list(m) for m in saved.get("mods", [])]
+        p.siege_turns = saved.get("siege_turns", 0)
     game.armies = {
         a["id"]: Army(a["id"], a["faction"], a["province"], a["general"],
                       [Regiment(**r) for r in a["regiments"]], a["moves_left"],

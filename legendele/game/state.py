@@ -10,6 +10,9 @@ from .economy import Treasury
 
 SEASONS = ("Spring", "Summer", "Autumn", "Winter")
 HEAL_RATE = 0.1  # share of full strength regiments recover each season on friendly ground
+SIEGE_ATTACK = (0.75, 0.9, 1.0)  # an assault's blows with no siege works / ladders / a ram as well
+MAX_HELPERS = 16  # regiments on one side, reinforcements included
+HELPING_ARMIES = 1  # armies that may march in to help each side
 RIVER_ATTACK = {"Danube": 0.8}  # attacking across a river: the attackers' blows, by river (others: 0.9)
 SIEGE_ATTRITION = 0.15  # share of full strength a besieged garrison loses each season
 REBELS = legends.REBELS
@@ -40,6 +43,7 @@ class Province:
     roads: list[str] = field(default_factory=list)  # neighbours joined by a road
     crossings: dict = field(default_factory=dict)  # neighbour -> river in between
     mods: list = field(default_factory=list)  # [name, order points, until round]: events weighing on the mood
+    siege_turns: int = 0  # seasons under the present siege: ladders after one, a ram after two
 
 
 @dataclass
@@ -374,6 +378,10 @@ class Game:
         regiments = [r for a in armies for r in a.regiments]
         side = self._side(armies[0].faction, regiments, armies[0].general, pid, defending=False, army=armies[0],
                           assault=assault)
+        if assault:
+            turns = min(2, self.provinces[pid].siege_turns)
+            side.attack_mult *= SIEGE_ATTACK[turns]
+            side.equipment = {"ladders": turns >= 1, "ram": turns >= 2}
         river = self.river_between(origin, pid) if origin and origin != pid else None
         if river:
             side.attack_mult *= RIVER_ATTACK.get(river, 0.9)
@@ -400,8 +408,10 @@ class Game:
         origin = ([army.province] + reach.path)[-2] if reach else army.province
         attackers = self._attackers([army], pid, origin=origin)
         if pid != army.province:
-            defenders, _ = self._field_defenders(army.faction, pid, army.faction if seen_only else None)
+            defenders, enemies = self._field_defenders(army.faction, pid, army.faction if seen_only else None)
             if defenders:
+                self._join(attackers, army.faction, pid, {army.id})
+                self._join(defenders, enemies[0].faction, pid, {a.id for a in enemies})
                 return battle.predict(attackers, defenders, self.data.units)
             if self.friendly_land(army.faction, pid):
                 return None
@@ -557,7 +567,12 @@ class Game:
         defenders, enemy_armies = self._field_defenders(army.faction, p.id)
         if defenders:
             attackers = self._attackers([army], p.id, origin=origin)
+            helpers = self._join(attackers, army.faction, p.id, {army.id})
+            helpers += self._join(defenders, enemy_armies[0].faction, p.id, {a.id for a in enemy_armies})
             result = self._resolve(attackers, defenders, p.id, "field")
+            for a in helpers:
+                result.notes.append(f"{a.general} marches in to help.")
+                self._drop_if_destroyed(a)
             river = self.river_between(origin, p.id) if origin else None
             if river:
                 result.notes.append(f"The attackers had to cross the {river}.")
@@ -583,6 +598,7 @@ class Game:
         if p.garrison:
             if p.besieged_by is None:
                 p.besieged_by = army.id
+                p.siege_turns = 0
                 self._event(SiegeStarted(p.id, army.faction),
                             f"{self.faction_name(army.faction)} lay siege to {p.name}.")
         else:
@@ -603,6 +619,32 @@ class Game:
         verdict = "and win" if result.attacker_won else "but are thrown back"
         self._event(Battle(result), f"{self.faction_name(a.faction)} {what} {self.faction_name(d.faction, True)} "
                                     f"at {place} {verdict}.")
+
+    def helpers(self, fid, pid, exclude=()):
+        """Armies of `fid` next door to a battle at `pid` that march in to help (not those besieging, nor
+        those that have already marched this season)."""
+        out = []
+        for nid in sorted(self.provinces[pid].neighbors):
+            if not self.friendly_land(fid, nid):
+                continue
+            for a in self.armies_in(nid):
+                if a.faction == fid and a.id not in exclude and not self.besieging(a) and a.regiments \
+                        and a.moves_left > 0:  # an army that has marched this season is too far off
+                    out.append(a)
+        return out
+
+    def _join(self, side, fid, pid, exclude):
+        """Add the helpers' regiments to a side (as late arrivals); returns the helping armies."""
+        joined = []
+        for a in self.helpers(fid, pid, exclude)[:HELPING_ARMIES]:
+            room = MAX_HELPERS - len(side.regiments)
+            if room <= 0:
+                break
+            coming = a.regiments[:room]
+            side.regiments += coming
+            side.late += coming
+            joined.append(a)
+        return joined
 
     def _remember(self, result, attackers, defenders, attacker_army, defender_army):
         """The survivors learn from the battle: veterans, and the generals' experience and traits."""
@@ -808,7 +850,10 @@ class Game:
         if p.besieged_by is not None and (p.besieged_by not in self.armies
                                           or self.armies[p.besieged_by].province != p.id):
             p.besieged_by = None
+        if p.besieged_by is None:
+            p.siege_turns = 0
         if p.besieged_by is not None:
+            p.siege_turns += 1
             for r in p.garrison:
                 r.hp -= self.data.units[r.unit]["hp"] * SIEGE_ATTRITION
             p.garrison[:] = [r for r in p.garrison if r.hp >= battle.MIN_HP]

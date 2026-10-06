@@ -170,7 +170,7 @@ def test_everyone_turns_on_a_runaway_leader(game):
 
 def test_ai_turns_are_diplomatic(real_data):
     kinds = set()
-    for seed in range(4):
+    for seed in range(8):
         g = Game.new(real_data, "voievodat", seed=seed)
         for _ in range(25):
             g.end_turn()

@@ -168,3 +168,28 @@ def test_player_eliminated_means_game_over(game):
         p.owner = "strigoi"
     game.end_turn()
     assert game.over and "voievodat" in game.eliminated
+
+
+def test_siege_works_grow_with_the_seasons(game):
+    no_ai(game)
+    vlad = army_at(game, "voievodat", "targoviste")
+    game.move_army(vlad.id, "buzau")
+    p = game.provinces["buzau"]
+    assert p.besieged_by == vlad.id
+    side = game._attackers([vlad], "buzau", assault=True)
+    assert side.equipment == {"ladders": False, "ram": False}
+    game.end_turn()
+    assert p.siege_turns == 1 and game._attackers([vlad], "buzau", assault=True).equipment["ladders"]
+    game.end_turn()
+    later = game._attackers([vlad], "buzau", assault=True)
+    assert later.equipment["ram"] and later.attack_mult > side.attack_mult
+
+
+def test_neighbours_march_in_to_help(game):
+    no_ai(game)
+    vlad = army_at(game, "voievodat", "targoviste")
+    radu = army_at(game, "voievodat", "craiova")
+    assert radu in game.helpers("voievodat", "arges", {vlad.id})  # Craiova is next to Argeș
+    side = game._attackers([vlad], "retezat", origin="craiova")
+    joined = game._join(side, "voievodat", "retezat", {vlad.id})
+    assert radu in joined and set(map(id, radu.regiments)) <= set(map(id, side.late))

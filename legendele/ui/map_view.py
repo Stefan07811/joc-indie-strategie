@@ -172,28 +172,39 @@ class MapView:
             pygame.draw.lines(surface, theme.HIGHLIGHT, False, points, 3)
             pygame.draw.circle(surface, theme.HIGHLIGHT, points[-1], 6)
 
+        attacker = game.armies[selected_army].faction if selected_army in game.armies else None
         for p in game.provinces.values():
-            self._draw_province_marks(surface, p, reach)
+            self._draw_province_marks(surface, p, reach, attacker)
 
         self.army_rects = []
         for pid in game.provinces:
             self._draw_armies(surface, pid, selected_army)
 
-    def _draw_province_marks(self, surface, p, reach):
+    def _draw_province_marks(self, surface, p, reach, attacker):
         game = self.game
+        icon = None
         if p.special == "heart":
             icon = self.assets.get("heart")
-            surface.blit(icon, icon.get_rect(midbottom=(p.x, p.y - 18)))
-        elif any(game.capital_of(f) == p.id for f in game.turn_order):
+        elif p.walls:
             icon = self.assets.get("castle", theme.faction_color(game, p.owner))
-            surface.blit(icon, icon.get_rect(midbottom=(p.x, p.y - 18)))
+        elif p.garrison:
+            icon = self.assets.get("camp", theme.faction_color(game, p.owner))
+        if icon:
+            rect = surface.blit(icon, icon.get_rect(midbottom=(p.x, p.y - 18)))
+            if p.garrison:
+                theme.text(surface, str(len(p.garrison)), (rect.right + 3, rect.centery), 16, theme.PARCHMENT,
+                           anchor="midleft", shadow=theme.INK)
+            if p.besieged_by is not None:
+                swords = self.assets.get("siege")
+                surface.blit(swords, swords.get_rect(midright=(rect.left - 4, rect.centery)))
         theme.text(surface, p.name, (p.x, p.y - 8), 18, theme.PARCHMENT, anchor="center", shadow=theme.INK)
         if reach and p.id in reach:
+            # gold: a free march; red: a battle, a siege or an assault awaits
+            color = theme.DANGER if game.defended(attacker, p.id) else theme.HIGHLIGHT
             badge = (p.x, p.y + 52)
             pygame.draw.circle(surface, theme.INK, badge, 10)
-            pygame.draw.circle(surface, theme.HIGHLIGHT, badge, 10, 2)
-            theme.text(surface, str(reach[p.id].cost), (badge[0] + 1, badge[1] + 1), 18, theme.HIGHLIGHT,
-                       anchor="center")
+            pygame.draw.circle(surface, color, badge, 10, 2)
+            theme.text(surface, str(reach[p.id].cost), (badge[0] + 1, badge[1] + 1), 18, color, anchor="center")
 
     def _draw_armies(self, surface, pid, selected_army):
         armies = self.game.armies_in(pid)

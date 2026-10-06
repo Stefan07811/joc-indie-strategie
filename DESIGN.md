@@ -146,7 +146,7 @@ tests/                 # teste pentru reguli și AI
 | Etapă | Ce conține | Rezultat |
 |---|---|---|
 | **M1 — Harta** ✅ | Hartă cu provincii, selecție, armate care se mișcă, ture | Te poți plimba pe hartă |
-| **M2 — Război** | Bătălii automate, cucerire, asedii simple, condiții de victorie | Prima partidă jucabilă cap-coadă (2 facțiuni) |
+| **M2 — Război** ✅ | Bătălii automate, cucerire, asedii simple, condiții de victorie | Prima partidă jucabilă cap-coadă (2 facțiuni) |
 | **M3 — Economie** | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
 | **M4 — Legende** | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
 | **M5 — AI și diplomație** | Personalități, pace/alianță | Adversari credibili |

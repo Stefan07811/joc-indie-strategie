@@ -7,6 +7,7 @@ from . import theme
 from .assets import Assets
 from .map_view import MapView
 from .panel import Panel
+from .reports import concerns_player, draw_game_over, draw_report
 
 TITLE = "Legends of the Carpathians"
 
@@ -66,23 +67,36 @@ class FactionSelect:
 
 
 class Campaign:
-    def __init__(self, app, faction):
+    def __init__(self, app, faction, seed=None):
         self.app = app
-        self.game = Game.new(app.data, faction)
+        self.game = Game.new(app.data, faction, seed=seed)
         self.map = MapView(self.game, app.assets)
         self.panel = Panel(self.game, app.assets)
         self.selected_army = None
         self.selected_province = None
         self.hovered = None
+        self.reports = []  # pop-ups waiting to be read, oldest first
+        self.menu_rect = pygame.Rect(theme.MAP_RECT.right - 180, 10, 164, 36)
 
     # --- input -----------------------------------------------------------------------------
 
     def handle(self, event):
+        if self.reports:
+            closes = (event.type == pygame.MOUSEBUTTONDOWN or
+                      event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER,
+                                                                     pygame.K_SPACE, pygame.K_ESCAPE))
+            if closes:
+                self.reports.pop(0)
+            return
         if event.type == pygame.MOUSEMOTION:
             self.hovered = self.map.province_at(event.pos) if theme.MAP_RECT.collidepoint(event.pos) else None
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.panel.end_turn_rect.collidepoint(event.pos):
+            if self.game.over and self.menu_rect.collidepoint(event.pos):
+                self.app.scene = FactionSelect(self.app)
+            elif self.panel.end_turn_rect.collidepoint(event.pos):
                 self.end_turn()
+            elif self.panel.assault_rect and self.panel.assault_rect.collidepoint(event.pos):
+                self.assault()
             elif theme.MAP_RECT.collidepoint(event.pos):
                 self.click_map(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -101,19 +115,32 @@ class Campaign:
         province = self.map.province_at(pos)
         army = game.armies.get(self.selected_army)
         if army and army.faction == game.player and province in self.reach():
-            if army_id is None or game.armies[army_id].faction == game.player:
-                try:
-                    game.move_army(army.id, province)
-                except MoveError:
-                    pass
-                self.selected_province = None
-                return
+            self._act(lambda: game.move_army(army.id, province))
+            self.selected_province = None
+            return
         if army_id is not None:
             self.selected_army = army_id
             self.selected_province = game.armies[army_id].province
         else:
             self.selected_army = None
             self.selected_province = province
+
+    def assault(self):
+        army = self.game.armies.get(self.selected_army)
+        if army is not None:
+            self._act(lambda: self.game.assault(army.id))
+
+    def _act(self, action):
+        try:
+            events = action()
+        except MoveError:
+            return
+        self._report(events)
+        if self.selected_army not in self.game.armies:
+            self.deselect()
+
+    def _report(self, events):
+        self.reports += [e for e in events if concerns_player(self.game, e)]
 
     def deselect(self):
         self.selected_army = None
@@ -130,7 +157,11 @@ class Campaign:
         self.selected_province = self.game.armies[nxt].province
 
     def end_turn(self):
+        if self.game.over:
+            return
+        start = len(self.game.events)
         self.game.end_turn()
+        self._report(self.game.events[start:])
         if self.selected_army not in self.game.armies:
             self.deselect()
 
@@ -138,21 +169,27 @@ class Campaign:
 
     def reach(self):
         army = self.game.armies.get(self.selected_army)
-        if army is None or army.faction != self.game.player:
+        if army is None or army.faction != self.game.player or self.game.over:
             return {}
         return self.game.reachable(army)
 
     def draw(self, surface):
         reach = self.reach()
         path = None
-        if self.hovered in reach:
+        target = self.hovered if self.hovered in reach else None
+        if target:
             army = self.game.armies[self.selected_army]
-            path = [army.province, *reach[self.hovered].path]
+            path = [army.province, *reach[target].path]
         self.map.draw(surface, hovered=self.hovered, selected_province=self.selected_province,
                       selected_army=self.selected_army, reach=reach, path=path)
         info = self.hovered if self.selected_army is None and self.hovered else self.selected_province
-        self.panel.draw(surface, province=info, army=self.game.armies.get(self.selected_army),
-                        mouse=pygame.mouse.get_pos())
+        mouse = pygame.mouse.get_pos()
+        self.panel.draw(surface, province=info, army=self.game.armies.get(self.selected_army), target=target,
+                        mouse=mouse)
+        if self.reports:
+            draw_report(surface, self.game, self.app.assets, self.reports[0])
+        elif self.game.over:
+            draw_game_over(surface, self.game, self.menu_rect, mouse)
 
 
 class App:
@@ -166,8 +203,8 @@ class App:
         self.scene = FactionSelect(self)
         self.clock = pygame.time.Clock()
 
-    def start_campaign(self, faction):
-        self.scene = Campaign(self, faction)
+    def start_campaign(self, faction, seed=None):
+        self.scene = Campaign(self, faction, seed)
 
     def run(self):
         while True:

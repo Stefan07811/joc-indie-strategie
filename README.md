@@ -5,6 +5,8 @@ dispută Carpații: **Voievodatul**, **Zmeii**, **Ielele** și **Strigoii**. Tex
 
 ![Harta campaniei](docs/screenshot.png)
 
+![Raport de bătălie](docs/battle_report.png)
+
 Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 
 ## Cum pornești jocul
@@ -27,15 +29,36 @@ python -m legendele
 | Deselectezi | clic dreapta sau `Esc` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M1 (harta)
+## Stadiul actual: etapa M2 (războiul)
 
+**Harta și mișcarea**
 - Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
-- Alegi una dintre cele 4 facțiuni.
 - Armatele au 4 puncte de mișcare pe tură. Câmpia costă 1, dealurile, pădurea și mlaștina 2, munții 3.
   Fiecare facțiune se mișcă ieftin (cost 1) pe terenul ei: Zmeii prin munți, Ielele prin păduri, Strigoii prin mlaștini.
-- O tură = un anotimp, începând din primăvara anului 1400.
-- Facțiunile AI își mută armatele spre provinciile pe care nu le dețin.
-- Armatele nu pot încă intra într-o provincie ocupată de o armată străină. Bătăliile și cucerirea vin în etapa M2.
+- Prin provinciile tale treci liber. Intrarea în orice altă provincie oprește marșul.
+  Cercul de pe hartă e **auriu** pentru un marș liber și **roșu** dacă te așteaptă o luptă sau un asediu.
+
+**Războiul**
+- **Bătălii calculate automat.** Contează atacul și apărarea unităților, terenul, zidurile,
+  generalul, terenul de acasă și moralul. O tabără fuge când pierde mai mult decât poate îndura.
+  Înainte de atac, panoul îți arată o **prognoză**: victorie clară, victorie costisitoare sau înfrângere probabilă.
+- **Cucerire:** o provincie fără apărare devine a ta când intri în ea.
+- **Asedii:** provinciile neutre sunt păzite de haiduci, iar capitalele au ziduri și garnizoană.
+  Armata ta rămâne la asediu și apărătorii slăbesc în fiecare anotimp. Poți da și asaltul (butonul **Assault the walls**).
+- **Retragere:** cine pierde se retrage într-o provincie vecină care e a lui. Dacă nu are unde, armata e distrusă.
+- Regimentele se refac câte puțin în fiecare tură pe teritoriul propriu.
+- **Raport de bătălie** după fiecare luptă la care participi.
+
+**Victorie și înfrângere**
+- **Cucerire:** 14 din 20 de provincii.
+- **Victorie de legendă:** ții Inima Munților și capitala ta 8 ture la rând.
+- O facțiune care își pierde toate provinciile e eliminată. Dacă ești tu, ai pierdut.
+
+**AI-ul** alege ținte valoroase și apropiate (Inima Munților, capitalele dușmane), își calculează
+șansele cu aceeași formulă de luptă și atacă doar când crede că poate câștiga.
+
+**Ce urmează (M3):** economia (aur, hrană, clădiri), recrutarea de regimente și efectele anotimpurilor.
+Deocamdată armatele nu pot primi întăriri.
 
 ## Pentru dezvoltare
 
@@ -44,6 +67,7 @@ pip install -r requirements-dev.txt
 python -m pytest                      # testele (regulile, harta și interfața, fără să deschidă fereastra)
 python -m legendele --faction zmei    # sari peste ecranul de alegere a facțiunii
 python -m legendele --faction iele --turns 4 --select-army --screenshot ecran.png
+python tools/simulate.py 40 100       # AI contra AI pe 40 de partide, pentru echilibrare
 ```
 
 ### Structura
@@ -57,6 +81,7 @@ legendele/
   mapshape.py  forma provinciilor, calculată din punctele din map.json
 tools/
   build_adjacency.py   recalculează vecinii provinciilor după ce muți/adaugi una în map.json
+  simulate.py          partide AI contra AI, cu statistici despre cine câștigă și cât durează
 tests/
 ```
 

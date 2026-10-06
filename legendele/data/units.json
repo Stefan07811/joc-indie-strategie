@@ -21,5 +21,8 @@
   "strigoi":          { "faction": "strigoi", "name": "Strigoi",             "attack": 7,  "defense": 5,  "hp": 110, "morale": 70, "speed": 5, "cost": 100, "upkeep": 10, "ability": "life_drain" },
   "moroi":            { "faction": "strigoi", "name": "Moroi",               "attack": 5,  "defense": 4,  "hp": 80,  "morale": 70, "speed": 6, "cost": 110, "upkeep": 11, "ability": "dread" },
   "varcolaci":        { "faction": "strigoi", "name": "Vârcolaci",           "attack": 9,  "defense": 4,  "hp": 100, "morale": 65, "speed": 8, "cost": 140, "upkeep": 14, "ability": "charge" },
-  "strigoi_batran":   { "faction": "strigoi", "name": "The Elder Strigoi",   "attack": 13, "defense": 9,  "hp": 230, "morale": 100, "speed": 5, "cost": 380, "upkeep": 38, "ability": "hero" }
+  "strigoi_batran":   { "faction": "strigoi", "name": "The Elder Strigoi",   "attack": 13, "defense": 9,  "hp": 230, "morale": 100, "speed": 5, "cost": 380, "upkeep": 38, "ability": "hero" },
+
+  "haiduc_brigands":  { "faction": "haiduci", "name": "Haiduc Brigands",    "attack": 5,  "defense": 4,  "hp": 80,  "morale": 55,  "speed": 5, "cost": 50,  "upkeep": 5,  "ability": null },
+  "haiduc_marksmen":  { "faction": "haiduci", "name": "Haiduc Marksmen",    "attack": 6,  "defense": 2,  "hp": 70,  "morale": 50,  "speed": 5, "cost": 70,  "upkeep": 7,  "ability": "ranged" }
 }

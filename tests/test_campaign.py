@@ -38,18 +38,19 @@ def test_reachable_respects_move_points(game):
     assert "targoviste" not in reach
 
 
-def test_foreign_armies_block_movement(game):
+def test_marching_stops_at_the_first_province_we_do_not_own(game):
     vlad = army_at(game, "voievodat", "targoviste")
-    assert "black_marsh" not in game.reachable(vlad)  # the Strigoi army stands there
-    game.armies_in("black_marsh")[0].province = "barlad"
-    assert "black_marsh" in game.reachable(vlad)
+    reach = game.reachable(vlad)
+    assert "black_marsh" in reach      # an enemy army: we may attack it...
+    assert "barlad" not in reach       # ...but not march past it
+    assert "buzau" in reach and "bacau" not in reach  # neutral Buzău ends the march too
 
 
 def test_move_spends_points_and_can_continue(game):
     vlad = army_at(game, "voievodat", "targoviste")
     game.move_army(vlad.id, "arges")
     assert (vlad.province, vlad.moves_left) == ("arges", 2)
-    game.move_army(vlad.id, "brasov")
+    game.move_army(vlad.id, "brasov")  # neutral, with a garrison: the march ends in a siege
     assert (vlad.province, vlad.moves_left) == ("brasov", 0)
     with pytest.raises(MoveError):
         game.move_army(vlad.id, "bacau")
@@ -73,20 +74,23 @@ def test_end_turn_advances_season_and_restores_moves(game):
     assert game.date == "Spring 1401"
 
 
-def test_ai_armies_march_and_never_share_a_province_with_enemies(game):
-    start = {a.id: a.province for a in game.armies.values() if a.faction != "voievodat"}
+def test_ai_wages_war_and_never_shares_a_province_with_enemies(data):
+    game = Game.new(data, "voievodat", seed=1)
     for _ in range(12):
         game.end_turn()
         for p in game.provinces:
             assert len({a.faction for a in game.armies_in(p)}) <= 1, p
-    moved = [aid for aid, pid in start.items() if game.armies[aid].province != pid]
-    assert moved, "AI armies should leave their starting provinces"
-    assert any("marches to" in line for line in game.log)
+        if game.over:
+            break
+    assert any(p.owner != data_owner for p, data_owner in
+               zip(game.provinces.values(), (d["owner"] for d in data.provinces))), "AI should take land"
 
 
-def test_ai_turns_are_deterministic(data):
-    a, b = Game.new(data, "zmei"), Game.new(data, "zmei")
-    for _ in range(8):
+def test_same_seed_same_war(data):
+    a, b = Game.new(data, "zmei", seed=7), Game.new(data, "zmei", seed=7)
+    for _ in range(10):
         a.end_turn()
         b.end_turn()
-    assert [(x.id, x.province) for x in a.armies.values()] == [(x.id, x.province) for x in b.armies.values()]
+    assert [(x.id, x.province, [r.hp for r in x.regiments]) for x in a.armies.values()] == \
+        [(x.id, x.province, [r.hp for r in x.regiments]) for x in b.armies.values()]
+    assert a.log == b.log

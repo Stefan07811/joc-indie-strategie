@@ -1,0 +1,7 @@
+{
+  "farm":     { "name": "Farmsteads",  "cost": 120, "turns": 1, "gold": 0,  "food": 3, "description": "+3 food each season. Terraced on the mountainsides." },
+  "market":   { "name": "Market",      "cost": 150, "turns": 1, "gold": 12, "food": 0, "description": "+12 gold each season." },
+  "mine":     { "name": "Mine",        "cost": 180, "turns": 2, "gold": 15, "food": 0, "terrain": ["hills", "mountains"], "description": "+15 gold each season. Hills and mountains only." },
+  "barracks": { "name": "Barracks",    "cost": 200, "turns": 2, "gold": 0,  "food": 0, "unlocks_tier": 2, "description": "Train elite regiments here. In your capital it also trains legendary ones." },
+  "walls":    { "name": "Stone Walls", "cost": 250, "turns": 2, "gold": 0,  "food": 0, "walls": true, "description": "Walls and a small garrison that guard the province." }
+}

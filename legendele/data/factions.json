@@ -1,52 +1,67 @@
 {
   "voievodat": {
-    "name": "The Voivodeship",
-    "adjective": "Voivodal",
+    "name": "The Principality",
+    "adjective": "Princely",
     "color": [184, 46, 52],
     "capital": "targoviste",
     "playable": true,
     "terrain_mastery": [],
-    "description": "Men of the valleys. Strong walls, steady coin, and churches whose bells unsettle the creatures of the night.",
-    "creature": false
+    "description": "Men of the valleys. Strong walls, steady coin, and church bells that unsettle the creatures of the night.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Mircea the Elder", "Lady Ruxandra", "Stefan the Bold", "Lord Dragos", "Captain Ioan", "Lady Elena"],
+    "income_mult": 1.25
   },
   "zmei": {
-    "name": "The Zmei",
-    "adjective": "Zmeu",
+    "name": "The Dragonkin",
+    "adjective": "Dragonkin",
     "color": [222, 150, 36],
     "capital": "retezat",
     "playable": true,
     "terrain_mastery": ["mountains"],
-    "description": "Dragon-kin of the high peaks. Few in number, terrible in battle, and greedy beyond measure.",
-    "creature": true
+    "description": "Dragon-blooded lords of the high peaks. Few in number, terrible in battle, and greedy beyond measure.",
+    "creature": true,
+    "winter_hardy": false,
+    "general_names": ["Ironscale", "Cinderjaw", "Old Gold-Hoarder", "Stormwing", "Ember-Eyes", "Sevenscale"],
+    "income_mult": 1.0
   },
   "iele": {
-    "name": "The Iele",
-    "adjective": "Iele",
+    "name": "The Fae Court",
+    "adjective": "Fae",
     "color": [152, 98, 206],
     "capital": "maramures",
     "playable": true,
     "terrain_mastery": ["forest"],
-    "description": "Fairies of the deep woods. Swift and unseen among the trees, their endless dance drives intruders mad.",
-    "creature": true
+    "description": "Wild fairies of the deep woods. Swift and unseen among the trees, their endless dance drives intruders mad.",
+    "creature": true,
+    "winter_hardy": false,
+    "general_names": ["The Silver Dancer", "Moonmist", "Lady of the Wells", "Thornveil", "Willow-Song", "Midnight Bloom"],
+    "income_mult": 1.0
   },
   "strigoi": {
-    "name": "The Strigoi",
-    "adjective": "Strigoi",
+    "name": "The Revenants",
+    "adjective": "Revenant",
     "color": [92, 168, 120],
     "capital": "black_marsh",
     "playable": true,
     "terrain_mastery": ["marsh"],
     "description": "The restless dead of the marshes. Cheap, countless and slow, and stronger with every grave they open.",
-    "creature": true
+    "creature": true,
+    "winter_hardy": true,
+    "general_names": ["The Hollow Count", "Grave-Mother", "Lord Ashen", "The Night Bell", "Crowfeather", "The Pale Widow"],
+    "income_mult": 1.0
   },
   "haiduci": {
-    "name": "Haiduc Rebels",
-    "adjective": "Haiduc",
+    "name": "Outlaws",
+    "adjective": "Outlaw",
     "color": [118, 106, 94],
     "capital": null,
     "playable": false,
     "terrain_mastery": ["forest"],
-    "description": "Outlaws of the forests who rise wherever lords rule badly.",
-    "creature": false
+    "description": "Brigands of the forests who rise wherever lords rule badly.",
+    "creature": false,
+    "winter_hardy": false,
+    "general_names": ["Iancu Jianu", "Pintea the Brave"],
+    "income_mult": 1.0
   }
 }

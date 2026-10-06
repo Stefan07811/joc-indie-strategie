@@ -2,6 +2,7 @@
 
 import pygame
 
+from ..game import economy
 from . import theme
 
 PAD = 16
@@ -14,6 +15,8 @@ class Panel:
         rect = theme.PANEL_RECT
         self.end_turn_rect = pygame.Rect(rect.x + PAD, rect.bottom - 64, rect.width - 2 * PAD, 44)
         self.assault_rect = None  # set while the selected army can storm walls
+        self.merge_rect = None  # set while the selected army has comrades to absorb
+        self.manage_rect = None  # set while one of our provinces is shown
 
     def draw(self, surface, *, province=None, army=None, target=None, mouse=(0, 0)):
         game = self.game
@@ -22,17 +25,18 @@ class Panel:
         pygame.draw.line(surface, theme.PANEL_LINE, rect.topleft, rect.bottomleft, 3)
         x, y = rect.x + PAD, rect.y + PAD
         width = rect.width - 2 * PAD
-        self.assault_rect = None
+        self.assault_rect = self.merge_rect = self.manage_rect = None
 
         theme.text(surface, game.date, (x, y), 30, theme.GOLD)
         y += 30
         y = self._progress(surface, x, y, width)
+        y = self._treasury(surface, x, y, width)
         y = self._rule(surface, y)
 
         if army is not None:
             y = self._army(surface, army, x, y, width, target, mouse)
         elif province is not None:
-            y = self._province(surface, game.provinces[province], x, y, width)
+            y = self._province(surface, game.provinces[province], x, y, width, mouse)
         else:
             for line in ("Click one of your banners to select an army,",
                          "then click a highlighted province to march.",
@@ -62,12 +66,23 @@ class Panel:
                    theme.GOLD if heart else theme.TEXT_DIM, anchor="topright")
         return y + 22
 
+    def _treasury(self, surface, x, y, width):
+        game = self.game
+        t = game.treasury[game.player]
+        bal = economy.balance(game, game.player)
+        theme.text(surface, f"Gold {t.gold}", (x, y), 20, theme.GOLD)
+        theme.text(surface, f"({bal.gold:+})", (x + 92, y + 2), 18, theme.GOOD if bal.gold >= 0 else theme.DANGER)
+        theme.text(surface, f"Food {t.food}", (x + width - 70, y), 20, theme.PARCHMENT, anchor="topright")
+        theme.text(surface, f"({bal.food:+})", (x + width, y + 2), 18, theme.GOOD if bal.food >= 0 else theme.DANGER,
+                   anchor="topright")
+        return y + 22
+
     def _rule(self, surface, y):
         rect = theme.PANEL_RECT
         pygame.draw.line(surface, theme.PANEL_LINE, (rect.x + PAD, y + 4), (rect.right - PAD, y + 4))
         return y + 14
 
-    def _province(self, surface, p, x, y, width):
+    def _province(self, surface, p, x, y, width, mouse):
         game = self.game
         terrain = game.data.terrain[p.terrain]
         theme.text(surface, p.name, (x, y), 28, theme.PARCHMENT)
@@ -79,6 +94,8 @@ class Panel:
         theme.text(surface, f"{terrain['name']}  ·  march cost {game.enter_cost(game.player, p.id)}"
                             + (f"  ·  defence +{bonus}%" if bonus else ""), (x, y), 18)
         y += 22
+        if p.owner == game.player:
+            y = self._holdings(surface, p, x, y, width, mouse)
         if p.special == "heart":
             for line in theme.wrap("Hold the Heart and your capital for 8 turns to win a Legendary Victory.",
                                    18, width):
@@ -89,7 +106,7 @@ class Panel:
             theme.text(surface, f"Capital of {game.faction_name(capital_of[0])}  ·  walled", (x, y), 18, theme.GOLD)
             y += 20
         if p.garrison:
-            who = "Haiduc rebels" if p.owner is None else "Garrison"
+            who = "Outlaws" if p.owner is None else "Garrison"
             y = self._regiments(surface, f"{who} ({len(p.garrison)}):", p.garrison, x, y, width)
         if p.besieged_by is not None and p.besieged_by in game.armies:
             besieger = game.armies[p.besieged_by]
@@ -100,6 +117,27 @@ class Panel:
                        theme.faction_color(game, a.faction))
             y += 19
         return y + 6
+
+    def _holdings(self, surface, p, x, y, width, mouse):
+        game = self.game
+        gold, food = economy.province_yield(game, p)
+        theme.text(surface, f"Yields {gold} gold and {food} food a season", (x, y), 18, theme.TEXT_DIM)
+        y += 20
+        built = [game.data.buildings[b]["name"] for b in p.buildings]
+        if p.construction:
+            c = p.construction
+            built.append(f"{game.data.buildings[c['building']]['name']} ({c['turns_left']} more)")
+        lines = theme.wrap("Buildings: " + (", ".join(built) or "none"), 18, width)
+        if p.recruits:
+            names = [game.data.units[u]["name"] for u in p.recruits]
+            lines += theme.wrap("Training: " + ", ".join(names), 18, width)
+        for line in lines:
+            theme.text(surface, line, (x, y), 18)
+            y += 19
+        self.manage_rect = pygame.Rect(x, y + 4, width, 32)
+        theme.button(surface, self.manage_rect, "Manage province  (M)", self.manage_rect.collidepoint(mouse),
+                     enabled=not game.over)
+        return y + 42
 
     def _army(self, surface, army, x, y, width, target, mouse):
         game = self.game
@@ -113,6 +151,15 @@ class Panel:
             theme.text(surface, f"Movement left: {army.moves_left} / {game.data.map['army_moves']}", (x, y), 18)
             y += 22
         y = self._regiments(surface, None, army.regiments, x, y, width)
+        comrades = [a for a in game.armies_in(army.province) if a.faction == army.faction and a.id != army.id]
+        if mine and comrades and len(army.regiments) < game.rules["max_regiments"]:
+            self.merge_rect = pygame.Rect(x, y, width, 30)
+            theme.button(surface, self.merge_rect, "Merge the armies here", self.merge_rect.collidepoint(mouse),
+                         enabled=not game.over)
+            y += 36
+        if mine and game.provinces[army.province].owner == game.player:
+            theme.text(surface, "M: manage this province", (x, y), 17, theme.TEXT_DIM)
+            y += 20
 
         if mine and game.besieging(army):
             p = game.provinces[army.province]

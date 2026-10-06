@@ -16,6 +16,7 @@ class GameData:
     factions: dict
     units: dict
     map: dict
+    buildings: dict
 
     @property
     def terrain(self):
@@ -32,7 +33,8 @@ class GameData:
         def read(name):
             return json.loads((data_dir / name).read_text(encoding="utf-8"))
 
-        data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"))
+        data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"),
+                   buildings=read("buildings.json"))
         data.validate()
         return data
 
@@ -58,6 +60,17 @@ class GameData:
         for uid, u in self.units.items():
             if u["faction"] not in self.factions:
                 raise DataError(f"unit {uid}: unknown faction {u['faction']!r}")
+        for bid, b in self.buildings.items():
+            for t in b.get("terrain", ()):
+                if t not in self.terrain:
+                    raise DataError(f"building {bid}: unknown terrain {t!r}")
+        for fid, f in self.factions.items():
+            if f["playable"] and not any(u["faction"] == fid and u["tier"] == 1 for u in self.units.values()):
+                raise DataError(f"{fid}: needs at least one tier 1 unit")
+        for p in self.provinces:
+            for uid in p.get("garrison", ()):
+                if uid not in self.units:
+                    raise DataError(f"{p['id']}: unknown garrison unit {uid!r}")
         for a in self.map["start_armies"]:
             if a["faction"] not in self.factions or a["province"] not in known:
                 raise DataError(f"bad starting army {a}")

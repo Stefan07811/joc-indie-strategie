@@ -24,7 +24,8 @@ def test_terrain_costs_and_mastery(game):
     assert game.enter_cost("voievodat", "craiova") == 1      # plains
     assert game.enter_cost("voievodat", "arges") == 2        # hills
     assert game.enter_cost("voievodat", "heart") == 3        # mountains
-    assert game.enter_cost("zmei", "heart") == 1             # Zmei master the mountains
+    assert game.enter_cost("zmei", "retezat") == 1           # the Dragonkin master the mountains...
+    assert game.enter_cost("zmei", "heart") == 3             # ...but the Heart belongs to no legend
     assert game.enter_cost("iele", "suceava") == 1           # Iele master the forest
     assert game.enter_cost("strigoi", "siret") == 1          # Strigoi master the marsh
 

@@ -8,12 +8,31 @@
     "conquest_provinces": 14,
     "heart_turns": 8
   },
+  "economy": {
+    "start_gold": 200,
+    "start_food": 40,
+    "capital_tax": 25,
+    "gold_per_food": 50,
+    "max_regiments": 12,
+    "building_slots": 3,
+    "recruits_per_turn": 2,
+    "garrison_size": 2,
+    "hunger_loss": 0.1,
+    "winter_attrition": 0.08,
+    "militia_size": 1
+  },
+  "seasons": {
+    "Spring": {"food": 1.0},
+    "Summer": {"food": 1.5},
+    "Autumn": {"food": 1.0},
+    "Winter": {"food": 0.5}
+  },
   "terrain": {
-    "plains": {"name": "Plains", "move_cost": 1, "color": [158, 178, 98], "defense": 1.0},
-    "hills": {"name": "Hills", "move_cost": 2, "color": [178, 156, 102], "defense": 1.2},
-    "forest": {"name": "Forest", "move_cost": 2, "color": [78, 122, 72], "defense": 1.15},
-    "marsh": {"name": "Marsh", "move_cost": 2, "color": [98, 112, 88], "defense": 1.1},
-    "mountains": {"name": "Mountains", "move_cost": 3, "color": [132, 126, 122], "defense": 1.3}
+    "plains": {"name": "Plains", "move_cost": 1, "color": [158, 178, 98], "defense": 1.0, "tax": 18, "food": 4},
+    "hills": {"name": "Hills", "move_cost": 2, "color": [178, 156, 102], "defense": 1.2, "tax": 15, "food": 2},
+    "forest": {"name": "Forest", "move_cost": 2, "color": [78, 122, 72], "defense": 1.15, "tax": 15, "food": 2},
+    "marsh": {"name": "Marsh", "move_cost": 2, "color": [98, 112, 88], "defense": 1.1, "tax": 10, "food": 2},
+    "mountains": {"name": "Mountains", "move_cost": 3, "color": [132, 126, 122], "defense": 1.3, "tax": 10, "food": 2}
   },
   "provinces": [
     {"id": "lapus", "name": "Lăpuș Woods", "terrain": "forest", "x": 220, "y": 110, "owner": "iele", "neighbors": ["cluj", "hunedoara", "maramures"]},
@@ -39,12 +58,12 @@
   ],
   "start_armies": [
     {"faction": "voievodat", "province": "targoviste", "general": "Vlad the Young", "regiments": ["oteni", "oteni", "arcasi", "calareti"]},
-    {"faction": "voievodat", "province": "craiova", "general": "Boyar Radu", "regiments": ["oteni", "arcasi"]},
-    {"faction": "zmei", "province": "retezat", "general": "Pajura the Zmeu", "regiments": ["pui_de_zmeu", "pui_de_zmeu", "zmei_buzdugan"]},
+    {"faction": "voievodat", "province": "craiova", "general": "Lord Radu", "regiments": ["oteni", "arcasi", "arcasi"]},
+    {"faction": "zmei", "province": "retezat", "general": "Pajura Firetongue", "regiments": ["pui_de_zmeu", "zmei_buzdugan", "spiridusi"]},
     {"faction": "zmei", "province": "hunedoara", "general": "Spark-Eye", "regiments": ["spiridusi", "pui_de_zmeu"]},
-    {"faction": "iele", "province": "maramures", "general": "Sânziana the Pale", "regiments": ["iele_dansatoare", "iele_dansatoare", "valve", "sanziene"]},
-    {"faction": "iele", "province": "bistrita", "general": "Vâlva of the Birches", "regiments": ["valve", "iele_dansatoare"]},
-    {"faction": "strigoi", "province": "black_marsh", "general": "Old Moroi", "regiments": ["morti", "morti", "morti", "strigoi", "moroi"]},
-    {"faction": "strigoi", "province": "barlad", "general": "The Gravedigger", "regiments": ["morti", "morti", "varcolaci"]}
+    {"faction": "iele", "province": "maramures", "general": "The Pale Lady", "regiments": ["iele_dansatoare", "iele_dansatoare", "valve", "sanziene"]},
+    {"faction": "iele", "province": "bistrita", "general": "Spirit of the Birches", "regiments": ["valve", "valve", "iele_dansatoare"]},
+    {"faction": "strigoi", "province": "black_marsh", "general": "Old Bloodfang", "regiments": ["morti", "morti", "strigoi", "moroi"]},
+    {"faction": "strigoi", "province": "barlad", "general": "The Gravedigger", "regiments": ["morti", "varcolaci"]}
   ]
 }

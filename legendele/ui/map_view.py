@@ -49,6 +49,7 @@ class MapView:
         self._tints = {}
         self._owner_key = None
         self._owner_layer = None
+        self._snow_layer = None
         self.army_rects = []  # (rect, army id), refreshed every frame for clicks
 
     # --- static layers ---------------------------------------------------------------------
@@ -134,6 +135,17 @@ class MapView:
             self._owner_layer = self._scaled(small)
         return self._owner_layer
 
+    def _snow(self):
+        if self._snow_layer is None:
+            small = self._small()
+            small.fill((235, 240, 250, 60))
+            for r in range(self.rows):
+                for c in range(self.cols):
+                    if _hash(c + 7, r + 3) % 9 == 0:
+                        small.set_at((c, r), (250, 252, 255, 170))
+            self._snow_layer = self._scaled(small)
+        return self._snow_layer
+
     # --- per frame -------------------------------------------------------------------------
 
     def province_at(self, pos):
@@ -154,6 +166,8 @@ class MapView:
         game = self.game
         surface.blit(self.terrain_layer, (0, 0))
         surface.blit(self._owner_overlay(), (0, 0))
+        if game.season == "Winter":
+            surface.blit(self._snow(), (0, 0))
 
         if reach:
             # Dim everything the selected army cannot reach this turn.

@@ -24,7 +24,8 @@ def no_ai(game):
 
 def test_walking_into_an_undefended_province_captures_it(game):
     radu = army_at(game, "voievodat", "craiova")
-    events = game.move_army(radu.id, "iron_gates")  # Zmei land, no army, no garrison
+    game.provinces["iron_gates"].garrison = []  # its militia has been called away
+    events = game.move_army(radu.id, "iron_gates")  # Dragonkin land, no army, no garrison
     assert game.provinces["iron_gates"].owner == "voievodat"
     assert any(isinstance(e, Captured) and e.previous == "zmei" for e in events)
     assert radu.moves_left == 0
@@ -42,7 +43,8 @@ def test_a_garrison_means_a_siege_that_starves_it_out(game):
     assert sum(r.hp for r in buzau.garrison) < start
     for _ in range(8):
         game.end_turn()
-    assert buzau.owner == "voievodat" and not buzau.garrison
+    assert buzau.owner == "voievodat"
+    assert all(game.data.units[r.unit]["faction"] == "voievodat" for r in buzau.garrison)  # our own militia
 
 
 def test_leaving_lifts_the_siege(game):

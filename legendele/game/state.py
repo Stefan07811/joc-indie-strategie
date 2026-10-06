@@ -4,8 +4,9 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle
+from . import battle, economy
 from .battle import BattleResult, Regiment, Side
+from .economy import Treasury
 
 SEASONS = ("Spring", "Summer", "Autumn", "Winter")
 HEAL_RATE = 0.1  # share of full strength regiments recover each season on friendly ground
@@ -30,6 +31,9 @@ class Province:
     walls: bool = False
     garrison: list[Regiment] = field(default_factory=list)
     besieged_by: int | None = None  # id of the army besieging this province's garrison
+    buildings: list[str] = field(default_factory=list)
+    construction: dict | None = None  # {"building": id, "turns_left": n}
+    recruits: list[str] = field(default_factory=list)  # unit ids arriving next season
 
 
 @dataclass
@@ -100,7 +104,10 @@ class Game:
     eliminated: list[str] = field(default_factory=list)
     heart_turns: dict[str, int] = field(default_factory=dict)
     winner: Victory | None = None
+    treasury: dict[str, Treasury] = field(default_factory=dict)
+    spectate: bool = False  # AI-only games (simulations): the war goes on after the player falls
     _next_army_id: int = 1
+    _generals_named: dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None):
@@ -115,10 +122,14 @@ class Game:
             )
         for a in data.map["start_armies"]:
             game.add_army(a["faction"], a["province"], a["general"], a["regiments"])
+        for p in game.provinces.values():
+            if p.owner:
+                game._muster(p)
         if ai_factory is None:
             from .ai import SimpleAI as ai_factory
         for fid in game.turn_order:
             game.heart_turns[fid] = 0
+            game.treasury[fid] = Treasury(game.rules["start_gold"], game.rules["start_food"])
             if fid != player:
                 game.ai[fid] = ai_factory(fid)
         game.log.append(f"{game.date}: {game.faction_name(player, True)} begin their campaign.")
@@ -134,7 +145,7 @@ class Game:
 
     @property
     def over(self):
-        return self.winner is not None or self.player in self.eliminated
+        return self.winner is not None or (self.player in self.eliminated and not self.spectate)
 
     @property
     def season(self):
@@ -151,6 +162,11 @@ class Game:
     @property
     def victory_rules(self):
         return self.data.map["victory"]
+
+    @property
+    def rules(self):
+        """Economy constants from map.json."""
+        return self.data.map["economy"]
 
     def faction_name(self, fid, mid_sentence=False):
         name = self.data.factions[fid]["name"] if fid else "No one"
@@ -176,9 +192,14 @@ class Game:
     def enter_cost(self, fid, pid):
         """Movement points faction `fid` spends to enter province `pid`."""
         terrain = self.provinces[pid].terrain
-        if terrain in self.data.factions[fid]["terrain_mastery"]:
+        if self.at_home(fid, pid):
             return 1
         return self.data.terrain[terrain]["move_cost"]
+
+    def at_home(self, fid, pid):
+        """Does `fid` master the terrain of `pid`? The Heart of the Mountains belongs to no legend."""
+        p = self.provinces[pid]
+        return p.special != "heart" and p.terrain in self.data.factions[fid]["terrain_mastery"]
 
     def has_enemy_army(self, fid, pid):
         return any(a.faction != fid for a in self.armies_in(pid))
@@ -239,8 +260,7 @@ class Game:
 
     def _side(self, fid, regiments, leader, pid, defending, walls=False):
         p = self.provinces[pid]
-        home = p.terrain in self.data.factions[fid]["terrain_mastery"]
-        mult = battle.HOME_TERRAIN_BONUS if home else 1.0
+        mult = battle.HOME_TERRAIN_BONUS if self.at_home(fid, pid) else 1.0
         defense = mult * (self.data.terrain[p.terrain]["defense"] if defending else 1.0)
         if walls:
             defense *= battle.WALLS_DEFENSE
@@ -334,6 +354,44 @@ class Game:
         self._check_end()
         return self.events[start:]
 
+    def build(self, fid, pid, bid):
+        reason = economy.building_blocker(self, fid, pid, bid)
+        if reason:
+            raise MoveError(reason)
+        b = self.data.buildings[bid]
+        self.treasury[fid].gold -= b["cost"]
+        self.provinces[pid].construction = {"building": bid, "turns_left": b["turns"]}
+
+    def recruit(self, fid, pid, uid):
+        reason = economy.unit_blocker(self, fid, pid, uid)
+        if reason:
+            raise MoveError(reason)
+        self.treasury[fid].gold -= self.data.units[uid]["cost"]
+        self.provinces[pid].recruits.append(uid)
+
+    def cancel_recruit(self, pid, index):
+        """Take back a regiment still waiting to be trained, with a full refund."""
+        p = self.provinces[pid]
+        uid = p.recruits.pop(index)
+        self.treasury[p.owner].gold += self.data.units[uid]["cost"]
+
+    def merge(self, army_id):
+        """Fold the other armies of the same faction standing here into this one (as far as room allows)."""
+        army = self.armies[army_id]
+        cap = self.rules["max_regiments"]
+        for other in self.armies_in(army.province):
+            if other.faction != army.faction or other.id == army.id:
+                continue
+            room = cap - len(army.regiments)
+            if room <= 0:
+                break
+            moved, other.regiments = other.regiments[:room], other.regiments[room:]
+            army.regiments += moved
+            army.moves_left = min(army.moves_left, other.moves_left)
+            if not other.regiments:
+                self._leave(other)
+                del self.armies[other.id]
+
     def _leave(self, army):
         here = self.provinces[army.province]
         if here.besieged_by == army.id:
@@ -377,9 +435,7 @@ class Game:
                                     f"at {place} {verdict}.")
 
     def _drop_if_destroyed(self, army):
-        if army.id in self.armies and not army.regiments:
-            del self.armies[army.id]
-            self.log.append(f"{army.general}'s army is destroyed.")
+        self._bury(army, "is destroyed")
 
     def _retreat(self, army, prefer):
         """Fall back to a friendly neighbouring province, or be destroyed if there is none."""
@@ -407,6 +463,8 @@ class Game:
         p.owner = fid
         p.garrison = []
         p.besieged_by = None
+        p.construction = None  # half-built work and recruits in training are lost; finished buildings stay
+        p.recruits = []
         self._event(Captured(p.id, fid, previous),
                     f"{self.faction_name(fid)} take {p.name}" + (f" from {self.faction_name(previous, True)}." if previous else "."))
 
@@ -441,7 +499,9 @@ class Game:
         """The player ends their turn: every AI faction acts, then a new season begins."""
         if self.over:
             return
-        for fid in self.turn_order[1:]:
+        for fid in self.turn_order:
+            if fid == self.player:
+                continue
             self.ai_turn(fid)
             if self.over:
                 return
@@ -454,27 +514,118 @@ class Game:
     def _new_round(self):
         self.round += 1
         self.log.append(f"{self.date} begins.")
+        for fid in self.turn_order:
+            self._collect(fid)
         for p in self.provinces.values():
-            if p.besieged_by is not None and (p.besieged_by not in self.armies
-                                              or self.armies[p.besieged_by].province != p.id):
-                p.besieged_by = None
-            if p.besieged_by is not None:
-                for r in p.garrison:
-                    r.hp -= self.data.units[r.unit]["hp"] * SIEGE_ATTRITION
-                p.garrison[:] = [r for r in p.garrison if r.hp >= battle.MIN_HP]
-                if not p.garrison:
-                    besieger = self.armies[p.besieged_by]
-                    self.log.append(f"The starving defenders of {p.name} surrender.")
-                    self._capture(p, besieger.faction)
-            elif p.owner:
-                self._heal(p.garrison)
-        for army in self.armies.values():
+            self._advance_construction(p)
+            self._train_recruits(p)
+            self._siege_or_rest(p)
+        for army in list(self.armies.values()):
             army.moves_left = self.data.map["army_moves"]
             if self.provinces[army.province].owner == army.faction:
                 self._heal(army.regiments)
+            elif self.season == "Winter" and not self.data.factions[army.faction]["winter_hardy"]:
+                for r in army.regiments:
+                    r.hp -= self.data.units[r.unit]["hp"] * self.rules["winter_attrition"]
+                self._bury(army, "freezes to death in the snow")
         self._check_end()
         if not self.winner:
             self._count_heart()
+
+    def _collect(self, fid):
+        """Taxes in, wages out, food in the granary; hunger and desertion when they run dry."""
+        t = self.treasury[fid]
+        bal = economy.balance(self, fid)
+        t.gold += bal.gold
+        t.food += bal.food
+        if t.food < 0:
+            t.food = 0
+            for army in self.armies_of(fid):
+                for r in army.regiments:
+                    r.hp -= self.data.units[r.unit]["hp"] * self.rules["hunger_loss"]
+                self._bury(army, "starves")
+            if fid == self.player:
+                self.log.append("The granaries are empty: our armies go hungry!")
+        if t.gold < 0:
+            regiments = [(self.data.units[r.unit]["upkeep"], a.id, i) for a in self.armies_of(fid)
+                         for i, r in enumerate(a.regiments)]
+            if regiments:
+                _, army_id, i = max(regiments)
+                army = self.armies[army_id]
+                deserter = army.regiments.pop(i)
+                self.log.append(f"Unpaid, the {self.data.units[deserter.unit]['name']} of {army.general} desert.")
+                self._bury(army, "melts away")
+
+    def _advance_construction(self, p):
+        if not p.construction:
+            return
+        p.construction["turns_left"] -= 1
+        if p.construction["turns_left"] > 0:
+            return
+        bid = p.construction["building"]
+        p.buildings.append(bid)
+        p.construction = None
+        if self.data.buildings[bid].get("walls"):
+            p.walls = True
+        if p.owner == self.player:
+            self.log.append(f"{self.data.buildings[bid]['name']} completed in {p.name}.")
+
+    def _train_recruits(self, p):
+        if not p.recruits or p.owner is None:
+            return
+        cap = self.rules["max_regiments"]
+        if self.has_enemy_army(p.owner, p.id):
+            # the enemy arrived while they trained: they man the walls instead of marching out
+            p.garrison += self._regiments(p.recruits)
+            p.recruits = []
+            return
+        for uid in p.recruits:
+            army = next((a for a in self.armies_in(p.id) if a.faction == p.owner and len(a.regiments) < cap), None)
+            if army is None:
+                army = self.add_army(p.owner, p.id, self._new_general(p.owner), [])
+                if p.owner == self.player:
+                    self.log.append(f"{army.general} takes command of a new army in {p.name}.")
+            army.regiments += self._regiments([uid])
+        p.recruits = []
+
+    def _siege_or_rest(self, p):
+        if p.besieged_by is not None and (p.besieged_by not in self.armies
+                                          or self.armies[p.besieged_by].province != p.id):
+            p.besieged_by = None
+        if p.besieged_by is not None:
+            for r in p.garrison:
+                r.hp -= self.data.units[r.unit]["hp"] * SIEGE_ATTRITION
+            p.garrison[:] = [r for r in p.garrison if r.hp >= battle.MIN_HP]
+            if not p.garrison:
+                besieger = self.armies[p.besieged_by]
+                self.log.append(f"The starving defenders of {p.name} surrender.")
+                self._capture(p, besieger.faction)
+        elif p.owner:
+            self._heal(p.garrison)
+            self._muster(p)
+
+    def _muster(self, p):
+        """Walled towns keep a proper garrison; every other province raises a militia."""
+        size = self.rules["garrison_size"] if p.walls else self.rules["militia_size"]
+        if len(p.garrison) < size:
+            p.garrison += self._regiments([self._cheapest_unit(p.owner)])
+
+    def _cheapest_unit(self, fid):
+        units = [u for u in economy.recruitable_units(self, fid) if self.data.units[u]["tier"] == 1]
+        return min(units, key=lambda u: (self.data.units[u]["cost"], -self.data.units[u]["defense"], u))
+
+    def _new_general(self, fid):
+        names = self.data.factions[fid]["general_names"]
+        n = self._generals_named.get(fid, 0)
+        self._generals_named[fid] = n + 1
+        return names[n] if n < len(names) else f"{names[n % len(names)]} {n // len(names) + 1}"
+
+    def _bury(self, army, how):
+        army.regiments[:] = [r for r in army.regiments if r.hp >= battle.MIN_HP]
+        if not army.regiments and army.id in self.armies:
+            self._leave(army)
+            del self.armies[army.id]
+            self.log.append(f"{army.general}'s army {how}.")
 
     def _heal(self, regiments):
         for r in regiments:

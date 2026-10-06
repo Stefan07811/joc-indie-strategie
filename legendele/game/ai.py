@@ -1,12 +1,19 @@
 """Computer-controlled factions.
 
-M2 behaviour: every army picks the most valuable province it can realistically take
+Each turn the AI first spends its gold (one building, then as many regiments as it can afford
+without running up a deficit), then moves its armies.
+
+Armies: every army picks the most valuable province it can realistically take
 (close, weakly held, ideally the Heart or an enemy capital), checks its odds with the same
 battle maths the game uses, and marches there. Besiegers storm the walls once the odds are
 good, otherwise they let hunger do the work. Smarter planning and personalities come in M5.
 """
 
+from . import economy
+
 MIN_SHARE_LEFT = 0.45  # only fight battles we expect to win with at least this much of the army left
+GOLD_RESERVE = 40  # kept back for emergencies
+BUILD_ORDER = ("market", "farm", "mine", "barracks", "walls")
 
 
 class SimpleAI:
@@ -14,6 +21,8 @@ class SimpleAI:
         self.faction = faction
 
     def take_turn(self, game):
+        self._build(game)
+        self._recruit(game)
         for army_id in sorted(a.id for a in game.armies_of(self.faction)):
             if game.over:
                 return
@@ -71,9 +80,11 @@ class SimpleAI:
         if p.owner == self.faction:
             return 8.0  # an enemy army on our own soil
         if p.special == "heart":
-            return 6.0
+            # the longer a rival holds the Heart, the closer they are to a legendary victory
+            return 6.0 + 2.0 * game.heart_turns.get(p.owner, 0)
         if p.owner and game.capital_of(p.owner) == p.id:
-            return 5.0
+            # taking a Heart holder's capital also breaks their count
+            return 5.0 + 1.5 * game.heart_turns.get(p.owner, 0)
         return 3.0 if p.owner is None else 3.5
 
     def _can_take(self, game, army, p):
@@ -84,3 +95,50 @@ class SimpleAI:
         if p.owner != self.faction and p.garrison:
             theirs += game.strength(p.garrison) * (1.5 if p.walls else 1.0) * 0.7  # sieges wear them down
         return theirs == 0 or ours >= theirs * 1.1
+
+    # --- economy ---------------------------------------------------------------------------
+
+    def _build(self, game):
+        fid = self.faction
+        gold = game.treasury[fid].gold
+        bal = economy.balance(game, fid)
+        order = list(BUILD_ORDER)
+        if bal.food < 2:
+            order.remove("farm")
+            order.insert(0, "farm")
+        capital = game.capital_of(fid)
+        # the capital first, then the richest provinces
+        provinces = sorted(game.provinces_of(fid), key=lambda p: (p.id != capital, -economy.province_yield(game, p)[0], p.id))
+        for bid in order:
+            if bid == "barracks":
+                candidates = [p for p in provinces if p.id == capital] or provinces[:1]
+            elif bid == "walls":
+                continue  # capitals are walled already; border forts come with M5's smarter AI
+            else:
+                candidates = provinces
+            for p in candidates:
+                cost = game.data.buildings[bid]["cost"]
+                if gold - cost >= GOLD_RESERVE and economy.building_blocker(game, fid, p.id, bid) is None:
+                    game.build(fid, p.id, bid)
+                    return
+
+    def _recruit(self, game):
+        fid = self.faction
+        units = game.data.units
+        capital = game.capital_of(fid)
+        places = [p for p in game.provinces_of(fid) if economy.can_manage(game, fid, p.id) is None]
+        places.sort(key=lambda p: (p.id != capital, not game.armies_in(p.id), p.id))
+        for p in places:
+            while True:
+                bal = economy.balance(game, fid)
+                queued_upkeep = sum(units[u]["upkeep"] for q in game.provinces_of(fid) for u in q.recruits)
+                spare = bal.gold - queued_upkeep
+                options = [u for u in economy.recruitable_units(game, fid)
+                           if economy.unit_blocker(game, fid, p.id, u) is None
+                           and game.treasury[fid].gold - units[u]["cost"] >= GOLD_RESERVE
+                           and units[u]["upkeep"] <= spare * 0.8]
+                if not options or game.treasury[fid].food + bal.food * 2 < 0:
+                    break
+                options.sort(key=lambda u: (-units[u]["cost"], u))
+                game.recruit(fid, p.id, game.rng.choice(options[:2]))
+

@@ -37,7 +37,7 @@ def test_choose_faction_then_march(app):
     click(app, (sibiu.x, sibiu.y - 30))
     assert pajura.province == "sibiu"
     assert pajura.moves_left == 0  # marching into foreign land ends the turn's march
-    assert game.besieging(pajura)  # Sibiu has a Haiduc garrison
+    assert game.besieging(pajura)  # Sibiu has an Outlaw garrison
 
     click(app, (10, 10), button=3)
     assert app.scene.selected_army is None
@@ -132,3 +132,59 @@ def test_every_faction_plays_a_few_turns(app):
             app.scene.draw(app.screen)
             press(app, pygame.K_RETURN)
             close_reports(app)
+
+
+def test_manage_a_province_build_and_recruit(app):
+    app.start_campaign("voievodat", seed=7)
+    app.scene.draw(app.screen)
+    game = app.scene.game
+    craiova = game.provinces["craiova"]
+    click(app, (craiova.x, craiova.y - 40))
+    assert app.scene.panel.manage_rect is not None
+    click(app, app.scene.panel.manage_rect.center)
+    dialog = app.scene.dialog
+    assert dialog is not None and dialog.pid == "craiova"
+
+    from legendele.ui.province_dialog import BOX
+
+    def rows(right):
+        return [r for r, _ in dialog.actions if (r.x > BOX.centerx) == right and r.height > 24]
+
+    click(app, rows(right=False)[0].center)  # the first building on offer: Farmsteads
+    assert craiova.construction == {"building": "farm", "turns_left": 1}
+    click(app, rows(right=True)[0].center)  # the first regiment on offer
+    assert len(craiova.recruits) == 1
+    gold = game.treasury["voievodat"].gold
+    training = [r for r, _ in dialog.actions if r.height == 24]
+    click(app, training[0].center)  # cancel it again
+    assert not craiova.recruits and game.treasury["voievodat"].gold > gold
+    press(app, pygame.K_ESCAPE)
+    assert app.scene.dialog is None
+
+
+def test_m_key_opens_only_our_own_provinces(app):
+    app.start_campaign("iele", seed=8)
+    app.scene.selected_province = "retezat"
+    press(app, pygame.K_m)
+    assert app.scene.dialog is None
+    app.scene.selected_province = "maramures"
+    press(app, pygame.K_m)
+    assert app.scene.dialog is not None
+
+
+def test_merge_button(app):
+    app.start_campaign("voievodat", seed=9)
+    game = app.scene.game
+    vlad = next(a for a in game.armies_of("voievodat") if a.province == "targoviste")
+    radu = next(a for a in game.armies_of("voievodat") if a.province == "craiova")
+    radu.province = "targoviste"
+    app.scene.selected_army = vlad.id
+    app.scene.draw(app.screen)
+    click(app, app.scene.panel.merge_rect.center)
+    assert radu.id not in game.armies
+
+
+def test_winter_map_draws(app):
+    app.start_campaign("strigoi", seed=10)
+    app.scene.game.round = 3
+    app.scene.draw(app.screen)

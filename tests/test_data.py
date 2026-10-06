@@ -23,7 +23,7 @@ def test_four_playable_factions_with_five_units_each(data):
     (lambda d: d.factions["zmei"].update(capital="atlantis"), "unknown capital"),
 ])
 def test_validation_catches_mistakes(data, breakage, message):
-    broken = GameData(copy.deepcopy(data.factions), copy.deepcopy(data.units), copy.deepcopy(data.map))
+    broken = GameData(copy.deepcopy(data.factions), copy.deepcopy(data.units), copy.deepcopy(data.map), copy.deepcopy(data.buildings))
     breakage(broken)
     with pytest.raises(DataError, match=message):
         broken.validate()

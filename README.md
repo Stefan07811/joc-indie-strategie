@@ -1,11 +1,14 @@
 # Legendele Carpaților (*Legends of the Carpathians*)
 
 Joc indie de strategie în stilul Total War, inspirat din folclorul românesc. Patru legende își
-dispută Carpații: **Voievodatul**, **Zmeii**, **Ielele** și **Strigoii**. Textele din joc sunt în engleză.
+dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii), **The Fae Court** (Ielele)
+și **The Revenants** (Strigoii). Textele din joc sunt în engleză.
 
 ![Harta campaniei](docs/screenshot.png)
 
 ![Raport de bătălie](docs/battle_report.png)
+
+![Administrarea unei provincii](docs/province.png)
 
 Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 
@@ -29,12 +32,13 @@ python -m legendele
 | Deselectezi | clic dreapta sau `Esc` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M2 (războiul)
+## Stadiul actual: etapa M3 (economia)
 
 **Harta și mișcarea**
 - Hartă fixă cu 20 de provincii și 5 tipuri de teren, desenată în stil pixel art.
 - Armatele au 4 puncte de mișcare pe tură. Câmpia costă 1, dealurile, pădurea și mlaștina 2, munții 3.
-  Fiecare facțiune se mișcă ieftin (cost 1) pe terenul ei: Zmeii prin munți, Ielele prin păduri, Strigoii prin mlaștini.
+  Fiecare facțiune se mișcă ieftin (cost 1) pe terenul ei: Dragonkin prin munți, Fae Court prin păduri,
+  Revenants prin mlaștini. Excepție: Inima Munților nu aparține niciunei legende.
 - Prin provinciile tale treci liber. Intrarea în orice altă provincie oprește marșul.
   Cercul de pe hartă e **auriu** pentru un marș liber și **roșu** dacă te așteaptă o luptă sau un asediu.
 
@@ -57,8 +61,25 @@ python -m legendele
 **AI-ul** alege ținte valoroase și apropiate (Inima Munților, capitalele dușmane), își calculează
 șansele cu aceeași formulă de luptă și atacă doar când crede că poate câștiga.
 
-**Ce urmează (M3):** economia (aur, hrană, clădiri), recrutarea de regimente și efectele anotimpurilor.
-Deocamdată armatele nu pot primi întăriri.
+**Economia**
+- **Aur și hrană**, afișate sus în panou, cu câștigul sau pierderea pe tură.
+  Aurul vine din taxe și clădiri și pleacă pe întreținerea armatelor. Hrana vine din teren și ferme,
+  iar unitățile mari mănâncă mai mult.
+- **Provinciile tale:** selectează una și apasă **Manage province** (sau `M`). Fereastra are două părți:
+  - **construcții:** Farmsteads, Market, Mine, Barracks, Stone Walls (3 locuri, gata în 1–2 anotimpuri);
+  - **recrutare:** cel mult 2 regimente pe tură, care sosesc în anotimpul următor.
+    Unitățile de nivel 2 cer Barracks, iar cele de nivel 3 și eroii cer Barracks în capitală.
+- **Armate noi:** recruții se alătură armatei din provincie sau pornesc o armată nouă, cu un general nou.
+  Armatele aflate în aceeași provincie se pot uni (**Merge the armies here**), până la 12 regimente.
+- **Garnizoane:** orașele cu ziduri își refac garnizoana, celelalte provincii ridică o miliție.
+  Orice cucerire cere acum un asediu sau un asalt.
+- **Anotimpurile contează:** vara aduce o recoltă bogată, iarna hrană puțină și zăpadă pe hartă.
+  Armatele aflate iarna departe de casă pierd oameni din cauza frigului, mai puțin Revenants.
+- **Lipsuri:** fără hrană armatele flămânzesc, iar cu tezaurul pe minus soldații dezertează.
+- **AI-ul** construiește, recrutează fără să intre pe minus și vânează facțiunea care ține Inima Munților.
+
+**Ce urmează (M4):** mecanicile speciale ale fiecărei facțiuni (Hora, ridicarea morților, comoara
+Dragonkin, bisericile), clădiri specifice și răscoalele Outlaws.
 
 ## Pentru dezvoltare
 
@@ -68,6 +89,8 @@ python -m pytest                      # testele (regulile, harta și interfața,
 python -m legendele --faction zmei    # sari peste ecranul de alegere a facțiunii
 python -m legendele --faction iele --turns 4 --select-army --screenshot ecran.png
 python tools/simulate.py 40 100       # AI contra AI pe 40 de partide, pentru echilibrare
+python tools/duel.py                  # armate de același cost, facțiune contra facțiune
+python tools/fair_costs.py            # cât valorează fiecare unitate în luptă, față de cost
 ```
 
 ### Structura
@@ -76,12 +99,13 @@ python tools/simulate.py 40 100       # AI contra AI pe 40 de partide, pentru ec
 legendele/
   game/        regulile jocului (fără pygame): date, stare, mișcare, ture, AI
   ui/          ecranele pygame: alegerea facțiunii, harta, panoul lateral
-  data/        JSON: factions.json, units.json, map.json
+  data/        JSON: factions.json, units.json, buildings.json, map.json
   assets/      sprite-uri opționale (vezi assets/README.md)
   mapshape.py  forma provinciilor, calculată din punctele din map.json
 tools/
   build_adjacency.py   recalculează vecinii provinciilor după ce muți/adaugi una în map.json
   simulate.py          partide AI contra AI, cu statistici despre cine câștigă și cât durează
+  duel.py, fair_costs.py   unelte de echilibrare a unităților
 tests/
 ```
 

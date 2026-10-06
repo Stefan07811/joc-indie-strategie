@@ -21,25 +21,36 @@ fiecare legendă are alt fel de economie, alte unități și o altă cale spre v
 
 ## 2. Facțiunile
 
-| Facțiune | Teritoriu de start | Stil de joc | Mecanică unică |
+Numele din joc sunt în engleză. În paranteză e legenda românească din care vin.
+
+| Facțiune | Teritoriu de start | Stil de joc | Mecanică unică (M4) |
 |---|---|---|---|
-| **Voievodatul** (oameni) | Văi și câmpii | Echilibrat, economie puternică, cetăți solide | **Cetăți:** zidurile dau bonus mare la apărare; poate ridica **Biserici** care slăbesc creaturile din jur |
-| **Zmeii** | Munți | Puține armate, dar foarte puternice; scumpi | **Comoara:** venitul crește cu aurul strâns (dobândă); Zmeul-general poate **răpi** fiul/fiica unui conducător → câștigă bani de răscumpărare sau un ostatic |
-| **Ielele** | Păduri și poieni | Rapide, slabe în luptă directă, magie | **Hora:** armatele inamice care intră în provinciile lor pierd moral și oameni în fiecare tură; nu pot fi văzute în păduri |
-| **Strigoii** | Mlaștini și cimitire | Ieftini, mulți, lenți | **Ridicarea morților:** după fiecare bătălie, o parte din morți (de ambele tabere) devin unități strigoi; sunt mai puternici iarna |
+| **The Principality** (Voievodatul, oameni) | Văi și câmpii | Echilibrat, economie puternică (+25% venit), cetăți solide | **Cetăți:** zidurile dau bonus mare la apărare; poate ridica **biserici** care slăbesc creaturile din jur |
+| **The Dragonkin** (Zmeii) | Munți | Puține armate, dar foarte puternice și scumpe | **Comoara:** venitul crește cu aurul strâns (dobândă); un general Dragonkin poate **răpi** moștenitorul unui conducător, pentru răscumpărare sau ca ostatic |
+| **The Fae Court** (Ielele) | Păduri și poieni | Rapide, slabe în luptă directă, magie | **Hora:** armatele inamice care intră în provinciile lor pierd moral și oameni în fiecare tură; nu pot fi văzute în păduri |
+| **The Revenants** (Strigoii) | Mlaștini și cimitire | Ieftini, mulți, lenți; nu suferă de frig | **Ridicarea morților:** după fiecare bătălie, o parte din morți (de ambele tabere) se ridică în rândurile lor; mai puternici iarna |
 
-**Haiducii** sunt o forță neutră, nu o facțiune jucabilă. Apar ca rebeli în provinciile cu
-ordine publică scăzută și atacă armatele slab apărate.
+**Outlaws** (Haiducii) sunt o forță neutră, nu o facțiune jucabilă. Păzesc provinciile neutre;
+din M4 se vor ridica la răscoală în provinciile cu ordine publică scăzută.
 
-### Unități (câte 5 pe facțiune, pentru început)
+### Unități (câte 5 pe facțiune)
 
-- **Voievodatul:** Oșteni (lăncieri), Arcași, Călăreți, Vânători de strigoi, Tunari (târziu)
-- **Zmeii:** Pui de zmeu, Zmei cu buzdugan, Balauri (zboară, foc), Spiriduși (cercetași), Zmeul cel Mare (erou)
-- **Ielele:** Iele dansatoare, Vâlve ale pădurii, Sânzâiene (vindecă), Rusalii (furie, iarna slabe), Muma Pădurii (erou)
-- **Strigoii:** Morți ridicați (ieftini), Strigoi, Moroi (sug moralul), Vârcolaci (rapizi), Strigoiul Bătrân (erou)
+Nivelul 1 se recrutează oriunde, nivelul 2 cere **Barracks**, nivelul 3 cere **Barracks** în capitală.
+Eroii (★) sunt unici: unul singur pe facțiune.
 
-Fiecare unitate are: atac, apărare, viață, moral, viteză, cost de recrutare, cost de întreținere
-și eventual o abilitate.
+- **The Principality:** Levy Spearmen (Oșteni) 1, Archers (Arcași) 1, Noble Horsemen (Călăreți) 2,
+  Monster Hunters (Vânători de strigoi) 2, Gunners (Tunari) 3
+- **The Dragonkin:** Dragon Whelps (Pui de zmeu) 1, Imp Scouts (Spiriduși) 1, Mace Drakes (Zmei cu buzdugan) 2,
+  Three-Headed Wyrms (Balauri) 3, The Dragon Lord (Zmeul cel Mare) 3★
+- **The Fae Court:** Dancing Fae (Iele dansatoare) 1, Woodland Spirits (Vâlve) 1, Midsummer Maidens (Sânziene) 2,
+  Wrathful Sprites (Rusalii) 2, Mother of the Forest (Muma Pădurii) 3★
+- **The Revenants:** Risen Dead (Morți ridicați) 1, Vampires (Strigoi) 2, Dread Wraiths (Moroi) 2,
+  Werewolves (Vârcolaci) 2, The Elder Vampire (Strigoiul Bătrân) 3★
+- **Outlaws:** Outlaw Brigands, Outlaw Marksmen (doar garnizoane)
+
+Fiecare unitate are: atac, apărare, viață, moral, cost de recrutare, întreținere în aur, hrană
+(unitățile mari mănâncă mai mult) și eventual o abilitate. Costurile sunt măsurate prin simulare
+(`tools/fair_costs.py`), ca fiecare unitate să valoreze în luptă cât costă.
 
 ---
 
@@ -65,14 +76,26 @@ Fiecare unitate are: atac, apărare, viață, moral, viteză, cost de recrutare,
 
 ---
 
-## 4. Economia (simplă)
+## 4. Economia
 
-Două resurse:
+Două resurse, strânse la începutul fiecărui anotimp:
 
-- **Aur:** din impozite (orașe), comerț și jaf. Plătește recrutări, clădiri și întreținerea armatelor.
-- **Hrană:** din ferme/teren. Armatele mari consumă hrană; fără hrană → pierderi și ordine publică scăzută.
+- **Aur:** taxe din provincii (după teren, plus bonus pentru capitale) și din clădiri.
+  Plătește clădirile, recrutările și întreținerea armatelor. Dacă tezaurul e pe minus, câte un regiment dezertează în fiecare tură.
+- **Hrană:** din teren și ferme. Fiecare regiment mănâncă după mărime (dragonii mult, lăncierii puțin).
+  Vara recolta e cu 50% mai mare, iarna doar pe jumătate. Când grânarele se golesc, armatele flămânzesc și pierd oameni.
 
-**Clădiri (exemple):** Fermă, Piață, Cazarmă (deblochează unități), Ziduri, Templu/Altar specific facțiunii.
+**Clădiri** (3 locuri pe provincie, gata în 1–2 anotimpuri): Farmsteads (+hrană), Market (+aur),
+Mine (+aur, doar pe dealuri și munți), Barracks (unități de nivel 2–3), Stone Walls (ziduri și garnizoană).
+Clădirile specifice fiecărei facțiuni vin în M4.
+
+**Recrutare:** cel mult 2 regimente pe provincie pe tură. Sosesc în anotimpul următor: se alătură unei armate
+din provincie sau formează una nouă, cu un general nou. Armatele au cel mult 12 regimente și se pot uni.
+
+**Garnizoane:** orașele cu ziduri își refac garnizoana (2 regimente), celelalte provincii ridică o miliție (1 regiment).
+Astfel, orice cucerire cere un asediu sau un asalt.
+
+**Iarna:** armatele aflate în afara teritoriului propriu pierd oameni din cauza frigului (Revenants nu).
 
 ---
 
@@ -147,7 +170,7 @@ tests/                 # teste pentru reguli și AI
 |---|---|---|
 | **M1 — Harta** ✅ | Hartă cu provincii, selecție, armate care se mișcă, ture | Te poți plimba pe hartă |
 | **M2 — Război** ✅ | Bătălii automate, cucerire, asedii simple, condiții de victorie | Prima partidă jucabilă cap-coadă (2 facțiuni) |
-| **M3 — Economie** | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
+| **M3 — Economie** ✅ | Aur, hrană, clădiri, recrutare, anotimpuri | Decizii reale între construcție și armată |
 | **M4 — Legende** | Cele 4 facțiuni cu mecanicile unice, Haiducii | Asimetria care face jocul special |
 | **M5 — AI și diplomație** | Personalități, pace/alianță | Adversari credibili |
 | **M6 — Aspect** | Pixel art, sunete, meniu, salvare/încărcare | Arată ca un joc |

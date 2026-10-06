@@ -7,6 +7,7 @@ from . import theme
 from .assets import Assets
 from .map_view import MapView
 from .panel import Panel
+from .province_dialog import ProvinceDialog
 from .reports import concerns_player, draw_game_over, draw_report
 
 TITLE = "Legends of the Carpathians"
@@ -76,6 +77,7 @@ class Campaign:
         self.selected_province = None
         self.hovered = None
         self.reports = []  # pop-ups waiting to be read, oldest first
+        self.dialog = None  # the province window, while open
         self.menu_rect = pygame.Rect(theme.MAP_RECT.right - 180, 10, 164, 36)
 
     # --- input -----------------------------------------------------------------------------
@@ -88,6 +90,10 @@ class Campaign:
             if closes:
                 self.reports.pop(0)
             return
+        if self.dialog:
+            if self.dialog.handle(event):
+                self.dialog = None
+            return
         if event.type == pygame.MOUSEMOTION:
             self.hovered = self.map.province_at(event.pos) if theme.MAP_RECT.collidepoint(event.pos) else None
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -97,6 +103,10 @@ class Campaign:
                 self.end_turn()
             elif self.panel.assault_rect and self.panel.assault_rect.collidepoint(event.pos):
                 self.assault()
+            elif self.panel.merge_rect and self.panel.merge_rect.collidepoint(event.pos):
+                self.game.merge(self.selected_army)
+            elif self.panel.manage_rect and self.panel.manage_rect.collidepoint(event.pos):
+                self.open_province()
             elif theme.MAP_RECT.collidepoint(event.pos):
                 self.click_map(event.pos)
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
@@ -108,6 +118,8 @@ class Campaign:
                 self.deselect()
             elif event.key == pygame.K_TAB:
                 self.select_next_army()
+            elif event.key == pygame.K_m:
+                self.open_province()
 
     def click_map(self, pos):
         game = self.game
@@ -141,6 +153,11 @@ class Campaign:
 
     def _report(self, events):
         self.reports += [e for e in events if concerns_player(self.game, e)]
+
+    def open_province(self):
+        p = self.game.provinces.get(self.selected_province)
+        if p is not None and p.owner == self.game.player and not self.game.over:
+            self.dialog = ProvinceDialog(self.game, p.id)
 
     def deselect(self):
         self.selected_army = None
@@ -186,6 +203,8 @@ class Campaign:
         mouse = pygame.mouse.get_pos()
         self.panel.draw(surface, province=info, army=self.game.armies.get(self.selected_army), target=target,
                         mouse=mouse)
+        if self.dialog:
+            self.dialog.draw(surface, mouse)
         if self.reports:
             draw_report(surface, self.game, self.app.assets, self.reports[0])
         elif self.game.over:

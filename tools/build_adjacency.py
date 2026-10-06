@@ -4,6 +4,7 @@ Run after moving or adding provinces:  python tools/build_adjacency.py
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -39,6 +40,8 @@ def main():
     start = text.index('"terrain": {')
     end = text.index('\n  },', start)
     text = text[:start] + f'"terrain": {{\n    {compact}\n  }},' + text[end + 5:]
+    # Tiny objects such as {"food": 1.0} also go on one line.
+    text = re.sub(r"\{\n\s+([^{}\[\]\n]+)\n\s+\}", r"{\1}", text)
     MAP_PATH.write_text(text + "\n", encoding="utf-8")
 
 

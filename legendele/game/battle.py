@@ -1,7 +1,7 @@
 """Auto-resolved battles.
 
 Both sides fight in short rounds. Each round every regiment strikes a random enemy regiment;
-damage depends on attack versus defence, on how battered the striker already is, and on
+damage grows with the striker's attack and shrinks with the target's defence, on how battered the striker already is, and on
 modifiers (terrain, walls, generals, home ground, first-round charges and volleys).
 A side breaks once it has lost more of its strength than its morale can bear.
 The same code predicts outcomes for the AI and for the player's battle forecast.
@@ -11,7 +11,8 @@ import dataclasses
 import random
 from dataclasses import dataclass, field
 
-BASE_DAMAGE = 30
+DAMAGE_PER_ATTACK = 5  # a blow lands for about attack × this, reduced by the target's defence
+ARMOUR = 10  # defence D lets through ARMOUR / (ARMOUR + D) of a blow
 MAX_ROUNDS = 12
 PURSUIT_LOSS = 0.2  # share of remaining strength a broken side loses while fleeing
 MIN_HP = 8  # regiments weaker than this are disbanded
@@ -41,7 +42,7 @@ class Side:
     defense_mult: float = 1.0
     attack_mult: float = 1.0
     resolve_bonus: float = 0.0
-    creature: bool = False  # Strigoi Hunters strike creatures harder
+    creature: bool = False  # Monster Hunters strike creatures harder
 
 
 @dataclass
@@ -94,7 +95,7 @@ def break_point(regiments, units, bonus=0.0):
     """Share of starting strength a side can lose before it breaks (0.3 .. 0.95)."""
     hp = sum(r.hp for r in regiments) or 1
     morale = sum(units[r.unit]["morale"] * r.hp for r in regiments) / hp
-    return max(0.3, min(0.95, morale / 100 * 0.8 + bonus))
+    return max(0.3, min(0.95, 0.25 + morale / 100 * 0.5 + bonus))
 
 
 def resolve(attacker, defender, units, rng=None, province="", kind="field"):
@@ -168,7 +169,7 @@ def _strikes(side, enemy, units, rng, round_no):
         defense = t["defense"] * enemy.defense_mult
         vigour = 0.5 + 0.5 * r.hp / u["hp"]
         roll = 0.8 + 0.4 * rng.random()
-        dmg = BASE_DAMAGE * attack / (attack + defense) * vigour * roll
+        dmg = DAMAGE_PER_ATTACK * attack * ARMOUR / (ARMOUR + defense) * vigour * roll
         hits[id(target)] = hits.get(id(target), 0) + dmg
     return hits
 

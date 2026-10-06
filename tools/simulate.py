@@ -20,6 +20,7 @@ def play(data, seed, max_turns):
     # The "player" is AI-controlled too; rotate who it is, since the game ends if the player falls.
     game = Game.new(data, FACTIONS[seed % len(FACTIONS)], seed=seed)
     game.ai[game.player] = SimpleAI(game.player)
+    game.spectate = True
     battles = 0
     while not game.over and game.round < max_turns:
         before = len(game.events)
@@ -39,8 +40,6 @@ def main():
         w = game.winner
         if w:
             winners[f"{w.faction} ({w.kind})"] += 1
-        elif game.over:
-            winners[f"{game.player} (as player) fell"] += 1
         else:
             winners["no winner yet"] += 1
         lengths.append(game.round)

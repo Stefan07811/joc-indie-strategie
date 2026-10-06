@@ -21,6 +21,7 @@ class GameData:
     traits: dict = field(default_factory=dict)  # the generals' traits
     events: dict = field(default_factory=dict)  # tales from folklore (events.py)
     techs: dict = field(default_factory=dict)  # traditions to study (techs.py)
+    quests: dict = field(default_factory=dict)  # quests of legend (quests.py)
 
     @property
     def terrain(self):
@@ -39,7 +40,8 @@ class GameData:
 
         data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"),
                    buildings=read("buildings.json"), abilities=read("abilities.json"), traits=read("traits.json"),
-                   events=read("events.json"), techs=read("techs.json"))
+                   events=read("events.json"), techs=read("techs.json"),
+                   quests=read("quests.json"))
         data.validate()
         return data
 
@@ -82,6 +84,9 @@ class GameData:
             for uid in p.get("garrison", ()):
                 if uid not in self.units:
                     raise DataError(f"{p['id']}: unknown garrison unit {uid!r}")
+        for qid, q in self.quests.items():
+            if q["faction"] not in self.factions or q["hero"] not in self.units:
+                raise DataError(f"quest {qid}: unknown faction or hero")
         for eid, e in self.events.items():
             if not e.get("choices"):
                 raise DataError(f"event {eid}: no choices")

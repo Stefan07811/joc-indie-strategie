@@ -2,7 +2,7 @@
 
 import pygame
 
-from ..game import diplomacy, economy, generals, legends, state
+from ..game import agents, diplomacy, economy, generals, legends, state
 from . import theme, tips
 
 PAD = 16
@@ -14,22 +14,26 @@ class Panel:
         self.assets = assets
         rect = theme.PANEL_RECT
         self.end_turn_rect = pygame.Rect(rect.x + PAD, rect.bottom - 64, rect.width - 2 * PAD, 44)
-        half = (rect.width - 2 * PAD - 8) // 2
-        self.diplomacy_rect = pygame.Rect(rect.x + PAD, rect.bottom - 132, half, 34)
-        self.traditions_rect = pygame.Rect(rect.x + PAD + half + 8, rect.bottom - 132, half, 34)
+        third = (rect.width - 2 * PAD - 12) // 3
+        self.diplomacy_rect = pygame.Rect(rect.x + PAD, rect.bottom - 132, third, 34)
+        self.traditions_rect = pygame.Rect(rect.x + PAD + third + 6, rect.bottom - 132, third, 34)
+        self.legends_rect = pygame.Rect(rect.x + PAD + 2 * (third + 6), rect.bottom - 132, third, 34)
+        self.actions = []  # (rect, callable): agents' deeds and hiring, rebuilt every frame
+        self.feedback = None  # (message, colour) after the last of those
         self.menu_rect = pygame.Rect(rect.right - PAD - 72, rect.y + PAD, 72, 28)
         self.assault_rect = None  # set while the selected army can storm walls
         self.merge_rect = None  # set while the selected army has comrades to absorb
         self.manage_rect = None  # set while one of our provinces is shown
         self.abduct_rect = None  # set while a Dragonkin army can carry off an heir
 
-    def draw(self, surface, *, province=None, army=None, target=None, mouse=(0, 0)):
+    def draw(self, surface, *, province=None, army=None, target=None, mouse=(0, 0), agent=None):
         game = self.game
         rect = theme.PANEL_RECT
         theme.frame(surface, rect, accent=theme.faction_color(game, game.player))
         x, y = rect.x + PAD, rect.y + PAD + 4
         width = rect.width - 2 * PAD
         self.assault_rect = self.merge_rect = self.manage_rect = self.abduct_rect = None
+        self.actions = []
 
         theme.outlined(surface, game.date, (x, y - 2), 26, theme.GOLD, anchor="topleft")
         theme.button(surface, self.menu_rect, "Menu", self.menu_rect.collidepoint(mouse))
@@ -38,7 +42,9 @@ class Panel:
         y = self._treasury(surface, x, y, width)
         y = self._rule(surface, y)
 
-        if army is not None:
+        if agent is not None:
+            y = self._agent(surface, agent, x, y, width, mouse)
+        elif army is not None:
             y = self._army(surface, army, x, y, width, target, mouse)
         elif province is not None:
             y = self._province(surface, game.provinces[province], x, y, width, mouse)
@@ -52,10 +58,14 @@ class Panel:
         y = self._rule(surface, y)
 
         self._chronicle(surface, x, y, width, self.diplomacy_rect.top - 8)
-        theme.button(surface, self.diplomacy_rect, "Diplomacy (D)", self.diplomacy_rect.collidepoint(mouse),
+        theme.button(surface, self.diplomacy_rect, "Diplomacy", self.diplomacy_rect.collidepoint(mouse),
                      enabled=not game.over)
+        theme.tip(self.diplomacy_rect, ["Diplomacy (D)", "War, peace, alliances, trade, marriages, vassals. "
+                                                         "The foreign courts are there too (F)."])
+        theme.button(surface, self.legends_rect, "Legends", self.legends_rect.collidepoint(mouse), enabled=not game.over)
+        theme.tip(self.legends_rect, ["Legends (L)", "Your quests, and the heroes of the old tales they bring."])
         study = game.studying.get(game.player)
-        label = "Traditions (T)" if not study else f"Studying ({study['turns_left']})"
+        label = "Traditions" if not study else f"Study ({study['turns_left']})"
         theme.button(surface, self.traditions_rect, label, self.traditions_rect.collidepoint(mouse),
                      enabled=not game.over)
         if study:
@@ -145,6 +155,57 @@ class Panel:
             y += 19
         return y + 6
 
+    def _agent(self, surface, agent, x, y, width, mouse):
+        game = self.game
+        mine = agent.faction == game.player
+        name = agents.name(agent.faction, agent.kind)
+        theme.outlined(surface, name, (x, y), 24, theme.PARCHMENT, anchor="topleft")
+        y += 30
+        theme.text(surface, f"{game.faction_name(agent.faction)}  ·  in {game.provinces[agent.province].name}",
+                   (x, y), 18, theme.faction_color(game, agent.faction))
+        y += 22
+        what = ("Sees the armies here and next door, even those hidden in the woods." if agent.kind == "spy"
+                else "Calms your provinces, or stirs up your rivals'.")
+        for line in theme.wrap(what, 16, width):
+            theme.text(surface, line, (x, y), 16, theme.TEXT_DIM)
+            y += 17
+        if not mine:
+            return y + 6
+        theme.text(surface, f"Movement left: {agent.moves_left} / {agents.MOVES}  ·  click a lit province to go",
+                   (x, y + 2), 16)
+        y += 26
+        for action, reason in agents.actions(game, agent):
+            _, chance, risk, desc = agents.ACTIONS[action]
+            label = {"sabotage": "Sabotage", "calm": "Calm the people", "unrest": "Stir up unrest"}[action]
+            if chance < 1:
+                label += f"  ({round(chance * 100)}%)"
+            rect = pygame.Rect(x, y, width, 32)
+            theme.button(surface, rect, label, rect.collidepoint(mouse) and reason is None, enabled=reason is None)
+            tip = [label, desc] + ([(f"If it fails, {round(risk * 100)}% chance the agent is caught.", theme.DANGER)]
+                                  if risk else []) + ([(reason, theme.DANGER)] if reason else [])
+            theme.tip(rect, tip)
+            if reason is None:
+                self.actions.append((rect, lambda a=action: self._deed(agent.id, a)))
+            y += 38
+        if self.feedback:
+            theme.text(surface, self.feedback[0], (x, y), 16, self.feedback[1])
+            y += 20
+        return y + 6
+
+    def _deed(self, agent_id, action):
+        deed = agents.act(self.game, agent_id, action)
+        self.feedback = (("Done!" if deed.success else "It failed" + (", and the agent was caught." if deed.caught
+                                                                       else ".")),
+                         theme.GOOD if deed.success else theme.DANGER)
+
+    def _hire(self, kind, pid):
+        try:
+            agents.hire(self.game, self.game.player, kind, pid)
+            self.feedback = (f"A {agents.name(self.game.player, kind).lower()} waits in "
+                             f"{self.game.provinces[pid].name}.", theme.GOOD)
+        except ValueError as e:
+            self.feedback = (str(e), theme.DANGER)
+
     def _holdings(self, surface, p, x, y, width, mouse):
         game = self.game
         gold, food = economy.province_yield(game, p)
@@ -165,7 +226,18 @@ class Panel:
         self.manage_rect = pygame.Rect(x, y + 4, width, 32)
         theme.button(surface, self.manage_rect, "Manage province  (M)", self.manage_rect.collidepoint(mouse),
                      enabled=not game.over)
-        return y + 42
+        y += 40
+        half = (width - 6) // 2
+        for i, kind in enumerate(agents.KINDS):
+            rect = pygame.Rect(x + i * (half + 6), y, half, 28)
+            reason = agents.hire_blocker(game, game.player, kind)
+            label = f"Hire {agents.name(game.player, kind).lower()} ({agents.COST[kind]})"
+            theme.button(surface, rect, label, rect.collidepoint(mouse) and reason is None,
+                         enabled=reason is None and not game.over)
+            theme.tip(rect, [label, "Agents move three provinces a season, anywhere." + (" " + reason if reason else "")])
+            if reason is None:
+                self.actions.append((rect, lambda k=kind, pid=p.id: self._hire(k, pid)))
+        return y + 34
 
     def _order(self, surface, p, x, y, width):
         order, parts = legends.public_order(self.game, p)

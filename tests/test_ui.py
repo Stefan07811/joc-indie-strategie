@@ -435,3 +435,37 @@ def test_diplomacy_offers_trade_and_marriage(app):
     press(app, pygame.K_d)
     labels = [label for _, label, _ in c.dialog.actions]
     assert "Trade agreement" in labels and "Royal marriage" in labels
+
+
+def test_agents_are_hired_moved_and_put_to_work(app):
+    from legendele.game import agents
+    app.start_campaign("voievodat", seed=13)
+    c = app.scene
+    game = c.game
+    game.treasury["voievodat"].gold = 1000
+    capital = game.provinces["targoviste"]
+    click(app, on_map(app, capital.x, capital.y - 40))
+    assert c.selected_province == "targoviste"
+    hire = next(r for r, _ in c.panel.actions)  # hire a spy
+    click(app, hire.center)
+    spy = next(iter(game.agents.values()))
+    assert spy.kind == "spy" and spy.province == "targoviste"
+    c.draw(app.screen)
+    token = next(r for r, aid in c.map.agent_rects if aid == spy.id)
+    click(app, on_map(app, *token.center))
+    assert c.selected_agent == spy.id and "retezat" in c.reach() and "maramures" not in c.reach()
+    retezat = game.provinces["retezat"]  # the Dragonkin capital, two provinces away
+    click(app, on_map(app, retezat.x + 30, retezat.y - 60))
+    assert spy.province == "retezat" and spy.moves_left == agents.MOVES - 2
+    sabotage = next(r for r, _ in c.panel.actions)
+    click(app, sabotage.center)
+    assert spy.moves_left == 0 or spy.id not in game.agents
+
+
+def test_legends_window(app):
+    from legendele.ui.legends_dialog import LegendsDialog
+    app.start_campaign("iele", seed=14)
+    press(app, pygame.K_l)
+    assert isinstance(app.scene.dialog, LegendsDialog)
+    press(app, pygame.K_ESCAPE)
+    assert app.scene.dialog is None

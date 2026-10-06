@@ -131,7 +131,8 @@ def visible_to(game, viewer, army):
     if p.terrain != "forest":
         return True
     near = {p.id, *p.neighbors}
-    return any(a.faction == viewer and a.province in near for a in game.armies.values())
+    from .agents import sees
+    return any(a.faction == viewer and a.province in near for a in game.armies.values()) or sees(game, viewer, p.id)
 
 
 # --- the Dragonkin abduct an heir ------------------------------------------------------------

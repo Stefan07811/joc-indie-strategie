@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, diplomacy, economy, events, foreign, generals, legends, techs
+from . import agents, battle, diplomacy, economy, events, foreign, generals, legends, quests, techs
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -154,6 +154,9 @@ class Game:
     trade: set = field(default_factory=set)  # frozenset({a, b}): trade agreements
     marriages: set = field(default_factory=set)  # frozenset({a, b}): royal marriages
     vassals: dict = field(default_factory=dict)  # vassal -> overlord
+    quests_done: dict = field(default_factory=dict)  # fid -> quests fulfilled
+    agents: dict = field(default_factory=dict)  # agent id -> agents.Agent
+    _next_agent_id: int = 1
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal"):
@@ -201,7 +204,7 @@ class Game:
     def _tally(self, fid, key):
         if fid and fid != REBELS:
             row = self.stats.setdefault(fid, {"won": 0, "lost": 0, "taken": 0, "fallen": 0})
-            row[key] += 1
+            row[key] = row.get(key, 0) + 1
 
     # --- queries ---------------------------------------------------------------------------
 
@@ -719,6 +722,10 @@ class Game:
         elif isinstance(event, Captured):
             self._tally(event.faction, "taken")
             self._tally(event.previous, "fallen")
+            if event.previous:
+                self._tally(event.faction, f"from_{event.previous}")
+        elif isinstance(event, legends.Abduction) and event.success:
+            self._tally(event.faction, "abducted")
 
     def realm_size(self, fid):
         """Provinces a legend rules: its own, and its vassals'."""
@@ -797,6 +804,8 @@ class Game:
         events.season(self)
         foreign.season(self)
         techs.season(self)
+        quests.season(self)
+        agents.season(self)
         for p in self.provinces.values():
             p.mods = [m for m in p.mods if m[2] > self.round]
         self._check_end()

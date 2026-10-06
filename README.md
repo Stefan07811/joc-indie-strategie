@@ -51,9 +51,11 @@ python -m legendele
 | Diplomația | **Diplomacy** sau `D` |
 | Curțile străine (tribut, mercenari) | `F` sau din Diplomacy |
 | Tradițiile (cercetare) | `T` sau butonul **Traditions** |
+| Misiunile și eroii | `L` sau butonul **Legends** |
+| Agenții | clic pe jetonul agentului, apoi clic pe o provincie luminată; acțiunile apar în panou |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M12 (statul)
+## Stadiul actual: etapa M13 (legende)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -269,7 +271,24 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
   începe un război.
 - AI-ul face și el toate acestea.
 
-**Ce urmează:** M13–M15, vezi planul din [DESIGN.md](DESIGN.md).
+**Legende (M13)**
+- **Misiuni și eroi** (tasta L sau butonul **Legends**): fiecare legendă are două misiuni din basme. Când le
+  împlinești, vine la capitala ta un erou unic:
+  - Principality: Făt-Frumos (5 victorii) și Greuceanu (ia 2 provincii de la zmei);
+  - Dragonkin: Zgripțuroaica (900 de aur în vistierie) și Spânul (răpește un moștenitor);
+  - Fae Court: Ileana Cosânzeana (10 provincii) și Regina Zânelor (4 provincii de pădure);
+  - Revenants: Baba Cloanța (12 provincii) și Marele Pricolici (12 victorii).
+
+  Fereastra arată cât ai avansat și ce au câștigat celelalte curți.
+- **Agenți:** spioni și preoți, cu nume după legendă (Spy/Priest, Imp Spy/Sorcerer, Will-o'-the-wisp/Herb
+  Witch, Night Crow/Necromancer). Îi angajezi dintr-o provincie a ta, cel mult 2 din fiecare.
+  - Merg oriunde, 3 provincii pe anotimp.
+  - Spionul vede armatele din provincia lui și din vecini (chiar și ielele ascunse în păduri) și poate
+    sabota o provincie dușmană: întârzie lucrările și îmbolnăvește garnizoana.
+  - Preotul liniștește o provincie a ta (+2 ordine) sau stârnește tulburări la rival (-2 ordine).
+  - O acțiune ratată îl poate costa pe agent viața. AI-ul își folosește și el agenții.
+
+**Ce urmează:** M14–M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

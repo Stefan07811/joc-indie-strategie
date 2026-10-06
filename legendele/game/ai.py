@@ -16,7 +16,7 @@ Each turn an AI:
 4. Gathers: armies that ended up together merge.
 """
 
-from . import diplomacy, economy, legends
+from . import agents, diplomacy, economy, legends
 from .diplomacy import ALLIANCE, PEACE, WAR
 
 MIN_SHARE_LEFT = 0.45  # only fight battles we expect to win with at least this much of the army left
@@ -45,6 +45,7 @@ class SimpleAI:
 
     def take_turn(self, game):
         self._diplomacy(game)
+        agents.ai_hire(game, self.faction)
         self._build(game)
         self._recruit(game)
         for army_id in sorted(a.id for a in game.armies_of(self.faction)):
@@ -60,6 +61,8 @@ class SimpleAI:
             elif not self._on_guard(game, army):
                 self._march(game, army)
         self._gather(game)
+        if not game.over:
+            agents.ai_turn(game, self.faction)
 
     # --- diplomacy -------------------------------------------------------------------------
 
@@ -110,7 +113,10 @@ class SimpleAI:
             if rel == WAR and game.rng.random() < 0.3:
                 self._offer(game, "vassal", other)
             if game.vassals.get(me) == other and diplomacy.might(game, me) > diplomacy.might(game, other) * 0.9:
-                game.break_alliance(me, other)  # strong again: no more bending the knee
+                if diplomacy.relation(game, me, other) == ALLIANCE:
+                    game.break_alliance(me, other)  # strong again: no more bending the knee
+                else:
+                    diplomacy.free(game, me, other)
         self._maybe_declare_war(game)
 
     def _alarming(self, game):

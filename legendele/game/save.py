@@ -9,6 +9,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from .agents import Agent
 from .battle import Regiment
 from .diplomacy import Proposal, key
 from .economy import Treasury
@@ -80,6 +81,9 @@ def to_dict(game):
         "trade": sorted(_pair(k) for k in game.trade),
         "marriages": sorted(_pair(k) for k in game.marriages),
         "vassals": game.vassals,
+        "quests_done": game.quests_done,
+        "agents": [asdict(a) for a in game.agents.values()],
+        "next_agent_id": game._next_agent_id,
     }
 
 
@@ -137,6 +141,9 @@ def from_dict(data, d, ai_factory=None):
     game.trade = {_unpair(k) for k in d.get("trade", [])}
     game.marriages = {_unpair(k) for k in d.get("marriages", [])}
     game.vassals = dict(d.get("vassals", {}))
+    game.quests_done = {fid: list(q) for fid, q in d.get("quests_done", {}).items()}
+    game.agents = {a["id"]: Agent(**a) for a in d.get("agents", [])}
+    game._next_agent_id = d.get("next_agent_id", 1)
     for fid in game.eliminated:
         game.ai.pop(fid, None)
     return game

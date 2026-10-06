@@ -269,7 +269,7 @@ tests/                 # teste pentru reguli și AI
 | **M10 — Harta vie** ✅ | râuri și drumuri, evenimente din folclor, puterile străine |
 | **M11 — Bătălii tactice** ✅ | desfășurare, abilități active, vreme și noapte, zoom, întăriri, asedii, bătălie personalizată |
 | **M12 — Stat** ✅ | tehnologii, comerț, vasali, căsătorii |
-| **M13 — Legende** | eroi și misiuni, agenți |
+| **M13 — Legende** ✅ | eroi și misiuni, agenți |
 | **M14 — Rejucabilitate** | Outlaws jucabili, Solomonarii, opțiuni de start |
 | **M15 — Finisaj** | joc în română, muzică și sunete, realizări, executabil |
 

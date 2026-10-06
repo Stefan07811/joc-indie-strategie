@@ -8,8 +8,9 @@ import pygame
 from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
                     Raid, Rebellion, SiegeStarted, Tale, Victory, diplomacy,
-                    foreign)
+                    agents, foreign)
 from ..game.economy import DIFFICULTY
+from ..game.state import Reach
 from ..game.save import load_game
 from . import map_view, theme, tips
 from .assets import Assets
@@ -18,6 +19,7 @@ from .battle_screen import fight
 from .diplomacy_dialog import DiplomacyDialog
 from .foreign_dialog import ForeignDialog
 from .map_view import MapView
+from .legends_dialog import LegendsDialog
 from .menus import MainMenu, PauseMenu
 from .panel import Panel
 from .province_dialog import ProvinceDialog
@@ -139,6 +141,7 @@ class Campaign:
         self.map = MapView(self.game, app.assets)
         self.panel = Panel(self.game, app.assets)
         self.selected_army = None
+        self.selected_agent = None
         self.selected_province = None
         self.hovered = None
         # pop-ups waiting to be read (envoys and tales from a loaded game too)
@@ -237,6 +240,8 @@ class Campaign:
                 self.open_foreign()
             elif event.key == pygame.K_t:
                 self.open_traditions()
+            elif event.key == pygame.K_l:
+                self.open_legends()
 
     def _click(self, pos):
         panel = self.panel
@@ -252,6 +257,13 @@ class Campaign:
             self.open_diplomacy()
         elif panel.traditions_rect.collidepoint(pos):
             self.open_traditions()
+        elif panel.legends_rect.collidepoint(pos):
+            self.open_legends()
+        elif any(rect.collidepoint(pos) for rect, _ in panel.actions):
+            next(action for rect, action in panel.actions if rect.collidepoint(pos))()
+            self.app.audio.play("click")
+            if self.selected_agent not in self.game.agents:
+                self.selected_agent = None
         elif panel.assault_rect and panel.assault_rect.collidepoint(pos):
             self.assault()
         elif panel.abduct_rect and panel.abduct_rect.collidepoint(pos):
@@ -267,8 +279,22 @@ class Campaign:
 
     def click_map(self, pos):
         game = self.game
+        agent_id = self.map.agent_at(pos)
         army_id = self.map.army_at(pos)
         province = self.map.province_at(pos)
+        agent = game.agents.get(self.selected_agent)
+        if agent and agent.faction == game.player and province in self.reach() and agent_id is None:
+            agents.move(game, agent.id, province)
+            self.selected_province = province
+            self.app.audio.play("march")
+            return
+        self.panel.feedback = None
+        if agent_id is not None:
+            self.selected_agent, self.selected_army = agent_id, None
+            self.selected_province = game.agents[agent_id].province
+            self.app.audio.play("select")
+            return
+        self.selected_agent = None
         army = game.armies.get(self.selected_army)
         reach = self.reach()
         if army and army.faction == game.player and province in reach:
@@ -320,6 +346,11 @@ class Campaign:
             self.dialog = DiplomacyDialog(self.game, self.app.assets)
             self._dialog_from = len(self.game.events)
 
+    def open_legends(self):
+        if not self.game.over:
+            self.dialog = LegendsDialog(self.game, self.app.assets)
+            self._dialog_from = len(self.game.events)
+
     def open_traditions(self):
         if not self.game.over:
             self.dialog = TechsDialog(self.game, self.app.audio)
@@ -368,6 +399,7 @@ class Campaign:
 
     def deselect(self):
         self.selected_army = None
+        self.selected_agent = None
         self.selected_province = None
 
     def select_next_army(self):
@@ -438,6 +470,11 @@ class Campaign:
     # --- drawing ---------------------------------------------------------------------------
 
     def reach(self):
+        agent = self.game.agents.get(self.selected_agent)
+        if agent is not None:
+            if agent.faction != self.game.player or self.game.over:
+                return {}
+            return {pid: Reach(cost, [pid]) for pid, cost in agents.reachable(self.game, agent).items()}
         army = self.game.armies.get(self.selected_army)
         if army is None or army.faction != self.game.player or self.game.over:
             return {}
@@ -447,11 +484,13 @@ class Campaign:
         reach = self.reach()
         path = None
         target = self.hovered if self.hovered in reach else None
-        if target:
+        if target and self.selected_agent in self.game.agents:
+            path = [self.game.agents[self.selected_agent].province, target]
+        elif target:
             army = self.game.armies[self.selected_army]
             path = [army.province, *reach[target].path]
         self.map.draw(surface, hovered=self.hovered, selected_province=self.selected_province,
-                      selected_army=self.selected_army, reach=reach, path=path)
+                      selected_army=self.selected_army, reach=reach, path=path, selected_agent=self.selected_agent)
         for rect, army_id in self.map.army_rects:
             screen_rect = rect.move(self.map.to_screen((0, 0)))
             if self.map.rect.contains(screen_rect) and army_id in self.game.armies:
@@ -471,7 +510,7 @@ class Campaign:
         info = self.hovered if self.selected_army is None and self.hovered else self.selected_province
         mouse = pygame.mouse.get_pos()
         self.panel.draw(surface, province=info, army=self.game.armies.get(self.selected_army), target=target,
-                        mouse=mouse)
+                        mouse=mouse, agent=self.game.agents.get(self.selected_agent))
         if self.dialog:
             self.dialog.draw(surface, mouse)
         if self.pause:

@@ -16,6 +16,7 @@ import pygame
 
 from .. import profile
 from ..mapshape import CELL, map_grid
+from ..game import agents
 from . import figures, painter, theme
 
 
@@ -82,6 +83,7 @@ class MapView:
         self._owner_layer = None
         self._snow_layer = None
         self.army_rects = []  # (world rect, army id), refreshed every frame for clicks
+        self.agent_rects = []  # (world rect, agent id), likewise
         self.marching = {}  # army id -> (points, start time, seconds per step): standards on the move
         scale = MINIMAP_WIDTH / self.size[0]
         self.minimap_rect = pygame.Rect(self.rect.x + 10, 0, MINIMAP_WIDTH, round(self.size[1] * scale))
@@ -257,7 +259,7 @@ class MapView:
         self._draw_minimap(surface, view)
 
     def draw_world(self, surface, *, hovered=None, selected_province=None, selected_army=None, reach=None,
-                   path=None):
+                   path=None, selected_agent=None):
         """Everything, in world coordinates, onto a world-sized surface (its clip limits the work)."""
         game = self.game
         surface.blit(self.terrain_layer, (0, 0))
@@ -268,6 +270,8 @@ class MapView:
         if reach:
             # Dim everything the selected army cannot reach this turn.
             here = game.armies[selected_army].province if selected_army in game.armies else None
+            if selected_agent in game.agents:
+                here = game.agents[selected_agent].province
             for pid in game.provinces:
                 if pid not in reach and pid != here:
                     surface.blit(*self._tinted("mask", pid, (16, 12, 8, 120)))
@@ -286,6 +290,7 @@ class MapView:
         self.army_rects = []
         for pid in sorted(game.provinces, key=lambda pid: game.provinces[pid].y):
             self._draw_armies(surface, pid, selected_army)
+        self._draw_agents(surface, selected_agent)
 
     def _draw_path(self, surface, points):
         points = [(x, y - 4) for x, y in points]
@@ -322,7 +327,7 @@ class MapView:
         theme.outlined(surface, p.name, (p.x, p.y + 4), 17)
         if reach and p.id in reach:
             # gold: a free march; red: a battle, a siege or an assault awaits
-            color = theme.DANGER if game.looks_defended(attacker, p.id) else theme.HIGHLIGHT
+            color = theme.DANGER if attacker and game.looks_defended(attacker, p.id) else theme.HIGHLIGHT
             badge = (p.x + 26, p.y + 30)
             pygame.draw.circle(surface, theme.INK, badge, 11)
             pygame.draw.circle(surface, color, badge, 11, 2)
@@ -360,6 +365,47 @@ class MapView:
             pygame.draw.circle(surface, (226, 190, 96), plaque, 9, 1)
             theme.outlined(surface, str(len(army.regiments)), (plaque[0], plaque[1] - 1), 13, theme.PARCHMENT, width=1)
             self.army_rects.append((rect.inflate(6, 4), army.id))
+
+    def agents_seen(self):
+        """Our agents, and the others' wherever we rule or our spies watch."""
+        game = self.game
+        me = game.player
+        return [a for a in game.agents.values()
+                if a.faction == me or game.provinces[a.province].owner == me or agents.sees(game, me, a.province)]
+
+    def agent_at(self, pos):
+        if not self.rect.collidepoint(pos) or self.on_minimap(pos):
+            return None
+        pos = self.to_world(pos)
+        for rect, agent_id in reversed(self.agent_rects):
+            if rect.collidepoint(pos):
+                return agent_id
+        return None
+
+    def _draw_agents(self, surface, selected_agent):
+        """Agents are small tokens beside a province's town: an eye for a spy, a star for a priest."""
+        self.agent_rects = []
+        by_place = {}
+        for a in sorted(self.agents_seen(), key=lambda a: a.id):
+            by_place.setdefault(a.province, []).append(a)
+        for pid, here in by_place.items():
+            p = self.game.provinces[pid]
+            for i, a in enumerate(here):
+                x, y = p.x - 44 - i * 24, p.y + 40
+                color = theme.faction_color(self.game, a.faction)
+                if a.id == selected_agent:
+                    pygame.draw.circle(surface, theme.HIGHLIGHT, (x, y), 15, 3)
+                pygame.draw.circle(surface, theme.INK, (x + 1, y + 2), 12)
+                pygame.draw.circle(surface, color, (x, y), 11)
+                pygame.draw.circle(surface, (226, 190, 96), (x, y), 11, 2)
+                if a.kind == "spy":
+                    pygame.draw.ellipse(surface, theme.PARCHMENT, (x - 7, y - 4, 14, 8))
+                    pygame.draw.circle(surface, theme.INK, (x, y), 3)
+                else:
+                    theme.star(surface, (x, y), 7, theme.PARCHMENT)
+                if a.faction == self.game.player and a.moves_left == 0:
+                    pygame.draw.circle(surface, (0, 0, 0), (x + 8, y + 8), 3)
+                self.agent_rects.append((pygame.Rect(x - 12, y - 12, 24, 24), a.id))
 
     def _draw_minimap(self, surface, view):
         key = (self._owner_key, self.game.season == "Winter")

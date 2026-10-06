@@ -34,7 +34,7 @@ def button(scene, label):
 def test_title_screen_without_saves(app):
     assert isinstance(app.scene, MainMenu)
     app.scene.draw(app.screen)
-    assert [label for _, label in app.scene.buttons] == ["New Campaign", "Load Game", "Custom Battle", "Settings", "Quit"]
+    assert [label for _, label in app.scene.buttons] == ["New Campaign", "Load Game", "Custom Battle", "Achievements", "Settings", "Quit"]
     click(app, button(app.scene, "New Campaign"))
     assert isinstance(app.scene, FactionSelect)
     click(app, app.scene.back_rect.center)

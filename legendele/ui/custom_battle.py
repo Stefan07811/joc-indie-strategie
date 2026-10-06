@@ -103,7 +103,11 @@ class CustomBattle:
         player = self.sides[self.you]["faction"]
         game = Game.new(self.app.data, player if self.app.data.factions[player]["playable"] else self.choices[0])
         title = "Custom battle: " + ("assault" if self.kind == "assault" else self.terrain)
-        return BattleScreen(self.app, game, self.field(), title=title).run()
+        field = self.field()
+        result = BattleScreen(self.app, game, field, title=title).run()
+        if result.attacker_won == (self.you == 0) and not field.auto:
+            self.app.achieve(["custom"])
+        return result
 
     # --- drawing -----------------------------------------------------------------------------
 

@@ -169,6 +169,7 @@ class Battlefield:
         self.time = 0.0
         self.withdrawn = None
         self.notes = []
+        self.auto = False  # the computer fought (part of) it out for the player (finish())
         equipment = attacker.equipment or {}
         self.ladders = kind == "assault" and bool(equipment.get("ladders"))
         self.ram = Ram(150, FIELD_H / 2) if kind == "assault" and equipment.get("ram") else None
@@ -700,6 +701,8 @@ class Battlefield:
 
     def finish(self, step=1 / 30, max_steps=None):
         """Let the computer fight it out to the end (both sides), and return the result."""
+        if not self.over:
+            self.auto = True
         self.player_side = None
         steps = 0
         while not self.over:

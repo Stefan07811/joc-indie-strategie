@@ -1,10 +1,11 @@
-"""Menus: the title screen, save/load slots, settings and the in-game pause menu."""
+"""Menus: the title screen, save/load slots, settings, achievements and the in-game pause menu."""
 
 import time
 
 import pygame
 
 from .. import profile
+from ..game import achievements
 from ..game.save import SaveError
 from . import theme
 
@@ -41,8 +42,8 @@ class MainMenu:
         self.app = app
         self.continue_slot = profile.latest_slot()
         labels = (["Continue"] if self.continue_slot else []) + ["New Campaign", "Load Game", "Custom Battle",
-                                                                  "Settings", "Quit"]
-        self.buttons = _button_column(labels, 312, height=42, gap=12)
+                                                                  "Achievements", "Settings", "Quit"]
+        self.buttons = _button_column(labels, 304, height=40, gap=10)
 
     def handle(self, event):
         if not _clicked(event):
@@ -58,6 +59,8 @@ class MainMenu:
                     self.app.scene = SlotScreen(self.app, "load", back=self)
                 elif label == "Settings":
                     self.app.scene = SettingsScreen(self.app, back=self)
+                elif label == "Achievements":
+                    self.app.scene = AchievementsScreen(self.app, back=self)
                 elif label == "Custom Battle":
                     from .custom_battle import CustomBattle
                     self.app.scene = CustomBattle(self.app, back=self)
@@ -245,6 +248,56 @@ class SettingsScreen:
             theme.text(surface, "No sound device was found: the game is silent.", (cx, 540), 18, theme.TEXT_DIM,
                        anchor="center")
         theme.button(surface, self.back_rect, "Back", self.back_rect.collidepoint(mouse))
+
+
+class AchievementsScreen:
+    """Every achievement: the ones earned in gold, with the day they were earned."""
+    music = None
+    COLS, CARD_W, CARD_H = 3, 400, 50
+
+    def __init__(self, app, back):
+        self.app = app
+        self.back = back
+        self.all = achievements.every(app.data)
+        self.earned = profile.load_achievements()
+        self.back_rect = pygame.Rect(theme.WINDOW_SIZE[0] // 2 - 100, 662, 200, 42)
+
+    def handle(self, event):
+        if _escape(event) or (_clicked(event) and self.back_rect.collidepoint(event.pos)):
+            self.app.audio.play("click")
+            self.app.scene = self.back
+
+    def draw(self, surface):
+        _backdrop(self.app, surface, 200)
+        cx = theme.WINDOW_SIZE[0] // 2
+        theme.outlined(surface, "Achievements", (cx, 36), 40, theme.GOLD, width=2)
+        done = sum(a.id in self.earned for a in self.all)
+        theme.text(surface, f"{done} of {len(self.all)} earned", (cx, 64), 18, theme.PARCHMENT, anchor="midtop")
+        left = cx - (self.COLS * self.CARD_W + (self.COLS - 1) * 10) // 2
+        rows = -(-len(self.all) // self.COLS)
+        for i, a in enumerate(self.all):
+            col, row = divmod(i, rows)
+            rect = pygame.Rect(left + col * (self.CARD_W + 10), 94 + row * (self.CARD_H + 6), self.CARD_W, self.CARD_H)
+            self._card(surface, rect, a)
+        theme.button(surface, self.back_rect, "Back", self.back_rect.collidepoint(pygame.mouse.get_pos()))
+
+    def _card(self, surface, rect, a):
+        got = a.id in self.earned
+        theme.row(surface, rect, False, got)
+        star = (rect.x + 22, rect.centery)
+        if got:
+            theme.star(surface, star, 11)
+        else:
+            pygame.draw.circle(surface, theme.TEXT_DIM, star, 9, 2)
+        theme.text(surface, a.name, (rect.x + 44, rect.y + 5), 17, theme.GOLD if got else theme.PARCHMENT)
+        text = a.description if got or not a.secret else "A secret deed."
+        line = theme.wrap(text, 14, rect.width - 54)[0]
+        theme.text(surface, line, (rect.x + 44, rect.y + 27), 14, theme.TEXT if got else theme.TEXT_DIM)
+        if got:
+            day = time.strftime("%d %b %Y", time.localtime(self.earned[a.id]))
+            theme.tip(rect, [a.name, a.description, (f"Earned on {day}", theme.GOLD)])
+        else:
+            theme.tip(rect, [a.name, text, ("Not earned yet", theme.TEXT_DIM)])
 
 
 class PauseMenu:

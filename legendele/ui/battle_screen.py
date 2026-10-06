@@ -58,7 +58,10 @@ def fight(app, game, attackers, defenders, pid, kind):
     player_side = 0 if attackers.faction == game.player else 1
     field = Battlefield(attackers, defenders, game.data.units, game.provinces[pid].terrain, kind, game.rng,
                         province=pid, player_side=player_side, weather=weather, night=night)
-    return BattleScreen(app, game, field).run()
+    result = BattleScreen(app, game, field).run()
+    if result.winning_faction == game.player and not field.auto:
+        app.achieve(["lead"])
+    return result
 
 
 def _title(game, pid, kind):

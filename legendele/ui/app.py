@@ -9,7 +9,7 @@ from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
                     Raid, Rebellion, SiegeStarted, Tale, Victory, diplomacy,
                     agents, foreign)
-from ..game import start
+from ..game import achievements, start
 from ..game.economy import DIFFICULTY
 from ..game.state import Reach
 from ..game.save import load_game
@@ -30,6 +30,7 @@ from .techs_dialog import TechsDialog
 from .tutorial import Tutorial
 
 TITLE = "Legends of the Carpathians"
+TOAST_MS = 5000  # how long an achievement stays announced
 
 
 class FactionSelect:
@@ -386,6 +387,7 @@ class Campaign:
         sound = event_sound(self.game, events)
         if sound:
             self.app.audio.play(sound)
+        self.app.achieve(achievements.campaign(self.game, events, profile.load_achievements()))
 
     def open_pause(self):
         self.pause = PauseMenu(self.app, self)
@@ -595,6 +597,7 @@ class App:
         self.audio = Audio(self.settings)
         self._backdrop = None
         self.running = True
+        self.toasts = []  # [Achievement, ms when it went up]: the achievements just earned
         self.scene = MainMenu(self)
         self.clock = pygame.time.Clock()
 
@@ -661,12 +664,38 @@ class App:
         pygame.quit()
 
     def present(self, draw):
-        """Draw a frame (with the tooltip under the mouse, if any) and show it."""
+        """Draw a frame (with the achievements just earned and the tooltip under the mouse) and show it."""
         theme.clear_tips()
         draw(self.screen)
+        self._draw_toasts(self.screen)
         if pygame.mouse.get_focused():
             theme.draw_tip(self.screen, pygame.mouse.get_pos())
         pygame.display.flip()
+
+    # --- achievements ------------------------------------------------------------------------
+
+    def achieve(self, ids):
+        """Remember these achievements; the new ones are announced with a fanfare."""
+        new = profile.unlock(ids)
+        if new:
+            by_id = {a.id: a for a in achievements.every(self.data)}
+            now = pygame.time.get_ticks()
+            self.toasts += [[by_id[i], now] for i in new if i in by_id]
+            self.audio.play("fanfare")
+        return new
+
+    def _draw_toasts(self, surface):
+        now = pygame.time.get_ticks()
+        self.toasts = [t for t in self.toasts if now - t[1] < TOAST_MS]
+        y = 14
+        for achievement, since in self.toasts[:3]:
+            box = pygame.Rect(0, 0, 440, 64)
+            box.midtop = (theme.WINDOW_SIZE[0] // 2, y)
+            inner = theme.frame(surface, box, accent=theme.GOLD)
+            theme.star(surface, (inner.x + 24, inner.centery), 12)
+            theme.text(surface, "Achievement: " + achievement.name, (inner.x + 48, inner.y + 6), 19, theme.GOLD)
+            theme.text(surface, achievement.description, (inner.x + 48, inner.y + 30), 16, theme.PARCHMENT)
+            y += box.height + 8
 
     def screenshot(self, path, tip_at=None):
         """Save the current screen; `tip_at` shows the tooltip at that point straight away."""

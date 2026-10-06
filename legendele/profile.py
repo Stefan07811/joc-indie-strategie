@@ -1,4 +1,4 @@
-"""The player's own files: settings and saved campaigns.
+"""The player's own files: settings, achievements and saved campaigns.
 
 They live in ~/.legendele (or wherever LEGENDELE_HOME points, e.g. for tests).
 """
@@ -40,6 +40,30 @@ def store_settings(settings):
     path = home() / "settings.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(settings, indent=2), encoding="utf-8")
+
+
+# --- achievements ----------------------------------------------------------------------------
+
+def load_achievements():
+    """{achievement id: when it was earned (seconds since the epoch)}."""
+    try:
+        saved = json.loads((home() / "achievements.json").read_text(encoding="utf-8"))
+        return {k: v for k, v in saved.items() if isinstance(v, (int, float))}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def unlock(ids):
+    """Remember these achievements; returns the ones that are new."""
+    have = load_achievements()
+    new = [i for i in dict.fromkeys(ids) if i not in have]
+    if new:
+        now = time.time()
+        have.update({i: now for i in new})
+        path = home() / "achievements.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(have, indent=2), encoding="utf-8")
+    return new
 
 
 # --- saves -----------------------------------------------------------------------------------

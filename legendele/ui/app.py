@@ -7,7 +7,7 @@ import pygame
 
 from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
-                    Rebellion, SiegeStarted, Victory, diplomacy)
+                    Rebellion, SiegeStarted, Tale, Victory, diplomacy)
 from ..game.economy import DIFFICULTY
 from ..game.save import load_game
 from . import map_view, theme, tips
@@ -19,7 +19,8 @@ from .map_view import MapView
 from .menus import MainMenu, PauseMenu
 from .panel import Panel
 from .province_dialog import ProvinceDialog
-from .reports import ACCEPT_RECT, DECLINE_RECT, EndScreen, TurnSummary, concerns_player, draw_game_over, draw_report
+from .reports import (ACCEPT_RECT, DECLINE_RECT, EndScreen, TurnSummary, concerns_player, draw_game_over, draw_report,
+                      tale_choice_rects)
 from .tutorial import Tutorial
 
 TITLE = "Legends of the Carpathians"
@@ -137,7 +138,8 @@ class Campaign:
         self.selected_army = None
         self.selected_province = None
         self.hovered = None
-        self.reports = list(self.game.proposals)  # pop-ups waiting to be read (envoys from a loaded game too)
+        # pop-ups waiting to be read (envoys and tales from a loaded game too)
+        self.reports = list(self.game.proposals) + list(self.game.pending_events)
         self.dialog = None  # the province or diplomacy window, while open
         self._dialog_from = 0
         self.pause = None  # the pause menu, while open
@@ -155,6 +157,9 @@ class Campaign:
         if self.reports:
             if isinstance(self.reports[0], Proposal):
                 self._answer(event)
+                return
+            if isinstance(self.reports[0], Tale):
+                self._choose(event)
                 return
             closes = (event.type == pygame.MOUSEBUTTONDOWN or
                       event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER,
@@ -317,6 +322,21 @@ class Campaign:
             start = len(self.game.events)
             diplomacy.answer(self.game, offer, accept)
             self._report(self.game.events[start:])
+
+    def _choose(self, event):
+        tale = self.reports[0]
+        choices = self.game.data.events[tale.event]["choices"]
+        index = None
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            index = next((i for i, r in enumerate(tale_choice_rects(len(choices))) if r.collidepoint(event.pos)), None)
+        elif event.type == pygame.KEYDOWN and pygame.K_1 <= event.key < pygame.K_1 + len(choices):
+            index = event.key - pygame.K_1
+        if index is None:
+            return
+        self.reports.pop(0)
+        if tale in self.game.pending_events:
+            self._report(self.game.choose_event(tale, index))
+            self.app.audio.play("click")
 
     def open_province(self):
         p = self.game.provinces.get(self.selected_province)

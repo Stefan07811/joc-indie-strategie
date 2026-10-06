@@ -12,6 +12,7 @@ from pathlib import Path
 from .battle import Regiment
 from .diplomacy import Proposal, key
 from .economy import Treasury
+from .events import Tale
 from .state import Army, Game, Victory
 
 VERSION = 1
@@ -39,7 +40,7 @@ def to_dict(game):
             pid: {
                 "owner": p.owner, "walls": p.walls, "garrison": [asdict(r) for r in p.garrison],
                 "besieged_by": p.besieged_by, "buildings": p.buildings, "construction": p.construction,
-                "recruits": p.recruits, "captured_round": p.captured_round,
+                "recruits": p.recruits, "captured_round": p.captured_round, "mods": p.mods,
             }
             for pid, p in game.provinces.items()
         },
@@ -69,6 +70,7 @@ def to_dict(game):
         "history": game.history,
         "stats": game.stats,
         "difficulty": game.difficulty,
+        "pending_events": [asdict(t) for t in game.pending_events],
     }
 
 
@@ -89,6 +91,7 @@ def from_dict(data, d, ai_factory=None):
         p.construction = saved["construction"]
         p.recruits = list(saved["recruits"])
         p.captured_round = saved["captured_round"]
+        p.mods = [list(m) for m in saved.get("mods", [])]
     game.armies = {
         a["id"]: Army(a["id"], a["faction"], a["province"], a["general"],
                       [Regiment(**r) for r in a["regiments"]], a["moves_left"],
@@ -115,6 +118,7 @@ def from_dict(data, d, ai_factory=None):
     game.proposals = [Proposal(**p) for p in d["proposals"]]
     game.history = list(d.get("history", game.history))  # saves from before the chronicle have none
     game.stats = {fid: dict(row) for fid, row in d.get("stats", {}).items()}
+    game.pending_events = [Tale(**t) for t in d.get("pending_events", [])]
     for fid in game.eliminated:
         game.ai.pop(fid, None)
     return game

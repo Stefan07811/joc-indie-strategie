@@ -4,7 +4,7 @@ import heapq
 import random
 from dataclasses import dataclass, field
 
-from . import battle, diplomacy, economy, generals, legends
+from . import battle, diplomacy, economy, events, generals, legends
 from .battle import BattleResult, Regiment, Side
 from .economy import Treasury
 
@@ -39,6 +39,7 @@ class Province:
     captured_round: int | None = None  # when it last changed hands (fresh conquests are restless)
     roads: list[str] = field(default_factory=list)  # neighbours joined by a road
     crossings: dict = field(default_factory=dict)  # neighbour -> river in between
+    mods: list = field(default_factory=list)  # [name, order points, until round]: events weighing on the mood
 
 
 @dataclass
@@ -140,6 +141,7 @@ class Game:
     history: list = field(default_factory=list)  # one snapshot per season: {"round", "factions": {fid: {...}}}
     stats: dict = field(default_factory=dict)  # fid -> {"won", "lost", "taken", "fallen"}
     difficulty: str = "normal"
+    pending_events: list = field(default_factory=list)  # tales waiting for the human player's choice
 
     @classmethod
     def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal"):
@@ -462,6 +464,14 @@ class Game:
         self._check_end()
         return self.events[start:]
 
+    def choose_event(self, tale, index):
+        """The player answers a tale (events.py)."""
+        if tale not in self.pending_events:
+            raise MoveError("that has already been decided")
+        start = len(self.events)
+        events.choose(self, tale, index)
+        return self.events[start:]
+
     def abduct(self, army_id):
         """Dragonkin only: carry off a rival heir from a capital next to (or at) this army."""
         if self.over:
@@ -721,6 +731,9 @@ class Game:
         legends.healers(self)
         legends.rebellions(self)
         generals.idle(self)
+        events.season(self)
+        for p in self.provinces.values():
+            p.mods = [m for m in p.mods if m[2] > self.round]
         self._check_end()
         if not self.winner:
             self._count_heart()

@@ -64,11 +64,13 @@ def press(app, key):
     app.scene.draw(app.screen)
 
 
+ANSWER = {"Proposal": pygame.K_n, "Tale": pygame.K_1}  # envoys are sent away, tales get the first answer
+
+
 def close_reports(app):
-    """Read every pop-up (envoys are politely sent away), then the season's news."""
+    """Read every pop-up, then the season's news."""
     while app.scene.reports:
-        is_offer = type(app.scene.reports[0]).__name__ == "Proposal"
-        press(app, pygame.K_n if is_offer else pygame.K_RETURN)
+        press(app, ANSWER.get(type(app.scene.reports[0]).__name__, pygame.K_RETURN))
     if app.scene.summary:
         press(app, pygame.K_RETURN)
 
@@ -339,8 +341,7 @@ def test_the_season_news_leads_to_the_place(app):
     app.start_campaign("voievodat", seed=4)
     app.scene.end_turn()
     while app.scene.reports:
-        is_offer = type(app.scene.reports[0]).__name__ == "Proposal"
-        press(app, pygame.K_n if is_offer else pygame.K_RETURN)
+        press(app, ANSWER.get(type(app.scene.reports[0]).__name__, pygame.K_RETURN))
     summary = app.scene.summary
     assert summary is not None and summary.rows
     app.scene.draw(app.screen)
@@ -376,3 +377,18 @@ def test_the_advisor_waits_for_each_lesson(app):
     click(app, tutorial.skip_rect.center)
     assert c.tutorial is None and app.settings["tutorial"] is False
     assert len(STEPS) > 5
+
+
+def test_a_tale_is_answered_in_its_window(app):
+    from legendele.game import Tale
+    from legendele.ui.reports import tale_choice_rects
+    app.start_campaign("voievodat", seed=9)
+    c = app.scene
+    tale = Tale("harvest", "voievodat", "craiova")
+    c.game.pending_events.append(tale)
+    c._report([tale])
+    gold = c.game.treasury["voievodat"].gold
+    press(app, pygame.K_RETURN)  # a tale waits for an answer
+    assert c.reports and c.reports[0] is tale
+    click(app, tale_choice_rects(2)[1].center)  # sell the surplus
+    assert not c.reports and c.game.treasury["voievodat"].gold == gold + 90

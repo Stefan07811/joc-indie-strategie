@@ -1,0 +1,164 @@
+{
+  "sanziene": {
+    "title": "The Night of the Sânziene",
+    "text": "On midsummer night the young women wear crowns of yellow bedstraw and the fairies dance in the clearings. The villages ask leave to light the great fires.",
+    "seasons": ["Summer"],
+    "choices": [
+      {"label": "Light the fires, and pay for the feast", "effects": {"gold": -50, "order_all": 1, "turns": 3},
+       "result": "The fires burn till dawn; the people bless your name."},
+      {"label": "Forbid the old rites", "effects": {"order_all": -1, "turns": 2},
+       "result": "The fires stay dark, and so do the people's faces."}
+    ],
+    "ai": 0
+  },
+  "fae_midsummer": {
+    "title": "The Sânziene Join the Dance",
+    "text": "The kind fairies of midsummer have come down from the meadows of {province} and offer to walk with your court.",
+    "seasons": ["Summer"], "factions": ["iele"], "target": "province",
+    "choices": [
+      {"label": "Welcome them", "effects": {"regiment": "sanziene"}, "result": "Midsummer Maidens join the court in {province}."},
+      {"label": "Send them home with gifts", "effects": {"gold": -20, "order": 2, "turns": 4}, "result": "The people of {province} are glad of it."}
+    ],
+    "ai": 0
+  },
+  "strigoi_village": {
+    "title": "A Strigoi in the Village",
+    "text": "In {province} the dead walk at night: a fresh grave is found open and the cattle die. The villagers beg for help.",
+    "target": "province", "not_factions": ["strigoi"],
+    "choices": [
+      {"label": "Send monster hunters (60 gold)", "effects": {"gold": -60, "order": 2, "turns": 4}, "result": "Garlic, a stake and holy water: {province} sleeps in peace."},
+      {"label": "Let the priest deal with it", "effects": {"gamble": {"chance": 0.5, "win": {"order": 1, "turns": 3}, "lose": {"order": -3, "turns": 4}}}, "result": "The priest goes up to the graveyard with his censer."},
+      {"label": "It is only peasant talk", "effects": {"order": -2, "turns": 4}, "result": "Fear spreads through {province}."}
+    ],
+    "ai": 0
+  },
+  "andrew_night": {
+    "title": "The Night of Saint Andrew",
+    "text": "On the eve of Saint Andrew the graves open and the strigoi gather at the crossroads. The living rub garlic on doors and windows.",
+    "seasons": ["Winter"], "not_factions": ["strigoi"],
+    "choices": [
+      {"label": "Buy garlic for every door (30 gold)", "effects": {"gold": -30}, "result": "The night passes, and nobody is taken."},
+      {"label": "Trust in the bells", "effects": {"order_all": -1, "turns": 2}, "result": "Something walked the roads that night."}
+    ],
+    "ai": 0
+  },
+  "andrew_night_dead": {
+    "title": "The Night of Saint Andrew",
+    "text": "On the eve of Saint Andrew the graves of {province} open. The dead ask whom they should serve.",
+    "seasons": ["Winter"], "factions": ["strigoi"], "target": "province",
+    "choices": [
+      {"label": "Raise them for the war", "effects": {"regiment": "morti"}, "result": "The Risen Dead of {province} march under your banner."},
+      {"label": "Let them feast on the living", "effects": {"food": 10, "order": -2, "turns": 3}, "result": "The living of {province} grow fewer, and quieter."}
+    ],
+    "ai": 0
+  },
+  "plague": {
+    "title": "Plague",
+    "text": "A sickness comes up the river roads to {province}. Men fall in the camps and the markets.",
+    "seasons": ["Summer", "Autumn"], "target": "province",
+    "choices": [
+      {"label": "Close the roads (40 gold)", "effects": {"gold": -40, "order": -1, "turns": 2}, "result": "The roads to {province} are shut; the sickness burns itself out."},
+      {"label": "Carry on as usual", "effects": {"hurt_target": 0.3, "order": -2, "turns": 3}, "result": "The plague takes its toll in {province}."}
+    ],
+    "ai": 0
+  },
+  "comet": {
+    "title": "A Comet in the Sky",
+    "text": "For three nights a star with a fiery tail hangs over the mountains. The old women say it means war and death.",
+    "choices": [
+      {"label": "Have the priests explain it (40 gold)", "effects": {"gold": -40, "order_all": 1, "turns": 2}, "result": "God's sign, say the priests: victory for the righteous."},
+      {"label": "Tell the army it is a sign of victory", "effects": {"trait": "inspiring", "order_all": -1, "turns": 2}, "result": "The soldiers cheer; the peasants still cross themselves."}
+    ],
+    "ai": 0
+  },
+  "wedding": {
+    "title": "A Boyar's Wedding",
+    "text": "A great boyar of {province} marries his daughter and invites the court. Tradition wants a generous gift.",
+    "target": "province", "factions": ["voievodat", "zmei"],
+    "choices": [
+      {"label": "Give a rich gift (60 gold)", "effects": {"gold": -60, "order": 3, "turns": 6}, "result": "The boyars of {province} drink to your health."},
+      {"label": "Send your blessing only", "effects": {"order": -1, "turns": 3}, "result": "The boyar takes note."}
+    ],
+    "ai": 0
+  },
+  "outlaw_ballad": {
+    "title": "A Ballad of the Outlaws",
+    "text": "The lute players of {province} sing of an outlaw who robs the rich and feeds the poor. He sends word that he would serve you, if pardoned.",
+    "target": "province",
+    "choices": [
+      {"label": "Pardon him and his band", "effects": {"regiment": "haiduc_brigands", "order": -1, "turns": 3}, "result": "The outlaws of {province} come down from the forest."},
+      {"label": "Hunt them down (30 gold)", "effects": {"gold": -30, "order": 1, "turns": 3}, "result": "The forests of {province} are cleared of outlaws."}
+    ],
+    "ai": 1
+  },
+  "harvest": {
+    "title": "A Rich Harvest",
+    "text": "The granaries of {province} overflow. The merchants offer to buy what the people cannot eat.",
+    "seasons": ["Autumn"], "target": "province",
+    "choices": [
+      {"label": "Fill the army's granaries", "effects": {"food": 15}, "result": "Bread for the winter."},
+      {"label": "Sell the surplus", "effects": {"gold": 90}, "result": "The merchants pay in silver."}
+    ],
+    "ai": 0
+  },
+  "baba_dochia": {
+    "title": "The Days of Baba Dochia",
+    "text": "Old Dochia took off her sheepskins too early, and the March frost came back. The first sowing is ruined.",
+    "seasons": ["Spring"],
+    "choices": [
+      {"label": "Buy seed grain (50 gold)", "effects": {"gold": -50}, "result": "The fields are sown again."},
+      {"label": "Let the peasants make do", "effects": {"food": -10, "order_all": -1, "turns": 2}, "result": "A hungry spring."}
+    ],
+    "ai": 0
+  },
+  "decebal_treasure": {
+    "title": "The Treasure of Decebal",
+    "text": "Shepherds in {province} have found an old Dacian hoard under a river bed: gold coins with the faces of forgotten kings.",
+    "target": "province",
+    "choices": [
+      {"label": "Into the treasury", "effects": {"gold": 150, "order": -1, "turns": 3}, "result": "The coins clink in your chests."},
+      {"label": "Share it with the finders", "effects": {"gold": 70, "order": 2, "turns": 4}, "result": "The shepherds of {province} will sing of your fairness."}
+    ],
+    "ai": 0
+  },
+  "wolf_winter": {
+    "title": "A Wolf Winter",
+    "text": "The snow lies deep and the wolves come down to the villages. Armies in the field are hard pressed.",
+    "seasons": ["Winter"], "not_factions": ["strigoi"],
+    "choices": [
+      {"label": "Send furs and food to the camps (40 gold)", "effects": {"gold": -40, "food": -5}, "result": "The soldiers hold out."},
+      {"label": "The men will manage", "effects": {"hurt_armies": 0.1}, "result": "Frost and wolves thin the ranks."}
+    ],
+    "ai": 0
+  },
+  "hermit": {
+    "title": "The Hermit of the Mountain",
+    "text": "An old hermit from the forests above {province} asks to speak with one of your generals. He knows the ways of war, he says.",
+    "target": "province",
+    "choices": [
+      {"label": "Let him teach a general (40 gold)", "effects": {"gold": -40, "trait": "tactician"}, "result": "The general comes back from the mountain a wiser man."},
+      {"label": "Send him away", "effects": {}, "result": "The hermit shrugs and goes back to his cave."}
+    ],
+    "ai": 0
+  },
+  "hoard_dragon": {
+    "title": "A Rival Wyrm",
+    "text": "A wild balaur has made its lair near {province} and sits on a heap of stolen gold.",
+    "factions": ["zmei"], "target": "province",
+    "choices": [
+      {"label": "Fight it for the hoard", "effects": {"gamble": {"chance": 0.6, "win": {"gold": 160}, "lose": {"hurt_armies": 0.15}}}, "result": "Steel against fire."},
+      {"label": "Make it one of your own", "effects": {"gold": -80, "regiment": "balauri"}, "result": "The wyrm bows its three heads to you."}
+    ],
+    "ai": 0
+  },
+  "saxon_merchants": {
+    "title": "Saxon Merchants",
+    "text": "Traders from the walled towns of Transylvania offer good steel and grain for silver.",
+    "choices": [
+      {"label": "Buy grain (60 gold)", "effects": {"gold": -60, "food": 20}, "result": "Wagons of grain roll in."},
+      {"label": "Buy steel for the troops (90 gold)", "effects": {"gold": -90, "heal_armies": 0.3}, "result": "New blades and mail for the army."},
+      {"label": "Nothing today", "effects": {}, "result": "The merchants move on."}
+    ],
+    "ai": 2
+  }
+}

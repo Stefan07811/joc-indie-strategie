@@ -3,7 +3,7 @@
 import pygame
 
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, GeneralFell, Proposal, Rebellion,
-                    Victory)
+                    Tale, Victory, events)
 from ..game.state import SEASONS
 from . import theme
 
@@ -27,6 +27,8 @@ def concerns_player(game, event):
         return event.other == game.player
     if isinstance(event, GeneralFell):
         return event.faction == game.player
+    if isinstance(event, Tale):
+        return event.faction == game.player and event in game.pending_events
     return isinstance(event, (Eliminated, Victory))
 
 
@@ -53,6 +55,9 @@ def draw_report(surface, game, assets, event, mouse=(0, 0)):
     elif isinstance(event, Proposal):
         _proposal(surface, game, event, mouse)
         return
+    elif isinstance(event, Tale):
+        _tale(surface, game, event, mouse)
+        return
     else:
         _notice(surface, game, event)
     theme.text(surface, "Click or press Enter to continue", (BOX.centerx, BOX.bottom - 22), 17, theme.TEXT_DIM,
@@ -76,6 +81,33 @@ def _proposal(surface, game, offer, mouse):
         y += 28
     theme.button(surface, ACCEPT_RECT, "Accept  (Y)", ACCEPT_RECT.collidepoint(mouse))
     theme.button(surface, DECLINE_RECT, "Decline  (N)", DECLINE_RECT.collidepoint(mouse))
+
+
+TALE_BOX = pygame.Rect(0, 0, 640, 430)
+TALE_BOX.center = theme.MAP_RECT.center
+
+
+def tale_choice_rects(n):
+    """Where the answers to a tale are, top to bottom."""
+    return [pygame.Rect(TALE_BOX.x + 40, TALE_BOX.bottom - 30 - (n - i) * 62, TALE_BOX.width - 80, 54)
+            for i in range(n)]
+
+
+def _tale(surface, game, tale, mouse):
+    e = game.data.events[tale.event]
+    theme.frame(surface, TALE_BOX, kind="parchment")
+    theme.ribbon(surface, (TALE_BOX.centerx, TALE_BOX.y + 4), e["title"], 24)
+    y = TALE_BOX.y + 54
+    for line in theme.wrap(events.text(game, tale, e["text"]), 20, TALE_BOX.width - 90):
+        theme.text(surface, line, (TALE_BOX.x + 45, y), 20, theme.INK, lift=False)
+        y += 23
+    for i, (rect, choice) in enumerate(zip(tale_choice_rects(len(e["choices"])), e["choices"])):
+        hovered = rect.collidepoint(mouse)
+        theme.row(surface, rect, hovered)
+        theme.text(surface, f"{i + 1}.  {choice['label']}", (rect.x + 14, rect.y + 7), 20,
+                   theme.HIGHLIGHT if hovered else theme.PARCHMENT)
+        theme.text(surface, events.summary(game, choice.get("effects", {})), (rect.x + 34, rect.y + 31), 16,
+                   theme.GOLD)
 
 
 def _battle(surface, game, assets, result):

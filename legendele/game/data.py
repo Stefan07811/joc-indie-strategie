@@ -19,6 +19,7 @@ class GameData:
     buildings: dict
     abilities: dict
     traits: dict = field(default_factory=dict)  # the generals' traits
+    events: dict = field(default_factory=dict)  # tales from folklore (events.py)
 
     @property
     def terrain(self):
@@ -36,7 +37,8 @@ class GameData:
             return json.loads((data_dir / name).read_text(encoding="utf-8"))
 
         data = cls(factions=read("factions.json"), units=read("units.json"), map=read("map.json"),
-                   buildings=read("buildings.json"), abilities=read("abilities.json"), traits=read("traits.json"))
+                   buildings=read("buildings.json"), abilities=read("abilities.json"), traits=read("traits.json"),
+                   events=read("events.json"))
         data.validate()
         return data
 
@@ -79,6 +81,19 @@ class GameData:
             for uid in p.get("garrison", ()):
                 if uid not in self.units:
                     raise DataError(f"{p['id']}: unknown garrison unit {uid!r}")
+        for eid, e in self.events.items():
+            if not e.get("choices"):
+                raise DataError(f"event {eid}: no choices")
+            for fid in (*e.get("factions", ()), *e.get("not_factions", ())):
+                if fid not in self.factions:
+                    raise DataError(f"event {eid}: unknown faction {fid!r}")
+            effects = [c.get("effects", {}) for c in e["choices"]]
+            effects += [g[k] for x in effects if (g := x.get("gamble")) for k in ("win", "lose")]
+            for x in effects:
+                if x.get("regiment") and x["regiment"] not in self.units:
+                    raise DataError(f"event {eid}: unknown unit {x['regiment']!r}")
+                if x.get("trait") and x["trait"] not in self.traits:
+                    raise DataError(f"event {eid}: unknown trait {x['trait']!r}")
         for a in self.map["start_armies"]:
             if a["faction"] not in self.factions or a["province"] not in known:
                 raise DataError(f"bad starting army {a}")

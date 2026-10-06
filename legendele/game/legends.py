@@ -204,10 +204,12 @@ def public_order(game, p):
     for bid in p.buildings:
         if game.data.buildings[bid].get("order"):
             parts.append((game.data.buildings[bid]["name"], game.data.buildings[bid]["order"]))
+    from .events import order as events_order
     from .generals import order as generals_order
     camped = generals_order(game, p.id, fid)
     if camped:
         parts.append(("Generals", camped))
+    parts += events_order(game, p)
     if p.captured_round is not None:
         unrest = rules["conquest_unrest"] - (game.round - p.captured_round)
         if unrest > 0:

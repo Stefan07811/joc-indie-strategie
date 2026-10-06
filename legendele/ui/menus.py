@@ -174,11 +174,11 @@ class SettingsScreen:
         cx = theme.WINDOW_SIZE[0] // 2
         self.controls = {}
         for i, key in enumerate(("sound", "music")):
-            y = 240 + i * 80
+            y = 206 + i * 56
             self.controls[f"{key}-"] = pygame.Rect(cx + 40, y, 44, 40)
             self.controls[f"{key}+"] = pygame.Rect(cx + 196, y, 44, 40)
-        self.controls["fullscreen"] = pygame.Rect(cx + 40, 400, 200, 40)
-        self.controls["battles"] = pygame.Rect(cx + 40, 470, 200, 40)
+        for i, key in enumerate(("fullscreen", "battles", "turn_summary", "tutorial")):
+            self.controls[key] = pygame.Rect(cx + 40, 318 + i * 56, 200, 40)
         self.back_rect = pygame.Rect(cx - 100, 580, 200, 44)
 
     def handle(self, event):
@@ -194,6 +194,8 @@ class SettingsScreen:
             if name == "fullscreen":
                 settings["fullscreen"] = not settings["fullscreen"]
                 self.app.apply_display()
+            elif name in ("turn_summary", "tutorial"):
+                settings[name] = not settings.get(name, True)
             elif name == "battles":
                 modes = profile.BATTLE_MODES
                 settings["battles"] = modes[(modes.index(settings["battles"]) + 1) % len(modes)]
@@ -211,18 +213,28 @@ class SettingsScreen:
         mouse = pygame.mouse.get_pos()
         settings = self.app.settings
         for i, (key, label) in enumerate((("sound", "Sound effects"), ("music", "Music"))):
-            y = 240 + i * 80
+            y = 206 + i * 56
             theme.text(surface, label, (cx - 40, y + 20), 28, theme.PARCHMENT, anchor="midright")
             theme.button(surface, self.controls[f"{key}-"], "-", self.controls[f"{key}-"].collidepoint(mouse))
             theme.text(surface, f"{round(settings[key] * 100)}%", (cx + 140, y + 20), 28, theme.GOLD, anchor="center")
             theme.button(surface, self.controls[f"{key}+"], "+", self.controls[f"{key}+"].collidepoint(mouse))
-        theme.text(surface, "Fullscreen", (cx - 40, 420), 28, theme.PARCHMENT, anchor="midright")
+        theme.text(surface, "Fullscreen", (cx - 40, 338), 28, theme.PARCHMENT, anchor="midright")
         rect = self.controls["fullscreen"]
         theme.button(surface, rect, "On" if settings["fullscreen"] else "Off", rect.collidepoint(mouse))
-        theme.text(surface, "Your battles", (cx - 40, 490), 28, theme.PARCHMENT, anchor="midright")
+        theme.text(surface, "Your battles", (cx - 40, 394), 28, theme.PARCHMENT, anchor="midright")
         rect = self.controls["battles"]
         label = {"ask": "Ask each time", "fight": "Always lead", "auto": "Always auto"}[settings["battles"]]
         theme.button(surface, rect, label, rect.collidepoint(mouse))
+        theme.text(surface, "News each season", (cx - 40, 450), 28, theme.PARCHMENT, anchor="midright")
+        rect = self.controls["turn_summary"]
+        theme.button(surface, rect, "On" if settings.get("turn_summary", True) else "Off", rect.collidepoint(mouse))
+        theme.tip(rect, ["News each season", "After every turn, a list of what happened across the land while the "
+                                             "other legends moved. Click a line to look there."])
+        theme.text(surface, "Advisor in new campaigns", (cx - 40, 506), 28, theme.PARCHMENT, anchor="midright")
+        rect = self.controls["tutorial"]
+        theme.button(surface, rect, "On" if settings.get("tutorial", True) else "Off", rect.collidepoint(mouse))
+        theme.tip(rect, ["Advisor", "An old advisor walks you through your first turn, one thing at a time. "
+                                    "He leaves once you have heard him out (or skipped him)."])
         if not self.app.audio.enabled:
             theme.text(surface, "No sound device was found: the game is silent.", (cx, 540), 18, theme.TEXT_DIM,
                        anchor="center")

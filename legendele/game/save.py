@@ -65,6 +65,9 @@ def to_dict(game):
         "grudges": sorted(list(g) for g in game.grudges),
         "last_proposal": [[a, b, kind, r] for (a, b, kind), r in game.last_proposal.items()],
         "proposals": [asdict(p) for p in game.proposals],
+        "history": game.history,
+        "stats": game.stats,
+        "difficulty": game.difficulty,
     }
 
 
@@ -73,7 +76,7 @@ def from_dict(data, d, ai_factory=None):
         raise SaveError(f"This save was made by another version of the game ({d.get('version')}).")
     if d.get("map") != data.map["name"]:
         raise SaveError(f"This save is for the map {d.get('map')!r}.")
-    game = Game.new(data, d["player"], ai_factory=ai_factory)
+    game = Game.new(data, d["player"], ai_factory=ai_factory, difficulty=d.get("difficulty", "normal"))
     game.round = d["round"]
     for pid, saved in d["provinces"].items():
         p = game.provinces[pid]
@@ -108,6 +111,8 @@ def from_dict(data, d, ai_factory=None):
     game.grudges = {tuple(g) for g in d["grudges"]}
     game.last_proposal = {(a, b, kind): r for a, b, kind, r in d["last_proposal"]}
     game.proposals = [Proposal(**p) for p in d["proposals"]]
+    game.history = list(d.get("history", game.history))  # saves from before the chronicle have none
+    game.stats = {fid: dict(row) for fid, row in d.get("stats", {}).items()}
     for fid in game.eliminated:
         game.ai.pop(fid, None)
     return game

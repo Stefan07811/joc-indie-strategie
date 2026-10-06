@@ -260,6 +260,19 @@ tests/                 # teste pentru reguli și AI
 
 ---
 
+### Etapele următoare (lista de idei, toate acceptate)
+
+| Etapă | Conține |
+|---|---|
+| **M8 — Claritate** ✅ | tooltip-uri, veștile anotimpului, cronica războiului, dificultate, sfetnic |
+| **M9 — Oameni** | generali cu trăsături și experiență, regimente veterane |
+| **M10 — Harta vie** | râuri și drumuri, evenimente din folclor, puterile străine |
+| **M11 — Bătălii tactice** | desfășurare, abilități active, vreme și noapte, zoom, întăriri, asedii, bătălie personalizată |
+| **M12 — Stat** | tehnologii, comerț, vasali, căsătorii |
+| **M13 — Legende** | eroi și misiuni, agenți |
+| **M14 — Rejucabilitate** | Outlaws jucabili, Solomonarii, opțiuni de start |
+| **M15 — Finisaj** | joc în română, muzică și sunete, realizări, executabil |
+
 ## 11. Decizii luate
 
 | Întrebare | Decizie |

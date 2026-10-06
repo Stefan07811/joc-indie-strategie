@@ -32,7 +32,8 @@ def banner(app, army_id):
 @pytest.fixture(scope="module")
 def app(data):
     app = App(data)
-    app.settings["battles"] = "auto"  # these tests are about the campaign screens
+    app.settings["battles"] = "auto"
+    app.settings["tutorial"] = False  # these tests are about the campaign screens
     return app
 
 
@@ -64,10 +65,12 @@ def press(app, key):
 
 
 def close_reports(app):
-    """Read every pop-up; envoys are politely sent away."""
+    """Read every pop-up (envoys are politely sent away), then the season's news."""
     while app.scene.reports:
         is_offer = type(app.scene.reports[0]).__name__ == "Proposal"
         press(app, pygame.K_n if is_offer else pygame.K_RETURN)
+    if app.scene.summary:
+        press(app, pygame.K_RETURN)
 
 
 def test_end_turn_button_and_key(app):
@@ -126,6 +129,13 @@ def test_game_over_offers_the_main_menu(app):
     app.scene._report(game.events)
     close_reports(app)
     assert game.over
+    ending = app.scene.ending
+    assert ending is not None  # the chronicle of the war opens by itself
+    press(app, pygame.K_ESCAPE)  # ...and closes to look at the map
+    assert app.scene.ending is None
+    click(app, app.scene.chronicle_rect.center)  # it can be opened again
+    assert app.scene.ending is not None
+    press(app, pygame.K_ESCAPE)
     click(app, app.scene.menu_rect.center)
     assert not isinstance(app.scene, Campaign)
 
@@ -310,3 +320,59 @@ def test_the_map_scrolls_and_the_minimap_jumps(app):
 
     sea = next(f for f in app.data.map["foreign"] if f["terrain"] == "sea")
     assert view.province_at(on_map(app, sea["x"], sea["y"])) is None
+
+
+def test_tooltips_explain_the_panel(app):
+    from legendele.ui import theme
+    app.start_campaign("voievodat", seed=3)
+    theme.clear_tips()
+    app.scene.select_next_army()
+    app.scene.draw(app.screen)
+    panel = theme.PANEL_RECT
+    titles = {lines[0] for rect, lines in theme._tips if panel.contains(rect)}
+    assert {"Gold", "Food", "Conquest victory", "Legendary victory", "Levy Spearmen"} <= titles
+    rect, lines = next((r, l) for r, l in theme._tips if l[0] == "Gold")
+    assert theme.draw_tip(app.screen, rect.center, now=float("inf")) is not None
+
+
+def test_the_season_news_leads_to_the_place(app):
+    app.start_campaign("voievodat", seed=4)
+    app.scene.end_turn()
+    while app.scene.reports:
+        is_offer = type(app.scene.reports[0]).__name__ == "Proposal"
+        press(app, pygame.K_n if is_offer else pygame.K_RETURN)
+    summary = app.scene.summary
+    assert summary is not None and summary.rows
+    app.scene.draw(app.screen)
+    rect, place = next((r, p) for r, p in summary.row_rects if p)
+    click(app, rect.center)
+    assert app.scene.summary is None and app.scene.selected_province == place
+    p = app.scene.game.provinces[place]
+    assert app.scene.map.view().collidepoint(p.x, p.y)
+
+    app.settings["turn_summary"] = False
+    app.scene.end_turn()
+    assert app.scene.summary is None
+    app.settings["turn_summary"] = True
+
+
+def test_the_advisor_waits_for_each_lesson(app):
+    from legendele.ui.tutorial import STEPS
+    app.settings["tutorial"] = True
+    app.start_campaign("voievodat", seed=8)
+    c = app.scene
+    tutorial = c.tutorial
+    assert tutorial is not None and tutorial.index == 0
+    c.draw(app.screen)
+    click(app, tutorial.next_rect.center)
+    assert tutorial.index == 1
+    press(app, pygame.K_TAB)  # select an army: the lesson is learnt
+    assert tutorial.index == 2
+    army = c.game.armies[c.selected_army]
+    target = next(iter(c.game.reachable(army)))
+    c.game.move_army(army.id, target)
+    c.draw(app.screen)
+    assert tutorial.index == 3
+    click(app, tutorial.skip_rect.center)
+    assert c.tutorial is None and app.settings["tutorial"] is False
+    assert len(STEPS) > 5

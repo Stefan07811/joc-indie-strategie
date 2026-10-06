@@ -100,3 +100,17 @@ def test_same_seed_same_war(data):
     assert [(x.id, x.province, [r.hp for r in x.regiments]) for x in a.armies.values()] == \
         [(x.id, x.province, [r.hp for r in x.regiments]) for x in b.armies.values()]
     assert a.log == b.log
+
+
+def test_the_war_is_remembered_season_by_season(data):
+    game = Game.new(data, "voievodat", seed=5)
+    for _ in range(6):
+        game.end_turn()
+    assert [s["round"] for s in game.history] == list(range(7))
+    first = game.history[0]["factions"]
+    assert first["voievodat"]["provinces"] == 3 and first["zmei"]["regiments"] > 0
+    assert "haiduci" not in first
+    fought = sum(row["won"] + row["lost"] for row in game.stats.values())
+    battles = sum(1 for e in game.events if type(e).__name__ == "Battle" and e.result.attacker.faction != "haiduci"
+                  and e.result.defender.faction != "haiduci")
+    assert fought >= battles

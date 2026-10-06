@@ -3,7 +3,7 @@
 import pygame
 
 from ..game import MoveError, diplomacy
-from . import theme
+from . import theme, tips
 
 BOX = pygame.Rect(0, 0, 880, 660)
 BOX.center = theme.MAP_RECT.center
@@ -111,14 +111,16 @@ class DiplomacyDialog:
         truce = game.truce_until.get(diplomacy.key(me, fid), 0) - game.round
         if rel != "war" and truce > 0:
             label += f"  ·  truce for {truce} more season{'s' if truce > 1 else ''}"
-        theme.text(surface, label, (x + width, y + 4), 22, status[1], anchor="topright")
+        r = theme.text(surface, label, (x + width, y + 4), 22, status[1], anchor="topright")
+        theme.tip(r, tips.RELATIONS[rel])
 
         ai = game.data.factions[fid].get("ai", {})
         theme.text(surface, f"{ai.get('personality', '')}: {ai.get('summary', '')}", (x + 44, y + 28), 17,
                    theme.TEXT_DIM)
         score, parts = diplomacy.attitude(game, fid, me)
         word, wcolor = mood_word(score)
-        theme.text(surface, f"Attitude towards you: {word} ({score:+})", (x + 44, y + 50), 19, wcolor)
+        r = theme.text(surface, f"Attitude towards you: {word} ({score:+})", (x + 44, y + 50), 19, wcolor)
+        theme.tip(r, tips.attitude(game, fid))
         reasons = ", ".join(f"{name} {points:+}" for name, points in parts) or "nothing in particular"
         for i, line in enumerate(theme.wrap(reasons, 16, width - 44)[:2]):
             theme.text(surface, line, (x + 44, y + 72 + 17 * i), 16, theme.TEXT_DIM)

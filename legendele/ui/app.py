@@ -8,8 +8,9 @@ import pygame
 from .. import profile
 from ..game import (Abduction, Battle, Captured, DiplomacyChange, Eliminated, Game, GameData, MoveError, Proposal,
                     Rebellion, SiegeStarted, Victory, diplomacy)
+from ..game.economy import DIFFICULTY
 from ..game.save import load_game
-from . import map_view, theme
+from . import map_view, theme, tips
 from .assets import Assets
 from .audio import Audio
 from .battle_screen import fight
@@ -18,7 +19,8 @@ from .map_view import MapView
 from .menus import MainMenu, PauseMenu
 from .panel import Panel
 from .province_dialog import ProvinceDialog
-from .reports import ACCEPT_RECT, DECLINE_RECT, concerns_player, draw_game_over, draw_report
+from .reports import ACCEPT_RECT, DECLINE_RECT, EndScreen, TurnSummary, concerns_player, draw_game_over, draw_report
+from .tutorial import Tutorial
 
 TITLE = "Legends of the Carpathians"
 
@@ -35,7 +37,8 @@ class FactionSelect:
         left = (theme.WINDOW_SIZE[0] - (4 * width + 3 * gap)) // 2
         for i, fid in enumerate(self._playable()):
             self.cards.append((pygame.Rect(left + i * (width + gap), 200, width, 410), fid))
-        self.back_rect = pygame.Rect(theme.WINDOW_SIZE[0] // 2 - 100, 640, 200, 44)
+        self.back_rect = pygame.Rect(theme.WINDOW_SIZE[0] // 2 - 230, 640, 200, 44)
+        self.difficulty_rect = pygame.Rect(theme.WINDOW_SIZE[0] // 2 + 10, 640, 260, 44)
 
     def _playable(self):
         return [f for f, d in self.app.data.factions.items() if d["playable"]]
@@ -47,6 +50,12 @@ class FactionSelect:
             if self.back_rect.collidepoint(event.pos):
                 self.app.audio.play("click")
                 self.app.main_menu()
+            if self.difficulty_rect.collidepoint(event.pos):
+                self.app.audio.play("click")
+                levels = list(DIFFICULTY)
+                settings = self.app.settings
+                settings["difficulty"] = levels[(levels.index(settings.get("difficulty", "normal")) + 1) % len(levels)]
+                profile.store_settings(settings)
             for rect, fid in self.cards:
                 if rect.collidepoint(event.pos):
                     self.app.audio.play("recruit")
@@ -87,6 +96,13 @@ class FactionSelect:
             theme.text(surface, f"Capital: {next(p['name'] for p in data.provinces if p['id'] == f['capital'])}",
                        (rect.x + 16, rect.bottom - 30), 18, theme.TEXT_DIM)
         theme.button(surface, self.back_rect, "Back", self.back_rect.collidepoint(mouse))
+        level = DIFFICULTY[self.app.settings.get("difficulty", "normal")]
+        theme.button(surface, self.difficulty_rect, f"Difficulty: {level['name']}",
+                     self.difficulty_rect.collidepoint(mouse))
+        theme.tip(self.difficulty_rect, ["Difficulty", "Click to change.",
+                                         (f"The other legends earn {round(level['ai_income'] * 100)}% of their "
+                                          f"taxes and start with {level['ai_gold']} gold; you start with "
+                                          f"{level['player_gold']}.", theme.TEXT_DIM)])
 
 
 # Which sound a batch of events makes (the first match wins, so a battle drowns out a siege).
@@ -112,7 +128,8 @@ def event_sound(game, events):
 class Campaign:
     def __init__(self, app, faction=None, seed=None, game=None):
         self.app = app
-        self.game = game or Game.new(app.data, faction, seed=seed)
+        self.game = game or Game.new(app.data, faction, seed=seed,
+                                     difficulty=app.settings.get("difficulty", "normal"))
         self.game.fight_hook = lambda g, attackers, defenders, pid, kind: fight(app, g, attackers, defenders, pid, kind)
         self.music = self.game.player
         self.map = MapView(self.game, app.assets)
@@ -126,6 +143,11 @@ class Campaign:
         self.pause = None  # the pause menu, while open
         self.menu_rect = pygame.Rect(theme.MAP_RECT.right - 180, 10, 164, 36)
         self.dragging = None  # "map" (middle button) or "minimap" (left button) while the view is dragged
+        self.summary = None  # the season's news, shown once the pop-ups are read
+        self.ending = None  # the chronicle of the war, once it is decided
+        self.ending_seen = False
+        self.tutorial = Tutorial(self) if game is None and app.settings.get("tutorial", True) else None
+        self.chronicle_rect = pygame.Rect(theme.MAP_RECT.right - 360, 10, 164, 36)
 
     # --- input -----------------------------------------------------------------------------
 
@@ -143,6 +165,25 @@ class Campaign:
         if self.pause:
             if self.pause.handle(event):
                 self.pause = None
+            return
+        if self.ending:
+            answer = self.ending.handle(event)
+            if answer == "menu":
+                self.app.main_menu()
+            elif answer == "map":
+                self.ending = None
+            return
+        if self.summary:
+            answer = self.summary.handle(event)
+            if answer:
+                self.summary = None
+                if answer != "close":
+                    self.selected_army = None
+                    self.selected_province = answer
+                    self.center_on(answer)
+            return
+        if self.tutorial and not self.summary and not self.ending and self.tutorial.handle(event):
+            self._tutorial_progress()
             return
         if self.dialog:
             if self.dialog.handle(event):
@@ -186,6 +227,8 @@ class Campaign:
         panel = self.panel
         if self.game.over and self.menu_rect.collidepoint(pos):
             self.app.main_menu()
+        elif self.game.over and self.chronicle_rect.collidepoint(pos):
+            self.ending = EndScreen(self.game)
         elif panel.menu_rect.collidepoint(pos):
             self.open_pause()
         elif panel.end_turn_rect.collidepoint(pos):
@@ -305,9 +348,16 @@ class Campaign:
         if capital in self.game.provinces:
             self.center_on(capital)
 
+    def _tutorial_progress(self):
+        self.tutorial.update()
+        if self.tutorial.finished:
+            self.tutorial = None
+            self.app.settings["tutorial"] = False  # once is enough; the settings can bring it back
+            profile.store_settings(self.app.settings)
+
     def update(self, dt):
         """Scroll the map with the arrow keys or with the mouse at its edges."""
-        if self.reports or self.pause or self.dialog or self.dragging:
+        if self.reports or self.pause or self.dialog or self.dragging or self.summary:
             return
         keys = pygame.key.get_pressed()
         dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
@@ -328,11 +378,15 @@ class Campaign:
         if self.game.over:
             return
         start = len(self.game.events)
+        chronicle = len(self.game.log)
         self.game.end_turn()
         self.app.audio.play("turn")
         self._report(self.game.events[start:])
         if self.selected_army not in self.game.armies:
             self.deselect()
+        news = [line for line in self.game.log[chronicle:] if not line.endswith(" begins.")]
+        if news and not self.game.over and self.app.settings.get("turn_summary", True):
+            self.summary = TurnSummary(self.game, news)
         if not self.game.over:
             try:
                 profile.save(self.game, profile.AUTOSAVE)
@@ -356,6 +410,12 @@ class Campaign:
             path = [army.province, *reach[target].path]
         self.map.draw(surface, hovered=self.hovered, selected_province=self.selected_province,
                       selected_army=self.selected_army, reach=reach, path=path)
+        for rect, army_id in self.map.army_rects:
+            screen_rect = rect.move(self.map.to_screen((0, 0)))
+            if self.map.rect.contains(screen_rect) and army_id in self.game.armies:
+                theme.tip(screen_rect, tips.army(self.game, self.game.armies[army_id]))
+        theme.tip(self.map.minimap_rect, ["The whole map", "Click or drag here to look elsewhere. "
+                                          "Arrows or the mouse at the edge scroll the map; Home returns to your capital."])
         info = self.hovered if self.selected_army is None and self.hovered else self.selected_province
         mouse = pygame.mouse.get_pos()
         self.panel.draw(surface, province=info, army=self.game.armies.get(self.selected_army), target=target,
@@ -366,8 +426,20 @@ class Campaign:
             self.pause.draw(surface, mouse)
         elif self.reports:
             draw_report(surface, self.game, self.app.assets, self.reports[0], mouse)
+        elif self.summary:
+            self.summary.draw(surface, mouse)
+        elif self.tutorial and not self.game.over:
+            self._tutorial_progress()
+            if self.tutorial:
+                self.tutorial.draw(surface, mouse)
         elif self.game.over:
+            if not self.ending_seen:
+                self.ending_seen = True
+                self.ending = EndScreen(self.game)
             draw_game_over(surface, self.game, self.menu_rect, mouse)
+            theme.button(surface, self.chronicle_rect, "Chronicle", self.chronicle_rect.collidepoint(mouse))
+            if self.ending:
+                self.ending.draw(surface, mouse)
 
 
 class App:
@@ -444,11 +516,22 @@ class App:
             dt = self.clock.get_time() / 1000
             if hasattr(self.scene, "update"):
                 self.scene.update(min(dt, 0.1))
-            self.scene.draw(self.screen)
-            pygame.display.flip()
+            self.present(self.scene.draw)
             self.clock.tick(60)
         pygame.quit()
 
-    def screenshot(self, path):
+    def present(self, draw):
+        """Draw a frame (with the tooltip under the mouse, if any) and show it."""
+        theme.clear_tips()
+        draw(self.screen)
+        if pygame.mouse.get_focused():
+            theme.draw_tip(self.screen, pygame.mouse.get_pos())
+        pygame.display.flip()
+
+    def screenshot(self, path, tip_at=None):
+        """Save the current screen; `tip_at` shows the tooltip at that point straight away."""
+        theme.clear_tips()
         self.scene.draw(self.screen)
+        if tip_at:
+            theme.draw_tip(self.screen, tip_at, now=float("inf"))
         pygame.image.save(self.screen, str(path))

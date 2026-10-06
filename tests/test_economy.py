@@ -212,3 +212,13 @@ def test_ai_builds_and_recruits(data):
     ai_land = [p for p in g.provinces.values() if p.owner in ("zmei", "iele", "strigoi")]
     assert any(p.buildings or p.construction for p in ai_land)
     assert g._generals_named or any(len(a.regiments) > 4 for a in g.armies.values())
+
+
+def test_difficulty_sets_the_purses_and_the_rivals_taxes(data):
+    from legendele.game import Game, economy
+    easy = Game.new(data, "voievodat", seed=1, difficulty="easy")
+    hard = Game.new(data, "voievodat", seed=1, difficulty="hard")
+    assert easy.treasury["voievodat"].gold > hard.treasury["voievodat"].gold
+    assert easy.treasury["zmei"].gold < hard.treasury["zmei"].gold
+    assert economy.balance(easy, "zmei").tax < economy.balance(hard, "zmei").tax
+    assert economy.balance(easy, "voievodat").tax == economy.balance(hard, "voievodat").tax

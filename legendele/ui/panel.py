@@ -3,7 +3,7 @@
 import pygame
 
 from ..game import diplomacy, economy, legends
-from . import theme
+from . import theme, tips
 
 PAD = 16
 
@@ -68,21 +68,26 @@ class Panel:
                        anchor="topleft", width=1)
         y += 22
         owned = len(game.provinces_of(game.player))
-        theme.text(surface, f"Provinces {owned} / {rules['conquest_provinces']}", (x, y), 18, theme.TEXT_DIM)
+        r = theme.text(surface, f"Provinces {owned} / {rules['conquest_provinces']}", (x, y), 18, theme.TEXT_DIM)
+        theme.tip(r, tips.conquest(game))
         heart = game.heart_turns.get(game.player, 0)
-        theme.text(surface, f"Heart held {heart} / {rules['heart_turns']}", (x + width, y), 18,
-                   theme.GOLD if heart else theme.TEXT_DIM, anchor="topright")
+        r = theme.text(surface, f"Heart held {heart} / {rules['heart_turns']}", (x + width, y), 18,
+                       theme.GOLD if heart else theme.TEXT_DIM, anchor="topright")
+        theme.tip(r, tips.heart(game))
         return y + 22
 
     def _treasury(self, surface, x, y, width):
         game = self.game
         t = game.treasury[game.player]
         bal = economy.balance(game, game.player)
-        theme.text(surface, f"Gold {t.gold}", (x, y), 20, theme.GOLD)
-        theme.text(surface, f"({bal.gold:+})", (x + 92, y + 2), 18, theme.GOOD if bal.gold >= 0 else theme.DANGER)
-        theme.text(surface, f"Food {t.food}", (x + width - 70, y), 20, theme.PARCHMENT, anchor="topright")
-        theme.text(surface, f"({bal.food:+})", (x + width, y + 2), 18, theme.GOOD if bal.food >= 0 else theme.DANGER,
-                   anchor="topright")
+        r = theme.text(surface, f"Gold {t.gold}", (x, y), 20, theme.GOLD)
+        r = r.union(theme.text(surface, f"({bal.gold:+})", (x + 92, y + 2), 18,
+                               theme.GOOD if bal.gold >= 0 else theme.DANGER))
+        theme.tip(r, tips.gold(game))
+        r = theme.text(surface, f"Food {t.food}", (x + width - 70, y), 20, theme.PARCHMENT, anchor="topright")
+        r = r.union(theme.text(surface, f"({bal.food:+})", (x + width, y + 2), 18,
+                               theme.GOOD if bal.food >= 0 else theme.DANGER, anchor="topright"))
+        theme.tip(r, tips.food(game))
         return y + 22
 
     def _rule(self, surface, y):
@@ -157,7 +162,8 @@ class Panel:
         order, parts = legends.public_order(self.game, p)
         mood, color = (("Content", theme.GOOD) if order >= 3 else ("Uneasy", theme.HIGHLIGHT) if order >= 0
                        else ("Rebellious!", theme.DANGER))
-        theme.text(surface, f"Order {order:+}  ·  {mood}", (x, y), 18, color)
+        r = theme.text(surface, f"Order {order:+}  ·  {mood}", (x, y), 18, color)
+        theme.tip(r, tips.order(self.game, p))
         y += 19
         detail = ", ".join(f"{name} {points:+}" for name, points in parts)
         for line in theme.wrap(detail, 16, width):
@@ -179,9 +185,15 @@ class Panel:
         y = self._regiments(surface, None, army.regiments, x, y, width)
         abilities = sorted({game.data.abilities[a]["name"] for a in
                             (game.data.units[r.unit]["ability"] for r in army.regiments) if a})
+        ability_ids = sorted({a for a in (game.data.units[r.unit]["ability"] for r in army.regiments) if a})
+        start = y
         for line in theme.wrap("Abilities: " + ", ".join(abilities), 16, width) if abilities else ():
             theme.text(surface, line, (x, y), 16, theme.TEXT_DIM)
             y += 17
+        if ability_ids:
+            theme.tip((x, start, width, y - start),
+                      ["Abilities"] + [(f"{game.data.abilities[a]['name']}: {game.data.abilities[a]['description']}",
+                                        theme.TEXT) for a in ability_ids])
         if mine and legends.traits(game, army.faction).get("abduction"):
             y = self._abduction(surface, army, x, y + 2, width, mouse)
         comrades = [a for a in game.armies_in(army.province) if a.faction == army.faction and a.id != army.id]
@@ -235,7 +247,10 @@ class Panel:
             verdict, color = "Costly victory", theme.HIGHLIGHT
         else:
             verdict, color = "Likely defeat", theme.DANGER
-        theme.text(surface, f"Forecast{' at ' + place if place else ''}: {verdict}", (x, y), 18, color)
+        r = theme.text(surface, f"Forecast{' at ' + place if place else ''}: {verdict}", (x, y), 18, color)
+        theme.tip(r, ["Battle forecast", f"If the battle were fought now, you would keep about {round(share * 100)}% "
+                                         "of your strength." if wins else "Your army would most likely be beaten.",
+                      ("Only what your scouts can see is counted.", theme.TEXT_DIM)])
         return y + 22
 
     def _regiments(self, surface, title, regiments, x, y, width):
@@ -248,6 +263,7 @@ class Panel:
             icon = self.assets.get(f"unit_{u['icon']}", theme.faction_color(self.game, u["faction"]), 2)
             surface.blit(icon, icon.get_rect(center=(x + 8, y + 7)))
             theme.text(surface, u["name"], (x + 20, y), 18)
+            theme.tip((x, y, width, 18), tips.unit(self.game, r.unit, r))
             bar = pygame.Rect(x + width - 90, y + 5, 90, 7)
             share = max(0.0, min(1.0, r.hp / u["hp"]))
             theme.gauge(surface, bar, share,

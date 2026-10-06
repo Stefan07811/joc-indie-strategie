@@ -12,6 +12,7 @@ SEASONS = ("Spring", "Summer", "Autumn", "Winter")
 HEAL_RATE = 0.1  # share of full strength regiments recover each season on friendly ground
 SIEGE_ATTRITION = 0.15  # share of full strength a besieged garrison loses each season
 REBELS = legends.REBELS
+DIFFICULTY = economy.DIFFICULTY
 
 
 class MoveError(ValueError):
@@ -122,12 +123,15 @@ class Game:
     # called for the player's battles as fight_hook(game, attackers, defenders, province, kind); returning
     # a BattleResult replaces the auto-resolve (the real-time battle screen), None keeps it
     fight_hook: object = None
+    history: list = field(default_factory=list)  # one snapshot per season: {"round", "factions": {fid: {...}}}
+    stats: dict = field(default_factory=dict)  # fid -> {"won", "lost", "taken", "fallen"}
+    difficulty: str = "normal"
 
     @classmethod
-    def new(cls, data, player, ai_factory=None, seed=None):
+    def new(cls, data, player, ai_factory=None, seed=None, difficulty="normal"):
         if not data.factions[player]["playable"]:
             raise ValueError(f"{player} is not a playable faction")
-        game = cls(data=data, player=player, rng=random.Random(seed))
+        game = cls(data=data, player=player, rng=random.Random(seed), difficulty=difficulty)
         for p in data.provinces:
             game.provinces[p["id"]] = Province(
                 id=p["id"], name=p["name"], terrain=p["terrain"], x=p["x"], y=p["y"],
@@ -144,11 +148,31 @@ class Game:
         diplomacy.setup(game)
         for fid in game.turn_order:
             game.heart_turns[fid] = 0
-            game.treasury[fid] = Treasury(game.rules["start_gold"], game.rules["start_food"])
+            level = DIFFICULTY[difficulty]
+            gold = game.rules["start_gold"] * (level["player_gold"] if fid == player else level["ai_gold"]) // 200
+            game.treasury[fid] = Treasury(gold, game.rules["start_food"])
             if fid != player:
                 game.ai[fid] = ai_factory(fid)
         game.log.append(f"{game.date}: {game.faction_name(player, True)} begin their campaign.")
+        game.record_history()
         return game
+
+    def record_history(self):
+        """Remember how every legend stands this season (for the chronicle at the end of the war)."""
+        snapshot = {"round": self.round, "factions": {
+            fid: {"provinces": len(self.provinces_of(fid)),
+                  "regiments": sum(len(a.regiments) for a in self.armies_of(fid)),
+                  "gold": self.treasury[fid].gold if fid in self.treasury else 0}
+            for fid in self.data.factions if fid != REBELS}}
+        if self.history and self.history[-1]["round"] == self.round:
+            self.history[-1] = snapshot
+        else:
+            self.history.append(snapshot)
+
+    def _tally(self, fid, key):
+        if fid and fid != REBELS:
+            row = self.stats.setdefault(fid, {"won": 0, "lost": 0, "taken": 0, "fallen": 0})
+            row[key] += 1
 
     # --- queries ---------------------------------------------------------------------------
 
@@ -565,6 +589,13 @@ class Game:
     def _event(self, event, message):
         self.events.append(event)
         self.log.append(message)
+        if isinstance(event, Battle):
+            r = event.result
+            self._tally(r.winning_faction, "won")
+            self._tally(r.defender.faction if r.attacker_won else r.attacker.faction, "lost")
+        elif isinstance(event, Captured):
+            self._tally(event.faction, "taken")
+            self._tally(event.previous, "fallen")
 
     def _check_end(self):
         for fid in list(self.turn_order):
@@ -586,6 +617,7 @@ class Game:
     def _win(self, fid, kind):
         self.winner = Victory(fid, kind)
         self._event(self.winner, f"{self.faction_name(fid)} are masters of the Carpathians!")
+        self.record_history()
 
     # --- turns -----------------------------------------------------------------------------
 
@@ -631,6 +663,7 @@ class Game:
         self._check_end()
         if not self.winner:
             self._count_heart()
+        self.record_history()
 
     def _collect(self, fid):
         """Taxes in, wages out, food in the granary; hunger and desertion when they run dry."""

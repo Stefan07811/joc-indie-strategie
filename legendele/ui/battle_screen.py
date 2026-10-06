@@ -14,7 +14,7 @@ import pygame
 
 from ..game import battle
 from ..game.realtime import FIELD_H, FIELD_W, Battlefield
-from . import battle_art, painter, theme
+from . import battle_art, painter, theme, tips
 
 HUD = pygame.Rect(0, FIELD_H, theme.WINDOW_SIZE[0], theme.WINDOW_SIZE[1] - FIELD_H)
 STEP = 1 / 30
@@ -96,8 +96,7 @@ class BattleQuestion:
                     return False
                 self.handle(event)
             self.app.audio.update()
-            self.draw(self.app.screen)
-            pygame.display.flip()
+            self.app.present(self.draw)
             clock.tick(60)
         return self.answer
 
@@ -246,8 +245,7 @@ class BattleScreen:
                 self.handle(event)
             self.update(dt)
             self.app.audio.update()
-            self.draw(self.app.screen)
-            pygame.display.flip()
+            self.app.present(self.draw)
         return self.result
 
     # --- drawing ---------------------------------------------------------------------------
@@ -272,6 +270,10 @@ class BattleScreen:
         for u in f.units:
             if u.state in ("ready", "routing"):
                 self._banner(surface, u)
+                lines = tips.unit(self.game, u.regiment.unit, u.regiment)
+                if u.state == "routing":
+                    lines.insert(1, ("Fleeing the field!", theme.DANGER))
+                theme.tip((u.x - 26, u.y - 50, 52, 76), lines)
         if self.drag:
             rect = pygame.Rect(min(self.drag[0], self.mouse[0]), min(self.drag[1], self.mouse[1]),
                                abs(self.mouse[0] - self.drag[0]), abs(self.mouse[1] - self.drag[1]))

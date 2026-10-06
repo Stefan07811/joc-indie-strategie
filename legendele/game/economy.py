@@ -5,6 +5,15 @@ from dataclasses import dataclass
 from . import legends
 
 
+# How hard the other legends push: their income, and the gold each side starts with.
+DIFFICULTY = {
+    "easy": {"name": "Easy", "ai_income": 0.8, "player_gold": 400, "ai_gold": 150},
+    "normal": {"name": "Normal", "ai_income": 1.0, "player_gold": 200, "ai_gold": 200},
+    "hard": {"name": "Hard", "ai_income": 1.25, "player_gold": 150, "ai_gold": 300},
+    "legendary": {"name": "Legendary", "ai_income": 1.5, "player_gold": 100, "ai_gold": 400},
+}
+
+
 @dataclass
 class Treasury:
     gold: int
@@ -59,7 +68,10 @@ def balance(game, fid, season=None):
     regiments = [r for a in game.armies_of(fid) for r in a.regiments]
     upkeep = sum(game.data.units[r.unit]["upkeep"] for r in regiments)
     eaten = sum(appetite(game, r.unit) for r in regiments)
-    tax = round(tax * game.data.factions[fid]["income_mult"])
+    tax = tax * game.data.factions[fid]["income_mult"]
+    if fid != game.player:
+        tax *= DIFFICULTY[game.difficulty]["ai_income"]
+    tax = round(tax)
     return Balance(tax, upkeep, round(food * game.data.map["seasons"][season]["food"]), eaten,
                    legends.interest(game, fid))
 

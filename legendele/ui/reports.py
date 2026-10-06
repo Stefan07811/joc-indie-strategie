@@ -3,6 +3,7 @@
 import pygame
 
 from ..game import Abduction, Battle, Captured, DiplomacyChange, Eliminated, Proposal, Rebellion, Victory
+from ..game.state import SEASONS
 from . import theme
 
 BOX = pygame.Rect(0, 0, 560, 340)
@@ -173,3 +174,241 @@ def draw_game_over(surface, game, button_rect, mouse):
     theme.outlined(surface, text, (strip.x + 20, strip.centery), 26, theme.GOOD if won else theme.DANGER,
                    anchor="midleft")
     theme.button(surface, button_rect, "Main menu", button_rect.collidepoint(mouse))
+
+
+class TurnSummary:
+    """The season's news, after the other legends have moved: every line of the chronicle written
+    since we ended our turn, each one a way to look at the place it happened."""
+
+    ROW = 24
+    VISIBLE = 15
+
+    def __init__(self, game, lines):
+        self.game = game
+        names = sorted(((p.name, p.id) for p in game.provinces.values()), key=lambda n: -len(n[0]))
+        factions = sorted(((game.faction_name(f), f) for f in game.data.factions), key=lambda n: -len(n[0]))
+        self.rows = []
+        for line in lines:
+            place = next((pid for name, pid in names if name in line), None)
+            who = min(((line.find(name), fid) for name, fid in factions if name in line), default=(0, None))[1]
+            self.rows.append((line, place, who))
+        shown = max(5, min(self.VISIBLE, len(self.rows)))
+        self.box = pygame.Rect(0, 0, 720, 130 + shown * self.ROW)
+        self.box.center = theme.MAP_RECT.center
+        self.continue_rect = pygame.Rect(0, 0, 220, 40)
+        self.continue_rect.midbottom = (self.box.centerx, self.box.bottom - 16)
+        self.top = 0
+        self.row_rects = []
+
+    def handle(self, event):
+        """None while open; "close" to just close it; a province id to close it and look there."""
+        if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE,
+                                                          pygame.K_ESCAPE):
+            return "close"
+        if event.type == pygame.MOUSEWHEEL:
+            self.top = max(0, min(len(self.rows) - self.VISIBLE, self.top - event.y))
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.continue_rect.collidepoint(event.pos):
+                return "close"
+            for rect, place in self.row_rects:
+                if place and rect.collidepoint(event.pos):
+                    return place
+        return None
+
+    def draw(self, surface, mouse):
+        _shade(surface)
+        game = self.game
+        theme.frame(surface, self.box)
+        theme.ribbon(surface, (self.box.centerx, self.box.y + 4), f"Tidings of {game.date}", 24)
+        x, y = self.box.x + 28, self.box.y + 48
+        mine = game.faction_name(game.player)
+        self.row_rects = []
+        for line, place, who in self.rows[self.top:self.top + self.VISIBLE]:
+            rect = pygame.Rect(x - 6, y - 2, self.box.width - 44, self.ROW - 2)
+            hovered = place is not None and rect.collidepoint(mouse)
+            if hovered:
+                theme.row(surface, rect, True)
+            color = theme.PARCHMENT if mine in line else theme.TEXT_DIM
+            shown = line
+            while theme.font(18).size(shown)[0] > rect.width - 70 and len(shown) > 10:
+                shown = shown[:-4] + "..."
+            if who:
+                shield = [(x, y + 3), (x + 10, y + 3), (x + 10, y + 10), (x + 5, y + 15), (x, y + 10)]
+                pygame.draw.polygon(surface, theme.faction_color(game, who), shield)
+                pygame.draw.polygon(surface, theme.GOLD_DARK, shield, 1)
+            theme.text(surface, shown, (x + 18, y), 18, theme.HIGHLIGHT if hovered else color)
+            if place:
+                theme.text(surface, "show" if hovered else "·", (rect.right - 8, y), 16, theme.GOLD, anchor="topright")
+                theme.tip(rect, [game.provinces[place].name, line, ("Click to look there.", theme.TEXT_DIM)])
+            self.row_rects.append((rect, place))
+            y += self.ROW
+        if not self.rows:
+            theme.text(surface, "A quiet season.", (x, y), 18, theme.TEXT_DIM)
+        if len(self.rows) > self.VISIBLE:
+            theme.text(surface, f"{self.top + 1}-{min(len(self.rows), self.top + self.VISIBLE)} of {len(self.rows)}"
+                                "  ·  scroll for more", (self.box.right - 28, self.continue_rect.y - 22), 16,
+                       theme.TEXT_DIM, anchor="topright")
+        theme.button(surface, self.continue_rect, "Continue  (Enter)", self.continue_rect.collidepoint(mouse))
+
+
+class EndScreen:
+    """The chronicle of the war, once it is decided: how every realm grew and shrank, season by
+    season, and what each did in battle."""
+
+    BOX = pygame.Rect(0, 0, 1200, 660)
+
+    def __init__(self, game):
+        self.game = game
+        self.box = self.BOX.copy()
+        self.box.center = (theme.WINDOW_SIZE[0] // 2, theme.WINDOW_SIZE[1] // 2)
+        self.chart = pygame.Rect(self.box.x + 34, self.box.y + 118, 730, 420)
+        self.map_rect = pygame.Rect(0, 0, 220, 44)
+        self.menu_rect = pygame.Rect(0, 0, 220, 44)
+        self.map_rect.bottomright = (self.box.centerx - 10, self.box.bottom - 22)
+        self.menu_rect.bottomleft = (self.box.centerx + 10, self.box.bottom - 22)
+        self.factions = [f for f, d in game.data.factions.items() if d["playable"]]
+
+    def handle(self, event):
+        """None while open; "map" to look at the map; "menu" for the main menu."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            return "map"
+        if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+            return "menu"
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.map_rect.collidepoint(event.pos):
+                return "map"
+            if self.menu_rect.collidepoint(event.pos):
+                return "menu"
+        return None
+
+    def draw(self, surface, mouse):
+        game = self.game
+        veil = pygame.Surface(theme.WINDOW_SIZE, pygame.SRCALPHA)
+        veil.fill((10, 8, 6, 190))
+        surface.blit(veil, (0, 0))
+        theme.frame(surface, self.box)
+        won = game.winner is not None and game.winner.faction == game.player
+        title = "Victory" if won else "Defeat"
+        theme.ribbon(surface, (self.box.centerx, self.box.y + 4), f"{title}  ·  The Chronicle of the War", 26,
+                     color=theme.GOOD if won else theme.DANGER)
+        if game.winner:
+            how = {"conquest": "by conquest", "legend": "by holding the Heart of the Mountains",
+                   "last_standing": "as the last legend standing"}[game.winner.kind]
+            line = f"{game.faction_name(game.winner.faction)} won {how}, in {game.date}."
+        else:
+            line = f"{game.faction_name(game.player)} were destroyed in {game.date}."
+        seasons = len(game.history) - 1
+        years, rest = divmod(seasons, 4)
+        span = [f"{years} year{'s' if years != 1 else ''}"] if years else []
+        span += [f"{rest} season{'s' if rest != 1 else ''}"] if rest or not years else []
+        line += f"  The war lasted {' and '.join(span)}."
+        theme.text(surface, line, (self.box.centerx, self.box.y + 66), 22, theme.PARCHMENT, anchor="midtop")
+        self._chart(surface, mouse)
+        self._table(surface, self.chart.right + 34, self.chart.y)
+        theme.button(surface, self.map_rect, "Look at the map  (Esc)", self.map_rect.collidepoint(mouse))
+        theme.button(surface, self.menu_rect, "Main menu  (Enter)", self.menu_rect.collidepoint(mouse))
+
+    # --- provinces held, season by season ----------------------------------------------------
+
+    def _chart(self, surface, mouse):
+        game = self.game
+        area = theme.frame(surface, self.chart, kind="parchment", corners=False)
+        theme.text(surface, "Provinces held", (area.x + 12, area.y + 8), 20, theme.INK, lift=False)
+        plot = pygame.Rect(area.x + 46, area.y + 40, area.width - 150, area.height - 76)
+        history = game.history or [{"round": game.round, "factions": {}}]
+        goal = game.victory_rules["conquest_provinces"]
+        top = max(goal, max((row["provinces"] for snap in history for row in snap["factions"].values()), default=1))
+        top = ((top + 4) // 5) * 5
+        ink, faint = (70, 56, 40), (200, 186, 152)
+
+        def at(i, value):
+            x = plot.x + (plot.width * i / max(1, len(history) - 1))
+            return x, plot.bottom - plot.height * value / top
+
+        for v in range(0, top + 1, 5):  # recessive grid and the one axis
+            y = at(0, v)[1]
+            pygame.draw.line(surface, faint, (plot.x, y), (plot.right, y), 1)
+            theme.text(surface, str(v), (plot.x - 8, y), 15, ink, anchor="midright", lift=False)
+        gy = at(0, goal)[1]
+        for x in range(plot.x, plot.right, 12):  # the conquest goal, dashed
+            pygame.draw.line(surface, (150, 110, 60), (x, gy), (min(x + 6, plot.right), gy), 1)
+        theme.text(surface, f"Conquest: {goal}", (plot.x + 6, gy - 2), 15, (120, 84, 40), anchor="bottomleft",
+                   lift=False)
+        first_year = game.data.map["start_year"] + history[0]["round"] // 4
+        last_year = game.data.map["start_year"] + history[-1]["round"] // 4
+        step = max(1, (last_year - first_year) // 6 or 1)
+        for i, snap in enumerate(history):
+            if snap["round"] % 4 == 0 and (game.data.map["start_year"] + snap["round"] // 4 - first_year) % step == 0:
+                x = at(i, 0)[0]
+                pygame.draw.line(surface, ink, (x, plot.bottom), (x, plot.bottom + 4), 1)
+                theme.text(surface, str(game.data.map["start_year"] + snap["round"] // 4), (x, plot.bottom + 6), 15,
+                           ink, anchor="midtop", lift=False)
+        pygame.draw.line(surface, ink, plot.bottomleft, plot.bottomright, 1)
+
+        ends = []
+        for fid in self.factions:  # each realm keeps its own colour, whatever happens to the others
+            points = [at(i, snap["factions"].get(fid, {}).get("provinces", 0)) for i, snap in enumerate(history)]
+            color = theme.faction_color(game, fid)
+            if len(points) > 1:
+                pygame.draw.lines(surface, PARCHMENT_BG, False, points, 6)  # a surface ring
+                pygame.draw.lines(surface, color, False, points, 3)
+            x, y = points[-1]
+            pygame.draw.circle(surface, PARCHMENT_BG, (x, y), 6)
+            pygame.draw.circle(surface, color, (x, y), 5)
+            ends.append([y, fid, x])
+        ends.sort()
+        for k in range(1, len(ends)):  # direct labels at the line ends, pushed apart
+            ends[k][0] = max(ends[k][0], ends[k - 1][0] + 17)
+        for y, fid, x in ends:
+            pygame.draw.circle(surface, theme.faction_color(game, fid), (plot.right + 14, y), 4)
+            theme.text(surface, game.faction_name(fid).replace("The ", ""), (plot.right + 22, y), 15, theme.INK,
+                       anchor="midleft", lift=False)
+
+        # hover: the season under the mouse, every realm's count
+        if plot.inflate(0, 20).collidepoint(mouse) and len(history) > 1:
+            i = round((mouse[0] - plot.x) / plot.width * (len(history) - 1))
+            i = max(0, min(len(history) - 1, i))
+            x = at(i, 0)[0]
+            pygame.draw.line(surface, ink, (x, plot.y), (x, plot.bottom), 1)
+            snap = history[i]
+            lines = [f"{SEASONS[snap['round'] % 4]} {game.data.map['start_year'] + snap['round'] // 4}"]
+            rows = sorted(self.factions, key=lambda f: -snap["factions"].get(f, {}).get("provinces", 0))
+            for fid in rows:
+                row = snap["factions"].get(fid, {})
+                lines.append((f"{game.faction_name(fid)}: {row.get('provinces', 0)} provinces, "
+                              f"{row.get('regiments', 0)} regiments", theme.TEXT))
+            theme.tip(pygame.Rect(mouse[0] - 1, mouse[1] - 1, 3, 3), lines)
+
+    # --- the deeds of each realm ---------------------------------------------------------------
+
+    def _table(self, surface, x, y):
+        game = self.game
+        theme.outlined(surface, "Deeds of the legends", (x, y), 20, theme.GOLD, anchor="topleft", width=1)
+        y += 34
+        headers = (("Battles won", "won"), ("Battles lost", "lost"), ("Provinces taken", "taken"),
+                   ("Provinces lost", "fallen"))
+        order = sorted(self.factions, key=lambda f: (f != (game.winner.faction if game.winner else None),
+                                                     -len(game.provinces_of(f))))
+        for fid in order:
+            color = theme.faction_color(game, fid)
+            row = game.stats.get(fid, {})
+            shield = [(x, y + 3), (x + 13, y + 3), (x + 13, y + 11), (x + 6.5, y + 17), (x, y + 11)]
+            pygame.draw.polygon(surface, color, shield)
+            pygame.draw.polygon(surface, theme.GOLD, shield, 1)
+            name = game.faction_name(fid) + ("  (you)" if fid == game.player else "")
+            if fid in game.eliminated:
+                name += "  - destroyed"
+            theme.text(surface, name, (x + 20, y), 19, theme.PARCHMENT)
+            y += 24
+            theme.text(surface, f"{len(game.provinces_of(fid))} provinces now", (x + 20, y), 16, theme.TEXT_DIM)
+            y += 20
+            for i, (label, key) in enumerate(headers):
+                cx = x + 20 + (i % 2) * 180
+                cy = y + (i // 2) * 19
+                theme.text(surface, f"{label}: {row.get(key, 0)}", (cx, cy), 16, theme.TEXT)
+            y += 46
+            theme.divider(surface, x, x + 360, y)
+            y += 12
+
+
+PARCHMENT_BG = (226, 210, 172)  # behind the chart's lines: a thin ring keeps crossing lines apart

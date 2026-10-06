@@ -20,6 +20,8 @@ dispută Carpații: **The Principality** (Voievodatul), **The Dragonkin** (Zmeii
 
 ![O bătălie în timp real](docs/battle.png)
 
+![Cronica războiului](docs/chronicle.png)
+
 Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 
 ## Cum pornești jocul
@@ -49,7 +51,7 @@ python -m legendele
 | Diplomația | **Diplomacy** sau `D` |
 | Termini tura | butonul **End Turn**, `Enter` sau `Space` |
 
-## Stadiul actual: etapa M7 (bătălii în timp real)
+## Stadiul actual: etapa M8 (claritate)
 
 **Harta și mișcarea**
 - Hartă fixă cu 30 de provincii și 5 tipuri de teren, pe geografia reală a României: Carpații în arc,
@@ -191,7 +193,21 @@ Healing și Hero. Le vezi în panoul armatei și în fereastra de recrutare.
 - Pierderile și învingătorul se întorc în campanie exact ca după o bătălie automată.
   Dacă timpul (5 minute de luptă) expiră, apărătorii păstrează câmpul.
 
-**Ce urmează:** etapele din plan sunt gata. Vezi „Idei pentru mai departe” din [DESIGN.md](DESIGN.md).
+**Claritate (M8)**
+- **Tooltip-uri:** ține mouse-ul o clipă pe aur, hrană, ordine publică, regimente, abilități, clădiri,
+  atitudinea celorlalte legende, steagurile armatelor de pe hartă sau regimentele de pe câmpul de luptă și
+  afli ce înseamnă și de unde vin cifrele.
+- **Veștile anotimpului:** după fiecare tură, o listă cu ce s-a întâmplat pe hartă cât au mutat ceilalți.
+  Un clic pe un rând te duce acolo. Se poate opri din Settings.
+- **Cronica războiului:** la final, un grafic cu provinciile fiecărei legende, anotimp cu anotimp (cu
+  valorile la mouse), și faptele fiecăreia: bătălii câștigate și pierdute, provincii luate și pierdute.
+  Se poate redeschide cu butonul **Chronicle**.
+- **Dificultate** (Easy, Normal, Hard, Legendary), aleasă la începutul campaniei: schimbă aurul de
+  început și taxele celorlalte legende.
+- **Sfetnicul:** în prima campanie, bătrânul Neagu te învață pas cu pas (armate, marș, provincie,
+  diplomație, sfârșitul turei). Îl poți sări oricând și îl poți readuce din Settings.
+
+**Ce urmează:** M9–M15, vezi planul din [DESIGN.md](DESIGN.md).
 
 ## Pentru dezvoltare
 

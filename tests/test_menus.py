@@ -13,6 +13,7 @@ from legendele.ui.menus import MainMenu, PauseMenu, SettingsScreen, SlotScreen
 def app(real_data, player_home):
     app = App(real_data)
     app.settings["battles"] = "auto"
+    app.settings["tutorial"] = False
     return app
 
 

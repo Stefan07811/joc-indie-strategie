@@ -78,9 +78,10 @@ def readable(color):
     return tuple(round(c + (255 - c) * k) for c in color[:3])
 
 
-def text(surface, string, pos, size=20, color=TEXT, anchor="topleft", shadow=None):
-    """Draw `string` with its `anchor` point at `pos`; returns the rect it covered."""
-    img = font(size).render(string, True, readable(color) if shadow is None else color)
+def text(surface, string, pos, size=20, color=TEXT, anchor="topleft", shadow=None, lift=True):
+    """Draw `string` with its `anchor` point at `pos`; returns the rect it covered. Colours too dark
+    for the wood are lifted, unless `lift` is off (dark ink on parchment)."""
+    img = font(size).render(string, True, readable(color) if lift and shadow is None else color)
     rect = img.get_rect(**{anchor: pos})
     if shadow:
         surface.blit(font(size).render(string, True, shadow), rect.move(1, 1))
@@ -274,3 +275,65 @@ def row(surface, rect, hovered=False, enabled=True):
     surface.blit(_gradient(rect.size, top, bottom), rect)
     pygame.draw.rect(surface, (16, 12, 10), rect, 1)
     pygame.draw.rect(surface, GOLD_LIGHT if hovered else (GOLD_DARK if enabled else PANEL_LINE), rect.inflate(-2, -2), 1)
+
+
+# --- tooltips --------------------------------------------------------------------------------
+# Screens register areas while they draw (tip); the main loop clears them before each frame
+# (clear_tips) and shows the one under the mouse after it has rested there a moment (draw_tip).
+
+TIP_DELAY = 0.35
+TIP_WIDTH = 300
+_tips = []
+_tip_hover = {"key": None, "since": 0.0}
+
+
+def tip(rect, lines):
+    """Explain an area of the screen. `lines` is a string or a list of strings / (string, colour);
+    the first line is the title."""
+    if isinstance(lines, str):
+        lines = [lines]
+    _tips.append((pygame.Rect(rect), lines))
+
+
+def clear_tips():
+    _tips.clear()
+
+
+def tip_at(pos):
+    for rect, lines in reversed(_tips):
+        if rect.collidepoint(pos):
+            return rect, lines
+    return None
+
+
+def draw_tip(surface, mouse, now=None):
+    import time
+    now = time.monotonic() if now is None else now
+    hit = tip_at(mouse)
+    key = (tuple(hit[0]), str(hit[1])) if hit else None
+    if key != _tip_hover["key"]:
+        _tip_hover.update(key=key, since=now)
+    if hit is None or now - _tip_hover["since"] < TIP_DELAY:
+        return None
+    rows = []
+    for i, line in enumerate(hit[1]):
+        string, color = (line, TEXT if i else GOLD) if isinstance(line, str) else line
+        size = 19 if i == 0 else 16
+        for part in wrap(string, size, TIP_WIDTH - 24) or [""]:
+            rows.append((part, color, size))
+    height = sum(font(size).get_linesize() for _, _, size in rows) + 18
+    width = max(font(size).size(s)[0] for s, _, size in rows) + 26
+    box = pygame.Rect(mouse[0] + 16, mouse[1] + 18, max(120, width), height)
+    box.clamp_ip(surface.get_rect())
+    if box.collidepoint(mouse):
+        box.bottom = mouse[1] - 6
+        box.clamp_ip(surface.get_rect())
+    pygame.draw.rect(surface, (14, 10, 8), box.move(3, 4))
+    pygame.draw.rect(surface, (34, 26, 21), box)
+    pygame.draw.rect(surface, GOLD_DARK, box, 2)
+    pygame.draw.rect(surface, GOLD, box.inflate(-4, -4), 1)
+    y = box.y + 9
+    for string, color, size in rows:
+        text(surface, string, (box.x + 13, y), size, color)
+        y += font(size).get_linesize()
+    return box

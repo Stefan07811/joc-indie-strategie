@@ -3,7 +3,7 @@
 import pygame
 
 from ..game import MoveError, economy
-from . import theme
+from . import theme, tips
 
 BOX = pygame.Rect(0, 0, 880, 600)
 BOX.center = theme.MAP_RECT.center
@@ -94,6 +94,7 @@ class ProvinceDialog:
             rect = pygame.Rect(x, y, COLUMN, 46)
             self._row(surface, rect, f"{b['name']}", f"{b['cost']} gold · {b['turns']} season"
                       + ("s" if b["turns"] > 1 else ""), b["description"], reason, mouse)
+            theme.tip(rect, tips.building(game, bid) + ([(reason, theme.DANGER)] if reason else []))
             if reason is None:
                 self.actions.append((rect, self._sounding(lambda bid=bid: game.build(game.player, p.id, bid), "build")))
             y += 50
@@ -115,6 +116,7 @@ class ProvinceDialog:
                 stats += f" · {game.data.abilities[u['ability']]['name']}"
             self._row(surface, rect, u["name"] + ("  (hero)" if u["ability"] == "hero" else ""), f"{u['cost']} gold",
                       stats, reason, mouse, icon=f"unit_{u['icon']}")
+            theme.tip(rect, tips.unit(game, uid) + ([(reason, theme.DANGER)] if reason else []))
             if reason is None:
                 self.actions.append((rect, self._sounding(lambda uid=uid: game.recruit(game.player, p.id, uid),
                                                           "recruit")))

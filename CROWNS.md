@@ -78,6 +78,11 @@ rămâne ordin pentru lunile următoare, cu săgeți și apoi puncte. Tasta Spac
 - **Moduri de hartă:** `1` relief, `2` politic. Granițele, selecția și culorile se calculează pe placa
   video, deci o cucerire se vede imediat.
 
+**Pe Windows, fără Python:** în GitHub, *Actions → Build Crowns for Windows → Run workflow*, apoi se
+descarcă arhiva `CrownsOfTheBalkans-windows` de la rularea terminată, se dezarhivează și se pornește
+`CrownsOfTheBalkans.exe`. Prima pornire pregătește harta (un minut); următoarele durează câteva secunde.
+Dacă jocul se oprește cu o eroare, raportul e în `%USERPROFILE%\.crowns\crash.log`.
+
 ```bash
 pip install -r requirements.txt
 python -m crowns                 # campania: alegi un stat pe hartă și îl conduci
@@ -87,6 +92,7 @@ python -m crowns --shots DIR     # capturi de verificare, fără ecran
 python tools/terrain.py          # descarcă relieful și apele, refac harta de altitudini
 python tools/provinces.py        # refac provinciile după tools/history_1402.py
 python tools/realms_1402.py      # refac crowns/data/realms.json
+python tools/build_crowns.py     # programul de sine stătător (PyInstaller), în dist/
 ```
 
 ## Campania (etapa B3)

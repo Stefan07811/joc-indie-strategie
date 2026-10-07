@@ -19,8 +19,11 @@ def home():
 def _key(name, sources):
     h = hashlib.sha1(f"{VERSION}:{name}".encode())
     for src in sources:
-        st = Path(src).stat()
-        h.update(f"{src}:{st.st_size}:{st.st_mtime_ns}".encode())
+        try:
+            st = Path(src).stat()
+            h.update(f"{Path(src).name}:{st.st_size}:{st.st_mtime_ns}".encode())
+        except OSError:   # a packaged game has no source code to watch: its version stands in for it
+            h.update(f"{Path(src).name}:packaged".encode())
     return h.hexdigest()[:16]
 
 

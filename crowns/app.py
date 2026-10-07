@@ -51,7 +51,10 @@ def main(argv=None):
     parser.add_argument("--size", default=None, help="window size, e.g. 1920x1080")
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--style", default="codex", help="the map's look: codex (the game's) or real (for checks)")
+    parser.add_argument("--selftest", metavar="REPORT", help="check the game works, without a window, and quit")
     args = parser.parse_args(argv)
+    if args.selftest:
+        return selftest(Path(args.selftest))
     size = tuple(int(v) for v in args.size.split("x")) if args.size else None
     configure(offscreen=bool(args.shots), size=size or ((1600, 900) if args.shots else None),
               fullscreen=args.fullscreen)
@@ -60,6 +63,42 @@ def main(argv=None):
         app.shots(Path(args.shots), args.only)
     else:
         app.run()
+
+
+def selftest(report):
+    """Load everything the game needs and play a few months, without a window (for the build machine,
+    which has no graphics card). Writes what happened to `report`; returns 0 when all is well."""
+    lines = []
+    try:
+        from panda3d.core import Filename, MovieAudio
+
+        from .audio import MUSIC, PLAYLISTS
+        from .game.campaign import Campaign
+        from .game.navigation import NavalNavigation, Navigation
+        from .game.realms import load
+        from .mapdata import Ground
+        from .provinces import ProvinceMap
+        started = time.time()
+        provmap = ProvinceMap()
+        realms, relations = load()
+        ground = Ground()
+        c = Campaign(provmap, realms, relations, player="wallachia")
+        c.attach_ai(Navigation(ground, provmap), NavalNavigation(ground, provmap))
+        for _ in range(3):
+            c.end_month()
+        lines.append(f"campaign: {c.date}, {len(c.armies)} armies, {len(c.people)} people")
+        for name in {n for playlist in PLAYLISTS.values() for n in playlist}:
+            cursor = MovieAudio.get(Filename.fromOsSpecific(str(MUSIC / f"{name}.ogg"))).open()
+            lines.append(f"music {name}: {cursor.length():.0f} s")
+        lines.append(f"ok in {time.time() - started:.1f} s")
+        code = 0
+    except Exception:   # noqa: BLE001 - the report says what failed
+        import traceback
+        lines.append(traceback.format_exc())
+        code = 1
+    report.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("\n".join(lines))
+    return code
 
 
 # Imported after configure(): Panda reads its settings when ShowBase starts.
@@ -96,6 +135,11 @@ class MapApp(_showbase()):
         self.disableMouse()
         self.setBackgroundColor(*HAZE)
         started = time.time()
+        from direct.gui.OnscreenText import OnscreenText
+        waiting = OnscreenText(text="Crowns of the Balkans\n\nPreparing the map…\n(the first start takes a minute)",
+                               scale=0.06, fg=(0.24, 0.15, 0.08, 1), parent=self.aspect2d)
+        for _ in range(2):
+            self.graphicsEngine.renderFrame()
         self.world = MapWorld(style=style)
         self.world.root.reparentTo(self.render)
         self.provmap = ProvinceMap()
@@ -149,6 +193,7 @@ class MapApp(_showbase()):
         self.refresh()
         if realm:
             self.play_as(realm, welcome=False)
+        waiting.destroy()
         print(f"map ready in {time.time() - started:.1f} s")
         self.keys = {}
         for key in ("w", "a", "s", "d", "arrow_up", "arrow_down", "arrow_left", "arrow_right", "q", "e"):
@@ -861,4 +906,4 @@ class MapApp(_showbase()):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

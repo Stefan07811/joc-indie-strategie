@@ -1,0 +1,45 @@
+# Builds the Windows version of Crowns of the Balkans: a folder with CrownsOfTheBalkans.exe, zipped.
+# Runs on demand (Actions -> Build Crowns for Windows -> Run workflow) and for tags crowns-v*. The zip is
+# attached to the run as an artifact, and to a GitHub release for tags.
+name: Build Crowns for Windows
+
+on:
+  push:
+    tags: ["crowns-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller pytest
+      - name: Test the campaign
+        run: python -m pytest -q tests/test_crowns_campaign.py tests/test_crowns_war.py tests/test_crowns_people.py tests/test_crowns_history.py tests/test_crowns_navigation.py tests/test_crowns_ui_model.py tests/test_crowns_audio.py
+      - name: Build
+        run: python tools/build_crowns.py
+      - name: Smoke test the program
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          CROWNS_HOME="$RUNNER_TEMP/home" dist/CrownsOfTheBalkans/CrownsOfTheBalkans.exe --selftest report.txt || { cat report.txt; cat "$RUNNER_TEMP/home/crash.log"; exit 1; }
+          cat report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CrownsOfTheBalkans-windows
+          path: dist/CrownsOfTheBalkans.zip
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/CrownsOfTheBalkans.zip

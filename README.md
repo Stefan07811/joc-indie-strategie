@@ -31,6 +31,11 @@ Designul complet și planul pe etape sunt în [DESIGN.md](DESIGN.md).
 (sau din ultima rulare a workflow-ului **Build Windows**, la *Actions*), îl dezarhivezi și pornești
 `LegendsOfTheCarpathians.exe`.
 
+Salvările, setările și realizările stau în folderul `.legendele` din folderul tău de utilizator
+(pe Windows: `C:\Users\<nume>\.legendele`). Dacă jocul se închide din cauza unei erori, apare o fereastră
+care spune ce s-a întâmplat, iar detaliile rămân în `.legendele\crash.log`: trimite fișierul ăsta
+dezvoltatorului. Campania e salvată automat la începutul fiecărui anotimp (**Continue** din meniu).
+
 **Din surse:** ai nevoie de Python 3.10 sau mai nou.
 
 ```bash
@@ -377,6 +382,10 @@ tools/
   duel.py, fair_costs.py   unelte de echilibrare a unităților
 tests/
 ```
+
+`tests/saves/` păstrează câte o salvare făcută de fiecare etapă, începând cu harta pe geografia reală.
+Testele verifică dacă versiunea de acum le încarcă și le joacă mai departe, ca jucătorii să nu-și piardă
+campaniile la o actualizare.
 
 Ca să schimbi harta, editează pozițiile (`x`, `y`) sau proprietarii din `legendele/data/map.json`, apoi rulează
 `python tools/build_adjacency.py`. Testele verifică dacă vecinii din fișier se potrivesc cu harta desenată.

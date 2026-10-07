@@ -1,9 +1,10 @@
 # Builds the Windows version of the game: a folder with LegendsOfTheCarpathians.exe, zipped.
-# Runs on every version tag (v1.0, ...) and on demand (Actions -> Build Windows -> Run workflow).
-# The zip is attached to the run as an artifact, and to a GitHub release for tags.
+# Runs for pull requests, on every version tag (v1.0, ...) and on demand (Actions -> Build Windows -> Run
+# workflow). The zip is attached to the run as an artifact, and to a GitHub release for tags.
 name: Build Windows
 
 on:
+  pull_request:
   push:
     tags: ["v*"]
   workflow_dispatch:
@@ -14,6 +15,7 @@ permissions:
 jobs:
   windows:
     runs-on: windows-latest
+    timeout-minutes: 40
     env:
       SDL_VIDEODRIVER: dummy
       SDL_AUDIODRIVER: dummy
@@ -32,6 +34,7 @@ jobs:
         run: python tools/build_exe.py
       - name: Smoke test the program
         shell: bash
+        timeout-minutes: 5
         run: |
           LEGENDELE_HOME="$RUNNER_TEMP/home" dist/LegendsOfTheCarpathians/LegendsOfTheCarpathians.exe --faction voievodat --screenshot frame.png
           test -s frame.png

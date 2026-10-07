@@ -7,6 +7,7 @@ Extra options for development:
 
 import argparse
 import os
+import sys
 
 
 def main():
@@ -20,9 +21,19 @@ def main():
     if args.screenshot:
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-    from .ui.app import App
+    app = None
+    try:
+        from .ui.app import App
 
-    app = App()
+        app = App()
+        _play(app, args)
+    except Exception as exc:  # noqa: BLE001 - anything at all: log it and tell the player
+        from .crash import handle
+        handle(exc, app)
+        sys.exit(1)
+
+
+def _play(app, args):
     if args.faction:
         app.start_campaign(args.faction)
         for _ in range(args.turns):

@@ -25,10 +25,21 @@ HORSE_ARCHERS = {"horse_archers", "akinjis", "sipahis", "mamluks", "calarasi", "
                  "stratiotai"}
 HORSE_RANGE = 140.0
 VOLLEY = 4.0                                  # seconds between volleys
-AMMO = 30
+AMMO = 24
 MELEE_RATE = 0.025                            # blows a second from each man in the front ranks
-MISSILE_RATE = 0.03                           # arrows that tell, a volley, from each archer
+MISSILE_RATE = 0.04                           # arrows that tell, a volley, from each archer
 PRESSURE = 0.12                               # nerve lost a second in melee, by how the fight is going
+HIT_SLOPE = 0.02                             # how much skill over armour counts for a blow to tell
+HORSE_VOLLEY = 0.5                            # horse archers' time between volleys, against foot archers'
+HORSE_MELEE = 1.8                             # riders against men on foot
+# formations: (frontage, depth) against the plain line, and who may take them
+FORMATIONS = {"line": (1.0, 1.0, ("foot", "missile", "horse")), "deep": (0.6, 1.7, ("foot",)),
+              "wedge": (0.55, 1.6, ("horse",)), "square": (0.7, 1.4, ("foot",)),
+              "loose": (1.5, 1.3, ("missile", "horse"))}
+STANCES = ("free", "hold", "skirmish")
+RUN_COST = 1.0                                # how fast running tires
+TIRING = 0.15                                 # strength lost by a spent regiment
+SHY = 60.0                                   # how near a charge comes before archers give ground
 BREAK = 15.0                                  # morale under which a regiment flees
 TIME_LIMIT = 1800.0                           # seconds: then the defender holds the field
 
@@ -60,6 +71,11 @@ class Unit:
     still: float = 0.0                        # seconds since it last moved
     regiment: int = 0                         # index of the regiment in its army
     shocked: set = field(default_factory=set)
+    formation: str = "line"                   # see FORMATIONS
+    run: bool = False                         # march at the run (tiring)
+    stance: str = "free"                      # free: engage what comes near; hold: stand; skirmish: keep away
+    stamina: float = 100.0                    # wind and legs: running and fighting tire, rest restores
+    face_to: Optional[float] = None           # the facing to take once the march is done
 
     @property
     def alive(self):
@@ -71,22 +87,39 @@ class Unit:
 
     @property
     def frontage(self):
-        return float(np.clip(math.sqrt(self.men) * (3.2 if self.kind == "horse" else 2.6), 24, 130))
+        line = float(np.clip(math.sqrt(self.men) * (3.2 if self.kind == "horse" else 2.6), 24, 130))
+        return line * FORMATIONS[self.formation][0]
 
     @property
     def depth(self):
-        return max(12.0, self.frontage * (0.45 if self.kind == "horse" else 0.32))
+        f, d, _ = FORMATIONS[self.formation]
+        line = float(np.clip(math.sqrt(self.men) * (3.2 if self.kind == "horse" else 2.6), 24, 130))
+        return max(12.0, line * (0.45 if self.kind == "horse" else 0.32) * d)
+
+    @property
+    def armour(self):
+        """Defence in the formation it holds: a wedge opens its flanks, a square closes up."""
+        return self.defence + {"wedge": -2.0, "square": 1.0}.get(self.formation, 0.0)
+
+    @property
+    def tired(self):
+        """1.0 fresh .. 0.85 spent."""
+        return 1.0 - TIRING + TIRING * self.stamina / 100.0
+
+    def formations(self):
+        return [name for name, (_, _, kinds) in FORMATIONS.items() if self.kind in kinds]
 
     @property
     def radius(self):
         return math.hypot(self.frontage, self.depth) / 2
 
     def speed(self, running):
-        table = RUN if running else WALK
-        return table[self.kind]
+        table = RUN if running and self.stamina > 15 else WALK
+        slow = 0.55 if self.formation == "square" else (0.85 if self.formation == "deep" else 1.0)
+        return table[self.kind] * slow
 
     def ranged(self):
-        if self.kind == "missile":
+        if self.kind == "missile" or (self.kind == "foot" and self.missile >= 6):   # janissaries carry bows
             return RANGE["missile"]
         if self.unit in HORSE_ARCHERS and self.missile >= 4:
             return HORSE_RANGE
@@ -169,7 +202,7 @@ def _angle_to(a, x, y):
 
 def _hit(attack, defence, base=0.3):
     """The share of blows (or arrows) that tell: skill against armour and shield."""
-    return min(0.95, max(0.04, base + 0.045 * (attack - defence)))
+    return min(0.95, max(0.04, base + HIT_SLOPE * (attack - defence)))
 
 
 def _wrap(a):
@@ -193,6 +226,7 @@ class Battle:
         self.winner = None
         self.log = []
         self.events = []                  # (kind, ...) for the eyes: volleys and charges
+        self.formed_up = set()            # the sides whose captains have chosen their formations
         for side, army in enumerate(self.armies):
             self._deploy(side, army, unit_types)
 
@@ -252,10 +286,11 @@ class Battle:
             return True
         return False
 
-    def move(self, u, x, y):
+    def move(self, u, x, y, facing=None):
         if u.standing:
             u.order = ("move", float(np.clip(x, 20, FIELD_W - 20)), float(np.clip(y, 20, FIELD_H - 20)))
             u.charge = 0.0
+            u.face_to = facing
 
     def attack(self, u, target):
         if u.standing and target.alive and target.side != u.side:
@@ -264,6 +299,21 @@ class Battle:
 
     def halt(self, u):
         u.order = None
+        u.face_to = None
+
+    def set_formation(self, u, formation):
+        if formation in u.formations() and u.standing:
+            u.formation = formation
+            return True
+        return False
+
+    def set_stance(self, u, stance):
+        if stance in STANCES:
+            u.stance = stance
+
+    def face(self, u, angle):
+        """Turn to face `angle` (radians, 0 towards +y) where it stands, or once its march is done."""
+        u.face_to = angle
 
     def begin(self):
         self.started = True
@@ -295,6 +345,11 @@ class Battle:
 
     def _act(self, u, dt):
         u.still += dt
+        moving = u.order is not None and u.state == "formed"
+        if u.state == "fighting":
+            u.stamina = max(0.0, u.stamina - 0.35 * dt)
+        elif not moving:
+            u.stamina = min(100.0, u.stamina + 0.6 * dt)
         if u.charging > 0:
             u.charging = max(0.0, u.charging - dt)
         if u.state == "routing":
@@ -324,6 +379,11 @@ class Battle:
                 return   # shoot from where we stand
             goal = (target.x, target.y)
         if goal is None:
+            if u.face_to is not None:            # turn the front where we were told
+                turn = _wrap(u.face_to - u.facing)
+                u.facing += max(-1.0 * dt, min(1.0 * dt, turn))
+                if abs(turn) < 0.02:
+                    u.face_to = None
             return
         gx, gy = goal
         dist = math.hypot(gx - u.x, gy - u.y)
@@ -333,7 +393,9 @@ class Battle:
         want = math.atan2(gx - u.x, gy - u.y)
         turn = _wrap(want - u.facing)
         u.facing += max(-1.5 * dt, min(1.5 * dt, turn))
-        running = target is not None and dist < 160
+        running = u.run or (target is not None and dist < 160)
+        if running and u.stamina > 15:
+            u.stamina = max(0.0, u.stamina - (0.9 if u.kind == "horse" else 1.2) * RUN_COST * dt)
         step = min(dist, u.speed(running) * dt * self.field.going(u.x, u.y, u.kind))
         if abs(turn) < 0.6:
             u.x += math.sin(u.facing) * step
@@ -375,11 +437,14 @@ class Battle:
 
     def _strength(self, u, foe):
         """A regiment's fighting strength against `foe`, with the ground and the angle of attack."""
-        s = u.melee * (1.0 + 0.5 * u.experience) * self.leadership[u.side]
+        s = u.melee * (1.0 + 0.5 * u.experience) * self.leadership[u.side] * u.tired
+        s *= {"square": 0.9, "loose": 0.8}.get(u.formation, 1.0)
+        if u.kind == "horse" and foe.kind != "horse":
+            s *= HORSE_MELEE          # a rider strikes down from above
         front = abs(_wrap(_angle_to(foe, u.x, u.y) - foe.facing)) < 1.0
         if u.charging > 0:
-            bonus = 1.8 if u.melee >= 12 else 1.4
-            if front and foe.kind != "horse" and foe.still > 4:
+            bonus = (1.8 if u.melee >= 12 else 1.4) + (0.5 if u.formation == "wedge" else 0.0)
+            if (front or foe.formation == "square") and foe.kind != "horse" and foe.still > 4:
                 bonus = 1.0 + (bonus - 1.0) * 0.4      # foot standing firm, spears levelled, blunts the charge
             s *= bonus
         if u.still > 20 and u.kind != "horse":
@@ -390,7 +455,9 @@ class Battle:
             s *= 1.15     # fighting down a slope
         # where the blow lands on the foe: front, flank or rear
         angle = abs(_wrap(_angle_to(foe, u.x, u.y) - foe.facing))
-        if angle > 2.2:
+        if foe.formation == "square":
+            pass                                       # a square has no flank and no rear
+        elif angle > 2.2:
             s *= 1.8
         elif angle > 1.0:
             s *= 1.35
@@ -411,20 +478,20 @@ class Battle:
         hits, dealt = {}, {}
         for u, foe in pairs:
             engaged = min(u.men, u.frontage * 2.2)
-            dmg = engaged * MELEE_RATE * _hit(self._strength(u, foe), foe.defence) * dt * self.rng.uniform(0.6, 1.4)
+            dmg = engaged * MELEE_RATE * _hit(self._strength(u, foe), foe.armour) * dt * self.rng.uniform(0.6, 1.4)
             if foe.state == "routing":
                 dmg *= 2.5    # cut down as they run
             hits[foe.id] = hits.get(foe.id, 0.0) + dmg
             dealt[u.id] = dealt.get(u.id, 0.0) + dmg / max(1, foe.start_men)
             angle = abs(_wrap(_angle_to(foe, u.x, u.y) - foe.facing))
-            if angle > 1.0 and u.id not in foe.shocked:
+            if angle > 1.0 and u.id not in foe.shocked and foe.formation != "square":
                 foe.shocked.add(u.id)
                 foe.morale -= 12 if angle > 2.2 else 7
         for u, foe in pairs:
             # a regiment losing the fight loses heart faster than one winning it
             taken = hits.get(u.id, 0.0) / max(1, u.start_men)
             ratio = (taken + 1e-4) / (dealt.get(u.id, 0.0) + 1e-4)
-            u.morale -= PRESSURE * dt * min(4.0, max(0.25, ratio))
+            u.morale -= PRESSURE * dt * min(4.0, max(0.25, ratio)) * (0.7 if u.formation == "deep" else 1.0)
         for uid, dmg in hits.items():
             self._lose(self.units[uid], dmg)
 
@@ -445,13 +512,14 @@ class Battle:
             if u.order and u.order[0] == "attack" and self.units[u.order[1]] in foes:
                 target = self.units[u.order[1]]
             target = target or min(foes, key=lambda e: math.hypot(e.x - u.x, e.y - u.y))
-            u.reload = VOLLEY
+            u.reload = VOLLEY * (HORSE_VOLLEY if u.kind == "horse" else 1.0)   # riders loose on the move
             u.ammo -= 1
             dist = math.hypot(target.x - u.x, target.y - u.y)
             accuracy = 1.2 - 0.6 * dist / reach
             cover = 0.5 if self.field.wooded(target.x, target.y) else 1.0
+            cover *= {"loose": 0.6, "deep": 1.15, "square": 1.15}.get(target.formation, 1.0)
             skill = u.missile * (1 + 0.3 * u.experience)
-            dmg = u.men * MISSILE_RATE * _hit(skill, target.defence, 0.25) * accuracy * cover * \
+            dmg = u.men * MISSILE_RATE * _hit(skill, target.armour, 0.25) * accuracy * cover * \
                 self.rng.uniform(0.5, 1.5)
             hits.append((target, dmg))
             self.events.append(("volley", u.id, target.id))
@@ -465,7 +533,7 @@ class Battle:
             return
         before = u.men
         u.men -= dead
-        u.morale -= 120.0 * dead / max(1, u.start_men)
+        u.morale -= 120.0 * dead / max(1, u.start_men) * (0.85 if u.formation == "deep" else 1.0)
         if u.men <= 0:
             u.men = 0
             u.state = "gone"
@@ -542,7 +610,7 @@ class Battle:
                 continue
             nearest = min(foes, key=lambda e: dist(u, e))
             d = dist(u, nearest)
-            melee_near = [e for e in foes if not e.ranged() and e.state != "fighting" and dist(u, e) < 110]
+            melee_near = [e for e in foes if not e.ranged() and e.state != "fighting" and dist(u, e) < SHY]
             reach = u.ranged()
             if reach and u.ammo > 0:
                 if melee_near and u.kind == "horse":          # ride off and shoot again
@@ -575,10 +643,35 @@ class Battle:
             else:
                 self.move(u, u.x, u.y + forward * min(150.0, d - 220))
 
+    def captains(self, side):
+        """What the player's regiments do of their own accord, by their stance: a free regiment closes with
+        an enemy that comes near, a skirmishing one keeps its distance while it has arrows, one told to hold
+        stands where it is."""
+        foes = [e for e in self.units if e.side != side and e.standing]
+        for u in self.side_units(side):
+            if u.state == "fighting" or not foes:
+                continue
+            nearest = min(foes, key=lambda e: math.hypot(e.x - u.x, e.y - u.y))
+            d = math.hypot(nearest.x - u.x, nearest.y - u.y)
+            if u.stance == "skirmish" and u.ranged() and u.ammo > 0:
+                if not nearest.ranged() and d < SHY * 1.4:
+                    away = math.atan2(u.x - nearest.x, u.y - nearest.y)
+                    back = 160.0 if u.kind == "horse" else 70.0
+                    self.move(u, u.x + math.sin(away) * back, u.y + math.cos(away) * back)
+            elif u.stance == "free" and u.order is None and d < 90 and not (u.ranged() and u.ammo > 0):
+                self.attack(u, nearest)
+
+    def form_up(self, side):
+        """The captains keep the plain line: it is what their men know. (The player may choose otherwise.)"""
+
     def run(self, dt=1.0, ai_sides=(0, 1), limit=None):
         """Fight it out with the AI for the given sides (for auto-resolving and tests)."""
         if not self.started:
             self.begin()
+        for side in ai_sides:
+            if side not in self.formed_up:
+                self.form_up(side)
+                self.formed_up.add(side)
         while self.winner is None and (limit is None or self.time < limit):
             for side in ai_sides:
                 if int(self.time) % 5 == 0:

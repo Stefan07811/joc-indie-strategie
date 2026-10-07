@@ -28,6 +28,21 @@ class BattleHUD:
         self.retreat = theme.button(self.top, "Sound the retreat", a - 0.42, 0.875, actions["retreat"], width=0.38,
                                     scale=0.028, align="left")
         self.begin = theme.button(parent, "Begin the battle", 0, -0.62, actions["begin"], width=0.6, scale=0.045)
+        # the orders for the chosen regiments
+        self.orders = DirectFrame(parent=parent, frameColor=(0, 0, 0, 0))
+        self.order_buttons = {}
+        row = [("line", "Line", 0.13), ("deep", "Deep", 0.13), ("wedge", "Wedge", 0.15), ("square", "Square", 0.15),
+               ("loose", "Loose", 0.14), ("run", "Run (R)", 0.17), ("hold", "Hold (H)", 0.17),
+               ("skirmish", "Skirmish (G)", 0.22), ("halt", "Halt", 0.12)]
+        x = -sum(w + 0.012 for _, _, w in row) / 2
+        for key, label, w in row:
+            if key in ("line", "deep", "wedge", "square", "loose"):
+                command, args = actions["formation"], [key]
+            else:
+                command, args = actions[key], []
+            self.order_buttons[key] = theme.button(self.orders, label, x, -0.765, command, args, width=w,
+                                                   scale=0.024, align="left")
+            x += w + 0.012
         self.names = names
         self.cards = None
         self.card_units = []
@@ -48,12 +63,13 @@ class BattleHUD:
             name = UNITS[u.unit].name + (" (general)" if u.general else "")
             self.theme.button(card, name, x + 0.01, -0.835, self.actions["select"], [u.id], width=width - 0.02,
                               scale=0.022, align="left")
-            men = self.theme.label(card, "", x + 0.02, -0.89, scale=0.024)
+            men = self.theme.label(card, "", x + 0.02, -0.878, scale=0.022)
+            tags = self.theme.label(card, "", x + 0.02, -0.912, scale=0.019, color=FADED)
             bar_bg = DirectFrame(parent=card, frameColor=(0.35, 0.3, 0.25, 0.6),
                                  frameSize=(x + 0.02, x + width - 0.02, -0.955, -0.935))
             bar = DirectFrame(parent=card, frameColor=(0.2, 0.5, 0.25, 1),
                               frameSize=(x + 0.02, x + width - 0.02, -0.955, -0.935))
-            self.bars[u.id] = (men, bar, x + 0.02, x + width - 0.02, bar_bg)
+            self.bars[u.id] = (men, bar, x + 0.02, x + width - 0.02, tags)
             x += width + 0.015
 
     def update(self, speed, paused, selected):
@@ -64,14 +80,41 @@ class BattleHUD:
         minutes = int(b.time // 60)
         self.clock["text"] = ("Deploying" if not b.started else
                               f"{minutes} minutes into the battle" + ("  (paused)" if paused else ""))
-        self.help["text"] = ("Choose a regiment, then click where it should stand in your ground."
-                             if not b.started else
-                             "Left click: choose a regiment. Right click: march there, or attack the enemy clicked.")
+        self.help["text"] = ("Choose regiments (click, shift-click or drag a box), then click where they should "
+                             "stand. Right-drag: lay out a line." if not b.started else
+                             "Choose: click, shift-click, drag a box, ctrl+A, ctrl+1-9 to keep a group. "
+                             "Right click: march or attack. Right-drag: form a line.")
         self.buttons["pause"]["text"] = "Go on" if paused else "Pause"
         if b.started:
             self.begin.hide()
+        chosen = [u for u in self.card_units if u.id in selected and u.standing]
+        for key, button in self.order_buttons.items():
+            if key in ("line", "deep", "wedge", "square", "loose"):
+                usable = any(key in u.formations() for u in chosen)
+                on = bool(chosen) and all(u.formation == key for u in chosen if key in u.formations())
+            elif key == "skirmish":
+                usable = any(u.ranged() for u in chosen)
+                on = usable and all(u.stance == "skirmish" for u in chosen if u.ranged())
+            elif key == "run":
+                usable, on = bool(chosen), bool(chosen) and all(u.run for u in chosen)
+            elif key == "hold":
+                usable, on = bool(chosen), bool(chosen) and all(u.stance == "hold" for u in chosen)
+            else:
+                usable, on = bool(chosen) and b.started, False
+            button["text_fg"] = GOLD if on else (INK if usable else FADED)
+            if usable:
+                button.show()
+            else:
+                button.hide()
+        if not chosen:
+            self.orders.hide()
+        else:
+            self.orders.show()
         for u in self.card_units:
-            men, bar, x0, x1, _ = self.bars[u.id]
+            men, bar, x0, x1, tags = self.bars[u.id]
+            flags = [u.formation] + (["at the run"] if u.run else []) + \
+                ([u.stance] if u.stance != "free" else []) + (["tired"] if u.stamina < 35 else [])
+            tags["text"] = ", ".join(flags)
             state = {"routing": " — fleeing!", "gone": " — gone", "fighting": " — fighting"}.get(u.state, "")
             men["text"] = f"{u.men:,} men{state}"
             men["text_fg"] = RUBRIC if u.state in ("routing", "gone") else (GOLD if u.id in selected else INK)
@@ -81,6 +124,6 @@ class BattleHUD:
                                                                          else (0.7, 0.15, 0.1, 1))
 
     def destroy(self):
-        for w in (self.top, self.begin, self.cards):
+        for w in (self.top, self.begin, self.cards, self.orders):
             if w is not None:
                 w.destroy()

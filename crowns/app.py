@@ -104,12 +104,15 @@ def selftest(report):
 
 
 # Imported after configure(): Panda reads its settings when ShowBase starts.
+from .battle_controls import BattleControls  # noqa: E402
+
+
 def _showbase():
     from direct.showbase.ShowBase import ShowBase
     return ShowBase
 
 
-class MapApp(_showbase()):
+class MapApp(BattleControls, _showbase()):
     def __init__(self, style="codex", realm=None, quality="high"):
         super().__init__()
         from panda3d.core import WindowProperties
@@ -213,15 +216,14 @@ class MapApp(_showbase()):
             self.accept(key + "-up", self.keys.__setitem__, [key, False])
         self.accept("wheel_up", self.zoom, [0.85])
         self.accept("wheel_down", self.zoom, [1 / 0.85])
-        self.accept("mouse1", self.pick)
+        self.accept("mouse1", self._left_down)
+        self.accept("mouse1-up", self._left_up)
         self.accept("mouse2", self._drag, ["pan"])
         self.accept("mouse2-up", self._drag, [None])
         self.accept("mouse3", self._right_down)
         self.accept("mouse3-up", self._right_up)
         self.accept("space", self.space)
         self.accept("enter", self.end_month)
-        self.accept("1", self.set_mode, ["terrain"])
-        self.accept("2", self.set_mode, ["political"])
         self.accept("f5", self.save_game)
         self.accept("f9", self.load_game)
         self.accept("m", self.audio.toggle)
@@ -232,6 +234,7 @@ class MapApp(_showbase()):
         self.right_from = None
         self.in_battle = False
         self.battle = None
+        self.init_battle_controls()
         self.taskMgr.add(self.tick, "tick")
 
     # --- the campaign ----------------------------------------------------------------------------
@@ -380,7 +383,10 @@ class MapApp(_showbase()):
                                     names, {"pause": self.toggle_battle_pause, "x1": self.battle_speed_to, "x2":
                                             self.battle_speed_to, "x4": self.battle_speed_to,
                                             "auto": self.finish_battle_by_ai, "retreat": self.retreat_from_battle,
-                                            "begin": self.begin_battle, "select": self.select_regiment})
+                                            "begin": self.begin_battle, "select": self.select_regiment,
+                                            "formation": self.set_formation_selected, "run": self.toggle_run,
+                                            "hold": self.toggle_hold, "skirmish": self.toggle_skirmish,
+                                            "halt": self.halt_selected})
         self.battle_hud.buttons["x1"]["extraArgs"] = [1.0]
         self.battle_hud.buttons["x2"]["extraArgs"] = [2.0]
         self.battle_hud.buttons["x4"]["extraArgs"] = [4.0]
@@ -436,10 +442,12 @@ class MapApp(_showbase()):
                 self.battle_clock -= 0.5
                 if int(b.time * 2) % 10 == 0:
                     b.ai(1 - self.battle_side)
+                    b.captains(self.battle_side)
                 b.step(0.5)
         if b.winner is not None and not self.dialog.open:
             self.leave_battle()
             return
+        self.update_box()
         self.battle_scene.update(dt, b.time)
         cam = self.battle_cam
         self.battle_scene.follow(*cam.target, cam.distance, dt)
@@ -468,40 +476,6 @@ class MapApp(_showbase()):
         self.redraw_overlay()
         self.refresh()
         self.battle_dialog(report)
-
-    def battle_pick(self, add=False):
-        p = self.mouse_ground(self.battle_scene.height)
-        if p is None:
-            return
-        scene, b = self.battle_scene, self.battle
-        u = scene.unit_at(p.x, p.y)
-        if u is not None and u.side == self.battle_side:
-            if add or self.mouseWatcherNode.isButtonDown("shift"):
-                scene.selected.add(u.id)
-            else:
-                scene.selected = {u.id}
-            return
-        if not b.started and scene.selected:
-            for uid in list(scene.selected)[:1]:
-                b.place_unit(b.units[uid], p.x / 0.1, p.y / 0.1)
-            return
-        scene.selected.clear()
-
-    def battle_order(self):
-        p = self.mouse_ground(self.battle_scene.height)
-        if p is None or not self.battle.started:
-            return
-        scene, b = self.battle_scene, self.battle
-        target = scene.unit_at(p.x, p.y)
-        chosen = [b.units[uid] for uid in scene.selected if b.units[uid].standing]
-        if target is not None and target.side != self.battle_side:
-            for u in chosen:
-                b.attack(u, target)
-        else:
-            # several regiments keep their places side by side around the spot
-            for k, u in enumerate(chosen):
-                offset = (k - (len(chosen) - 1) / 2) * 140.0
-                b.move(u, p.x / 0.1 + offset, p.y / 0.1)
 
     def next_proposal(self):
         c = self.campaign
@@ -896,19 +870,31 @@ class MapApp(_showbase()):
         self.dragging = kind
         self.last_mouse = None
 
+    def _left_down(self):
+        if self.over_gui() or self.dialog.open:
+            return
+        if self.in_battle:
+            return self.battle_left_down()
+        self.pick()
+
+    def _left_up(self):
+        if self.in_battle:
+            self.battle_left_up()
+
     def _right_down(self):
-        """Right button: drag to turn the view, click to order the chosen army to march."""
-        self._drag("turn")
+        """Right button: drag to turn the view, click to order the chosen army to march. In a battle with
+        regiments chosen, a drag lays out the line they are to form."""
         m = self.mouseWatcherNode.getMouse() if self.mouseWatcherNode.hasMouse() else None
         self.right_from = (m.x, m.y) if m is not None else None
+        if self.in_battle and self.battle_scene.selected and not self.over_gui():
+            self.battle_right_down()
+        else:
+            self._drag("turn")
 
     def _right_up(self):
         self._drag(None)
         if self.in_battle:
-            if self.right_from is not None and self.mouseWatcherNode.hasMouse() and not self.over_gui():
-                m = self.mouseWatcherNode.getMouse()
-                if math.hypot(m.x - self.right_from[0], m.y - self.right_from[1]) <= 0.02:
-                    self.battle_order()
+            self.battle_right_up(self.right_from)
             return
         army = self.chosen
         if army is None or army.owner != self.campaign.player or self.right_from is None or self.dialog.open:
@@ -924,10 +910,6 @@ class MapApp(_showbase()):
             self.refresh()
 
     def pick(self):
-        if self.over_gui() or self.dialog.open:
-            return
-        if self.in_battle:
-            return self.battle_pick()
         p = self.mouse_ground()
         if p is None:
             return
@@ -1181,6 +1163,9 @@ class MapApp(_showbase()):
             if contact is not None and b.time > contact + 30 or b.winner is not None:
                 break
         self.battle_scene.selected = {u.id for u in b.side_units(0)[:3]}
+        for u in b.side_units(0)[:3]:
+            b.set_formation(u, u.formations()[1] if len(u.formations()) > 1 else "line")
+            u.run = True
         if want("battle_fight"):
             fighting = [u for u in b.units if u.state == "fighting"] or b.side_units(0)
             self.battle_cam.heading = 20

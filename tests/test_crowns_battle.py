@@ -105,3 +105,54 @@ def test_the_outcome_returns_to_the_campaign(world):
     assert ours.men < before[0]
     assert theirs not in c.armies or theirs.men < before[1]
     assert war.battle_score != 0 and war.losses
+
+
+def test_formations_change_the_block_and_who_may_take_them():
+    b = Battle(army("hungary", [("knights", 300), ("spearmen", 600), ("crossbowmen", 500)]),
+               army("serbia", [("spearmen", 600)]), UNITS, "plains", 1)
+    by = {u.unit: u for u in b.side_units(0)}
+    knights, spears, bows = by["knights"], by["spearmen"], by["crossbowmen"]
+    line = spears.frontage
+    assert b.set_formation(spears, "deep") and spears.frontage < line and spears.depth > 12
+    assert not b.set_formation(spears, "wedge")            # wedges are for horse
+    assert b.set_formation(knights, "wedge") and knights.armour < knights.defence
+    assert b.set_formation(bows, "loose") and "square" not in bows.formations()
+    assert b.set_formation(spears, "square") and spears.speed(False) < bows.speed(False)
+
+
+def test_a_square_has_no_flank():
+    def rear_blow(formation):
+        b = Battle(army("hungary", [("knights", 300)]), army("serbia", [("spearmen", 600)]), UNITS, "plains", 1)
+        knights, spears = b.units
+        spears.x, spears.y, spears.facing = 1200, 800, 0.0
+        knights.x, knights.y = 1200, 800 - 30                # behind the spearmen
+        b.set_formation(spears, formation)
+        return b._strength(knights, spears)
+    assert rear_blow("square") < rear_blow("line") / 1.5
+
+
+def test_running_tires_and_rest_restores():
+    b = Battle(army("wallachia", [("great_host", 1000)]), army("ott_rum", [("azaps", 600)]), UNITS, "plains", 1)
+    host, _ = b.units
+    b.begin()
+    host.run = True
+    b.move(host, host.x + 600, host.y)
+    for _ in range(60):
+        b._act(host, 1.0)
+    tired = host.stamina
+    assert tired < 60
+    b.halt(host)
+    for _ in range(30):
+        b._act(host, 1.0)
+    assert host.stamina > tired
+
+
+def test_free_regiments_close_with_what_comes_near_and_held_ones_stand():
+    for stance, expect in (("free", True), ("hold", False)):
+        b = Battle(army("wallachia", [("great_host", 1000)]), army("ott_rum", [("azaps", 600)]), UNITS, "plains", 1)
+        host, foe = b.units
+        foe.x, foe.y = host.x, host.y + 60
+        b.begin()
+        b.set_stance(host, stance)
+        b.captains(0)
+        assert (host.order is not None) == expect

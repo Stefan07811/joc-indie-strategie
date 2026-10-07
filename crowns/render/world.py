@@ -159,7 +159,8 @@ class MapWorld:
                              len(c), len(r))
                 self.terrain.attachNewNode(node)
         self.terrain.setShaderInputs(colormap=self.color_tex, normalmap=self.normal_tex, provinces=self.province_tex,
-                                     palette=self.palette_tex, index_size=Vec2(2, 2), palette_size=2.0,
+                                     palette=self.palette_tex, held=self.palette_tex, index_size=Vec2(2, 2),
+                                     palette_size=2.0,
                                      coast=self.coast_tex, time=0.0, borderdist=self.coast_tex,
                                      selected=-1, hovered=-1, sun_dir=SUN, cam_pos=Vec3(0, 0, 1000),
                                      haze=Vec3(*HAZE), map_size=self.size, overlay_mix=0.0,
@@ -197,10 +198,14 @@ class MapWorld:
         self.terrain.setShaderInputs(provinces=index_texture, borderdist=distance_texture,
                                      index_size=Vec2(index_texture.getXSize(), index_texture.getYSize()))
 
-    def set_palette(self, rgba, mix):
-        """The map mode: a colour per province index (1 x N RGBA), and how strongly it shows."""
+    def set_palette(self, rgba, mix, held=None):
+        """The map mode: a colour per province index (1 x N RGBA), and how strongly it shows. `held`, of
+        the same shape, is the colour of whoever holds each province now: where it differs (land
+        occupied in war) the land is hatched in the occupier's colour."""
         self.palette_tex = self._palette_texture(rgba)
-        self.terrain.setShaderInputs(palette=self.palette_tex, palette_size=float(rgba.shape[1]), overlay_mix=mix)
+        self.held_tex = self._palette_texture(rgba if held is None else held)
+        self.terrain.setShaderInputs(palette=self.palette_tex, held=self.held_tex,
+                                     palette_size=float(rgba.shape[1]), overlay_mix=mix)
 
     def set_reach(self, field=None, rect=None):
         """Show how far the chosen army can march this month: `field` is km / budget over the map

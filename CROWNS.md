@@ -8,9 +8,13 @@ Jocul vechi cu legende (`legendele/`) rămâne în depozit până când cel nou 
 
 ![Harta în 1402](docs/crowns/overview.png)
 
-![Oastea Țării Românești pornește spre Sofia: raza de marș pe o lună și drumul](docs/crowns/march.png)
+![Alegerea statului: fiecare țară are povestea ei din 1402](docs/crowns/choose.png)
 
-![De aproape: trecerea Dunării pe la vadul de la Nicopole](docs/crowns/march_close.png)
+![Târgoviștea: clădiri, recrutare, venituri](docs/crowns/province.png)
+
+![Oastea Țării Românești pornește spre Nicopole: raza de marș pe o lună și drumul](docs/crowns/army.png)
+
+![Războiul cu Rumelia otomană: ținuturile ocupate sunt hașurate în culoarea ocupantului](docs/crowns/war.png)
 
 ## Deciziile de bază
 
@@ -73,13 +77,38 @@ rămâne ordin pentru lunile următoare, cu săgeți și apoi puncte. Tasta Spac
 
 ```bash
 pip install -r requirements.txt
-python -m crowns                 # harta 3D (WASD/săgeți, rotița, clic dreapta tras sau Q/E, clic stânga,
-                                 # clic dreapta = marș pentru armata aleasă, Space = luna următoare)
+python -m crowns                 # campania: alegi un stat pe hartă și îl conduci
+python -m crowns --realm hungary # direct cu un stat (wallachia, moldavia, hungary, ott_rum, serbia, venice…)
 python -m crowns --shots DIR     # capturi de verificare, fără ecran
 python tools/terrain.py          # descarcă relieful și apele, refac harta de altitudini
 python tools/provinces.py        # refac provinciile după tools/history_1402.py
 python tools/realms_1402.py      # refac crowns/data/realms.json
 ```
+
+## Campania (etapa B3)
+
+Fiecare tură e o lună. Joci un stat și toate celelalte sunt conduse de AI.
+
+- **Banii:** taxe de la oameni, valoarea mărfii fiecărei provincii (grâu, vite, vin, sare, argint, aur,
+  mătase…) și comerțul orașelor; se plătesc curtea, armatele, zidurile noi și tributul către suzeran.
+  Statele care trec dincolo de marginea hărții (mamelucii cu Egiptul, Timur, Hoarda, Polonia, Lituania,
+  Genova) primesc și venitul de acolo.
+- **Clădiri:** 9 feluri, fiecare cu 3 niveluri (ogoare, târg, meșteșugari, mină, port, ziduri, cetate,
+  grajduri, biserică sau moschee). Se construiesc în luni, o lucrare odată pe provincie; orașele mari au
+  loc pentru mai multe.
+- **Oaste:** 7 tradiții militare. Țara Românească și Moldova au boieri, călărași, arcași și oastea cea
+  mare; latinii au cavaleri, oșteni în armură și arbaletrieri; otomanii au sipahi, akıncı, azapi și
+  ieniceri; Hoarda are arcași călare; mamelucii, cavaleria de elită. Recruții vin luna următoare.
+- **Război:** se declară cu un scop (o provincie, tribut sau independență). Suzeranul, vasalii și aliații
+  sunt chemați. Armatele care se întâlnesc dau bătălie, iar terenul contează (cavaleria e bună la câmpie,
+  pedestrimea la munte). O armată oprită la un oraș dușman îl asediază câteva luni, după ziduri și
+  garnizoană, mai încet iarna. Iarna în țară străină omoară oameni. Bătăliile, pământul ținut și scopul
+  războiului dau scorul de război, iar scorul hotărăște ce pace acceptă fiecare.
+- **Diplomație:** opinia dintre state ține de credință, de vechile prietenii și dușmănii, de granițe și de
+  războaiele recente. Poți face alianțe, cere tribut unui vecin mult mai slab și trimite daruri.
+- **AI-ul** construiește, recrutează, atacă vecinii slabi pe care nu-i iubește, asediază, se retrage din
+  fața armatelor mai mari și face pace când scorul o cere. Îți poate oferi pace: primești o întrebare.
+- **Salvare:** F5 salvează, F9 încarcă.
 
 ## Etapele
 
@@ -87,7 +116,7 @@ python tools/realms_1402.py      # refac crowns/data/realms.json
 |---|---|
 | **B1 — Harta 3D** (gata) | relief, ape, provincii, granițe, nume, cameră, selecție |
 | **B2 — Lumea în 1402** (gata) | toate statele cu conducătorii, dinastiile, vasalii și tributul lor; dezvoltarea provinciilor |
-| **B3 — Campania** (în lucru: mișcarea e gata) | ture lunare, economie, clădiri, armate pe hartă, asedii, războaie și păci, diplomație, AI |
+| **B3 — Campania** (jucabilă; urmează echilibrul) | ture lunare, economie, clădiri, armate pe hartă, asedii, războaie și păci, diplomație, AI |
 | **B4 — Oameni** | conducători și moștenitori care îmbătrânesc și mor, dinastii, căsătorii, nobili |
 | **B5 — Istoria** | misiuni pentru fiecare țară, evenimente istorice (Interregnul, Varna, Constantinopol), decizii |
 | **B6 — Interfața și sunetul** | ferestre în stil medieval, sfaturi, muzică cu instrumente reale |

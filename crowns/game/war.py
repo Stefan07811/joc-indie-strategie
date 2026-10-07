@@ -15,6 +15,8 @@ ENGAGE_KM = 18.0          # armies closer than this at the end of a march fight
 SIEGE_KM = 15.0           # an army this close to an enemy town besieges it
 TRUCE_MONTHS = 60
 GARRISON_PER_FORT = 300
+MILITIA_BASE = 150        # men who man an unwalled town's palisade and its church tower
+MILITIA_PER_THOUSAND = 5  # and more for every thousand people of the province
 ATTRITION = {"summer": 0.01, "spring": 0.015, "autumn": 0.015, "winter": 0.04}   # a month, in enemy land
 HOME_WINTER_ATTRITION = 0.005
 LOOTING = 0.05            # prosperity an enemy army strips from a province each month
@@ -134,9 +136,11 @@ class Warfare:
         return war
 
     def goal_text(self, war):
-        goal = war.goal
+        return self.describe_goal(war.goal, war.target)
+
+    def describe_goal(self, goal, target):
         province = self.static(goal["province"]).name if goal.get("province") else ""
-        return GOALS[goal["kind"]].format(province=province, defender=self.name(war.target))
+        return GOALS[goal["kind"]].format(province=province, defender=self.name(target))
 
     def defenders_called(self, defender, exclude):
         """Who comes to the aid of a realm attacked: its overlord (unless that is the attacker), its
@@ -403,39 +407,49 @@ class Warfare:
         army.moves = 0.0
 
     def garrison(self, pid):
-        return self.fort(pid) * GARRISON_PER_FORT + self.effect(pid, "garrison")
+        """The men defending the town: the fortress's garrison, the castle's, and the townsfolk and
+        villagers who take up arms when an enemy comes."""
+        militia = MILITIA_BASE + MILITIA_PER_THOUSAND * self.provinces[pid].population
+        return self.fort(pid) * GARRISON_PER_FORT + self.effect(pid, "garrison") + militia
 
     def _sieges(self):
-        besieged = set()
+        """Armies stopped at enemy towns besiege them, allies together; the town falls when the siege is
+        done (an unwalled town in a month or two, a great fortress in a year or more)."""
+        camps = {}
         for army in self.armies:
             prov = self.provmap.at(army.x, army.y)
-            if prov is None:
-                continue
-            p = self.provinces[prov.id]
-            if not self.hostile(army.owner, p.controller) or army.route is not None:
+            if prov is None or army.route is not None:
                 continue   # only an army that has stopped at the town besieges it
+            p = self.provinces[prov.id]
+            if not self.hostile(army.owner, p.controller):
+                continue
             tx, ty = prov.town
             if math.hypot(army.x - tx, army.y - ty) * 1.5 > SIEGE_KM:
                 continue
-            besieged.add(prov.id)
-            fort = self.fort(prov.id)
-            if fort == 0 or army.men >= 8 * max(1, self.garrison(prov.id)) and fort <= 1:
-                self._occupy(p, army.owner)
-                continue
-            if army.men < 2 * self.garrison(prov.id):
+            camps.setdefault(prov.id, []).append(army)
+        for pid, armies in camps.items():
+            p, info = self.provinces[pid], self.static(pid)
+            # the side already besieging keeps the siege; others of that side join it
+            lead = next((a for a in armies if p.siege and (a.owner == p.siege["by"] or
+                                                           not self.hostile(a.owner, p.siege["by"]))), armies[0])
+            side = [a for a in armies if a.owner == lead.owner or not self.hostile(a.owner, lead.owner)]
+            men = sum(a.men for a in side)
+            garrison = self.garrison(pid)
+            if men < 2 * garrison:
                 continue   # too few to close the town in
-            if not p.siege or p.siege.get("by") != army.owner:
-                p.siege = {"by": army.owner, "progress": 0.0, "months": 0}
-                self.tell(p.controller, f"{prov.name} is besieged by the {army.name}.")
-                self.tell(army.owner, f"The {army.name} lays siege to {prov.name}.")
+            fort = self.fort(pid)
+            if not p.siege or p.siege["by"] != lead.owner and self.hostile(p.siege["by"], lead.owner):
+                p.siege = {"by": lead.owner, "progress": 0.0, "months": 0}
+                self.tell(p.controller, f"{info.name} is besieged by the {lead.name}.")
+                self.tell(lead.owner, f"The {lead.name} lays siege to {info.name}.")
             winter = 0.5 if self.date.season == "winter" else 1.0
-            might = min(2.0, army.men / (4.0 * max(1, self.garrison(prov.id))))
-            p.siege["progress"] += (0.6 + 0.4 * might) * winter / (1.5 + 1.5 * fort) * self.rng.uniform(0.7, 1.3)
+            might = min(2.0, men / (4.0 * garrison))
+            p.siege["progress"] += (0.6 + 0.4 * might) * winter / (1.0 + 1.5 * fort) * self.rng.uniform(0.7, 1.3)
             p.siege["months"] += 1
             if p.siege["progress"] >= 1.0:
-                self._occupy(p, army.owner)
+                self._occupy(p, lead.owner)
         for p in self.provinces.values():
-            if p.siege and p.id not in besieged:
+            if p.siege and p.id not in camps:
                 p.siege = None
 
     def _occupy(self, p, tag):

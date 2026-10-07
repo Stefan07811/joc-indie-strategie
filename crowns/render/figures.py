@@ -92,14 +92,15 @@ class Builder:
     def node(self, name, smooth=False):
         """The triangles as a GeomNode: flat-shaded, or with normals averaged at shared corners
         (smooth=True, for the ink outline, which must swell without tearing apart)."""
-        rows = []
-        for v, color in self.tris:
-            n = np.cross(v[1] - v[0], v[2] - v[0])
-            length = np.linalg.norm(n)
-            n = n / length if length > 1e-9 else np.array([0, 0, 1.0])
-            for p in v:
-                rows.append([*p, *n, *color, 1.0])
-        data = np.array(rows, np.float32)
+        verts = np.array([v for v, _ in self.tris], np.float64)                  # (n, 3, 3)
+        colors = np.array([(*c, 1.0) for _, c in self.tris], np.float64)         # (n, 4)
+        n = np.cross(verts[:, 1] - verts[:, 0], verts[:, 2] - verts[:, 0])
+        length = np.linalg.norm(n, axis=1, keepdims=True)
+        n = np.where(length > 1e-9, n / np.maximum(length, 1e-9), np.array([0.0, 0.0, 1.0]))
+        count = len(self.tris)
+        data = np.concatenate([verts.reshape(-1, 3), np.repeat(n, 3, axis=0), np.repeat(colors, 3, axis=0)],
+                              axis=1).astype(np.float32)
+        assert data.shape == (count * 3, 10)
         if smooth:
             keys = np.round(data[:, :3] * 200).astype(np.int64)
             _, inverse = np.unique(keys, axis=0, return_inverse=True)

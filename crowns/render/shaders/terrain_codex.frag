@@ -6,6 +6,7 @@ uniform sampler2D colormap;
 uniform sampler2D normalmap;
 uniform sampler2D provinces;
 uniform sampler2D palette;
+uniform sampler2D held;         // the colour of whoever holds each province now (an occupier, in war)
 uniform sampler2D coast;        // map pixels to the coast: + at sea, - on land
 uniform sampler2D borderdist;   // texels to the nearest province border
 uniform vec2 index_size;
@@ -82,6 +83,13 @@ void main() {
         vec3 tint = mix(realm.rgb, vec3(dot(realm.rgb, vec3(0.33))), 0.3) * 1.2;  // pigments, not neon
         vec3 wash = mix(vec3(1.0), tint, clamp(pigment, 0.0, 1.0));
         col *= wash;  // watercolour multiplies over the paper
+        // land held by an enemy in war: hatched over in the occupier's colour
+        vec4 holder = texture(held, vec2((float(c) + 0.5) / palette_size, 0.5));
+        if (distance(holder.rgb, realm.rgb) > 0.01 && overlay_mix > 0.0) {
+            float stripe = step(0.55, fract((wpos.x + wpos.y) / max(2.2, d / 140.0)));
+            vec3 occupier = mix(holder.rgb, vec3(dot(holder.rgb, vec3(0.33))), 0.2) * 0.9;
+            col = mix(col, col * occupier * 1.15, stripe * 0.75);
+        }
     }
 
     // relief in ink: hatching in shadow, cross-hatching in deep shadow, strokes down steep slopes

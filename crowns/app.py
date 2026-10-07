@@ -1,22 +1,33 @@
-"""Crowns of the Balkans: the 3D map application.
+"""Crowns of the Balkans: the campaign on the 3D map.
 
-    python -m crowns                  play (a window at the desktop's resolution)
-    python -m crowns --shots DIR      render a few views to DIR and quit (works without a display)
+    python -m crowns                    play (choose a realm on the map)
+    python -m crowns --realm wallachia  play straight away as a realm
+    python -m crowns --shots DIR        render a few views to DIR and quit (works without a display)
 
-Controls: WASD or the arrows move, the mouse wheel zooms, right-drag or Q/E turns, middle-drag moves,
-left click picks a province or an army, right click orders the chosen army to march there, space or
-enter ends the month, 1 / 2 switch between the terrain and the political map.
+Controls: WASD or the arrows move, the mouse wheel zooms, right-drag or Q/E turns, middle-drag moves.
+Left click picks a province, an army or a realm; right click orders the chosen army to march there
+(onto an enemy army: give battle; to an enemy town: besiege it). Space ends the month. 1 / 2 switch
+between the terrain and the political map. F5 saves, F9 loads.
 """
 
 import argparse
+import json
 import math
+import os
 import sys
 import time
 from pathlib import Path
 
 from panda3d.core import loadPrcFileData
 
-FONTS = Path(__file__).resolve().parent / "assets" / "fonts"
+ACCENT = {"latin": (0.94, 0.92, 0.86), "vlach": (0.20, 0.30, 0.62), "balkan": (0.85, 0.75, 0.40),
+          "greek": (0.55, 0.20, 0.45), "ottoman": (0.94, 0.92, 0.86), "steppe": (0.55, 0.12, 0.10),
+          "levant": (0.90, 0.78, 0.30)}
+EASTERN = {"ottoman", "steppe", "levant"}
+
+
+def saves_dir():
+    return Path(os.environ.get("CROWNS_HOME", Path.home() / ".crowns")) / "saves"
 
 
 def configure(offscreen=False, size=None, fullscreen=False):
@@ -34,6 +45,7 @@ def configure(offscreen=False, size=None, fullscreen=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="crowns")
+    parser.add_argument("--realm", help="play as this realm (e.g. wallachia, hungary, ott_rum)")
     parser.add_argument("--shots", help="render views to this folder and quit")
     parser.add_argument("--only", nargs="*", help="with --shots: just these views")
     parser.add_argument("--size", default=None, help="window size, e.g. 1920x1080")
@@ -43,7 +55,7 @@ def main(argv=None):
     size = tuple(int(v) for v in args.size.split("x")) if args.size else None
     configure(offscreen=bool(args.shots), size=size or ((1600, 900) if args.shots else None),
               fullscreen=args.fullscreen)
-    app = MapApp(style=args.style)
+    app = MapApp(style=args.style, realm=args.realm)
     if args.shots:
         app.shots(Path(args.shots), args.only)
     else:
@@ -57,17 +69,21 @@ def _showbase():
 
 
 class MapApp(_showbase()):
-    def __init__(self, style="codex"):
+    def __init__(self, style="codex", realm=None):
         super().__init__()
-        from direct.gui.OnscreenText import OnscreenText
-        from panda3d.core import TextNode, Vec3, WindowProperties
+        from panda3d.core import WindowProperties
 
         from . import geo
+        from .game.campaign import Campaign
+        from .game.navigation import Navigation
+        from .game.realms import load as load_realms
         from .provinces import ProvinceMap
         from .render.camera import StrategyCamera
+        from .render.orders import RouteRibbon
         from .render.political import Labels, Overlay, RealmLabels
         from .render.world import HAZE, MapWorld
-        from .game.realms import load as load_realms
+        from .ui.panels import Chronicle, Dialog, SidePanel, TopBar
+        from .ui.theme import Theme
 
         self.geo = geo
         if hasattr(self.win, "getProperties") and not self.win.getProperties().getFullscreen() and self.pipe:
@@ -85,40 +101,36 @@ class MapApp(_showbase()):
         self.overlay = Overlay(self.provmap)
         self.world.set_provinces(self.overlay.index_texture(), self.overlay.distance_texture())
         self.realms, self.relations = load_realms()
-        REALM_NAMES = {tag: r["short"] for tag, r in self.realms.items()}
         self.colors = {tag: tuple(r["color"]) for tag, r in self.realms.items()}
-        self.owner_of = {p.id: p.owner for p in self.provmap.provinces.values()}
+        self.campaign = Campaign(self.provmap, self.realms, self.relations, player=None)
+        self.nav = Navigation(self.world.ground, self.provmap)
+        self.campaign.nav = self.nav
         self.selected = None
-        self.mode = "political"
-        self.font = self.loader.loadFont(str(FONTS / "EBGaramond.ttf"))
-        self.title_font = self.loader.loadFont(str(FONTS / "Cinzel.ttf"))
-        for f in (self.font, self.title_font):
-            f.setPixelsPerUnit(64)
-        self.labels = Labels(self.provmap, self.world.height_at, self.title_font, self.render)
-        self.realm_labels = RealmLabels(self.provmap, self.owner_of, REALM_NAMES, self.world.height_at,
-                                        self.title_font, self.render,
-                                        capitals={tag: r["capital"] for tag, r in self.realms.items()})
         self.hovered = None
+        self.mode = "political"
+        self.theme = Theme(self.loader)
+        self.labels = Labels(self.provmap, self.world.height_at, self.theme.title, self.render)
+        self.realm_labels = RealmLabels(self.provmap, self.owners(), {t: r["short"] for t, r in self.realms.items()},
+                                        self.world.height_at, self.theme.title, self.render,
+                                        capitals={t: r["capital"] for t, r in self.realms.items()})
         self.camera_ctl = StrategyCamera(self.camera, self.camLens, self.world.height_at)
         self.camera_ctl.look_at(*self.world_xy(25.5, 44.0), 1100)
-        self.info = OnscreenText(text="", pos=(-1.7, 0.9), scale=0.05, align=TextNode.ALeft, fg=(1, 0.95, 0.85, 1),
-                                 shadow=(0, 0, 0, 0.8), font=self.font, mayChange=True, parent=self.aspect2d)
-        self.redraw_overlay()
-        from .game.calendar import START
-        from .game.navigation import Navigation
-        from .render.orders import RouteRibbon
-        self.date = START
-        self.nav = Navigation(self.world.ground, self.provmap)
         self.ribbon = RouteRibbon(self.render, self.world.height_at)
         self.chosen = None
-        self.realm_names = REALM_NAMES
-        self.armies, self.figures = self.first_armies()
-        self.date_text = OnscreenText(text=str(self.date), pos=(0, 0.9), scale=0.065, fg=(0.24, 0.15, 0.08, 1),
-                                      shadow=(0.96, 0.9, 0.75, 0.9), font=self.title_font, mayChange=True,
-                                      parent=self.aspect2d)
-        self.army_text = OnscreenText(text="", pos=(-1.7, -0.75), scale=0.05, align=TextNode.ALeft,
-                                      fg=(1, 0.95, 0.85, 1), shadow=(0, 0, 0, 0.8), font=self.font, mayChange=True,
-                                      parent=self.aspect2d)
+        self.figures = {}
+        aspect = self.getAspectRatio()
+        self.topbar = TopBar(self.theme, self.aspect2d, aspect, self.end_month, self.show_my_realm)
+        self.panel = SidePanel(self.theme, self.aspect2d, aspect, {
+            "close": self.close_panel, "realm": self.show_realm, "tab": self.set_tab, "build": self.build,
+            "recruit": self.recruit, "halt": self.halt, "war": self.ask_war, "diplo": self.diplo,
+            "peace": self.offer_peace, "play": self.play_as})
+        self.chronicle = Chronicle(self.theme, self.aspect2d, aspect)
+        self.dialog = Dialog(self.theme, self.aspect2d)
+        self.redraw_overlay()
+        self.sync_figures()
+        self.refresh()
+        if realm:
+            self.play_as(realm, welcome=False)
         print(f"map ready in {time.time() - started:.1f} s")
         self.keys = {}
         for key in ("w", "a", "s", "d", "arrow_up", "arrow_down", "arrow_left", "arrow_right", "q", "e"):
@@ -135,44 +147,218 @@ class MapApp(_showbase()):
         self.accept("enter", self.end_month)
         self.accept("1", self.set_mode, ["terrain"])
         self.accept("2", self.set_mode, ["political"])
-        self.accept("escape", sys.exit)
+        self.accept("f5", self.save_game)
+        self.accept("f9", self.load_game)
+        self.accept("escape", self.escape)
         self.dragging = None
         self.last_mouse = None
-        self.Vec3 = Vec3
+        self.right_from = None
         self.taskMgr.add(self.tick, "tick")
 
-    def first_armies(self):
-        """The armies in the field in August 1402 (until the campaign raises them for real)."""
-        from .game.armies import HORSE_MARCH_KM, Army, Regiment
+    # --- the campaign ----------------------------------------------------------------------------
+
+    @property
+    def c(self):
+        return self.campaign
+
+    def owners(self):
+        return {p.id: p.owner for p in self.campaign.provinces.values()}
+
+    def play_as(self, tag, welcome=True):
+        c = self.campaign
+        c.player = tag
+        c.attach_ai(self.nav)
+        self.panel.close()
+        self.camera_ctl.look_at(*self.map_to_world(*c.static(c.capital(tag)).town), 520)
+        self.refresh()
+        if welcome:
+            info = c.info[tag]
+            self.dialog.show(info["name"], f"{info['situation']}\n\nSeptember 1402. The month is yours.",
+                             [("Begin", None)])
+
+    def refresh(self):
+        """Bring the bar and the open panel up to date."""
+        self.topbar.update(self.campaign)
+        self.topbar.show_end(self.campaign.player is not None)
+        subject = self.panel.subject
+        if subject is None:
+            return
+        kind, key = subject
+        if kind == "province":
+            self.panel.show_province(self.campaign, key)
+        elif kind == "army":
+            army = self.army_by_id(key)
+            if army is None:
+                self.close_panel()
+            else:
+                self.panel.show_army(self.campaign, army)
+        elif kind == "realm":
+            self.panel.show_realm(self.campaign, key, choosing=self.campaign.player is None)
+
+    def end_month(self):
+        c = self.campaign
+        if c.player is None or self.dialog.open:
+            return
+        before = str(c.date)
+        owners = self.owners()
+        c.end_month()
+        self.chronicle.add(before, c.messages)
+        self.chronicle.show()
+        self.sync_figures(animate=True)
+        if self.owners() != owners:
+            self.realm_labels.rebuild(self.owners())
+        self.redraw_overlay()
+        if self.chosen is not None and self.chosen not in c.armies:
+            self.chosen = None
+        self.show_orders()
+        self.refresh()
+        self.next_proposal()
+
+    def next_proposal(self):
+        c = self.campaign
+        if not c.proposals or self.dialog.open:
+            return
+        offer = c.proposals[0]
+        war = next((w for w in c.wars if w.id == offer["war"]), None)
+        if war is None:
+            c.proposals.pop(0)
+            return self.next_proposal()
+        text = f"{c.name(offer['from'])} offers to end {c.war_name(war)}: {c.peace_text(war, offer['terms'])}"
+
+        def answer(yes):
+            result = c.answer(offer, yes)
+            if result:
+                self.chronicle.add(str(c.date), [result])
+                self.chronicle.show()
+            self.redraw_overlay()
+            self.realm_labels.rebuild(self.owners())
+            self.refresh()
+            self.next_proposal()
+        self.dialog.show("An offer of peace", text, [("Accept", lambda: answer(True)),
+                                                     ("Refuse", lambda: answer(False))])
+
+    # --- the panels' actions ---------------------------------------------------------------------
+
+    def close_panel(self):
+        self.panel.close()
+        self.selected = None
+        self.redraw_overlay()
+
+    def show_realm(self, tag):
+        self.panel.show_realm(self.campaign, tag, choosing=self.campaign.player is None)
+
+    def show_my_realm(self):
+        if self.campaign.player:
+            self.show_realm(self.campaign.player)
+
+    def set_tab(self, tab, pid):
+        self.panel.tab = tab
+        self.panel.show_province(self.campaign, pid)
+
+    def build(self, pid, kind):
+        if self.campaign.build(pid, kind):
+            self.refresh()
+
+    def recruit(self, pid, unit):
+        if self.campaign.recruit(pid, unit):
+            self.refresh()
+
+    def halt(self, army_id):
+        army = self.army_by_id(army_id)
+        if army:
+            army.halt()
+            self.show_orders()
+            self.refresh()
+
+    def ask_war(self, tag, goal):
+        c = self.campaign
+        allies = c.defenders_called(tag, c.player)
+        text = f"Declare war on {c.info[tag]['name']}? Our goal: {c.describe_goal(goal, tag)}."
+        if allies:
+            text += " They will be joined by " + ", ".join(c.name(t) for t in allies) + "."
+        self.dialog.show("War", text, [("Declare war", lambda: self.declare(tag, goal)), ("Not yet", None)])
+
+    def declare(self, tag, goal):
+        c = self.campaign
+        c.messages = []
+        c.declare_war(c.player, tag, goal)
+        self.chronicle.add(str(c.date), c.messages)
+        self.chronicle.show()
+        self.refresh()
+
+    def diplo(self, tag, do, amount):
+        c = self.campaign
+        c.messages = []
+        if do == "ally":
+            ok, why = c.ally(c.player, tag)
+        elif do == "break":
+            ok, why = c.break_alliance(c.player, tag), f"The alliance with {c.name(tag)} is broken."
+        elif do == "tribute":
+            ok, why = c.demand_tribute(c.player, tag)
+        else:
+            ok = c.send_gift(c.player, tag, amount)
+            why = f"{c.name(tag)} thanks us for the gift." if ok else "We cannot afford it."
+        self.chronicle.add(str(c.date), [why])
+        self.chronicle.show()
+        self.refresh()
+
+    def offer_peace(self, war_id, terms):
+        c = self.campaign
+        war = next((w for w in c.wars if w.id == war_id), None)
+        if war is None:
+            return
+        other = war.target if c.player == war.leader else war.leader
+        if c.would_accept(war, terms, other):
+            text = c.make_peace(war, terms)
+            self.redraw_overlay()
+            self.realm_labels.rebuild(self.owners())
+        else:
+            c.nudge(c.player, other, -3)
+            text = f"{c.name(other)} refuses our terms."
+        self.chronicle.add(str(c.date), [text])
+        self.chronicle.show()
+        self.refresh()
+
+    # --- armies ----------------------------------------------------------------------------------
+
+    def army_by_id(self, army_id):
+        return next((a for a in self.campaign.armies if a.id == army_id), None)
+
+    def sync_figures(self, animate=False):
+        """A miniature for every army: new ones raised, the destroyed taken away, marches walked."""
         from .render.figures import ArmyFigure
         from .render.world import SUN
-        hosts = [  # realm, town, men, light horse, accent, eastern dress
-            ("wallachia", "targoviste", 9000, True, (0.20, 0.30, 0.62), False),
-            ("ott_rum", "edirne", 14000, False, (0.94, 0.92, 0.86), True),
-            ("hungary", "buda", 12000, False, (0.94, 0.92, 0.86), False),
-            ("serbia", "krusevac", 6000, False, (0.85, 0.75, 0.40), False),
-            ("moldavia", "suceava", 7000, True, (0.85, 0.72, 0.30), False),
-        ]
-        armies, figures = [], {}
-        for realm, town, men, horse, accent, eastern in hosts:
-            x, y = self.provmap.provinces[town].town
-            army = Army(f"{realm}-1", realm, f"Army of {self.realm_names[realm]}", x, y,
-                        [Regiment("great_host", men)], march=HORSE_MARCH_KM if horse else None)
-            color = tuple(c / 255 for c in self.colors[realm])
-            figure = ArmyFigure(self.render, self.world.height_at, color, accent, SUN, eastern=eastern)
-            figure.place(x, self.geo.HEIGHT - y)
-            armies.append(army)
-            figures[army.id] = figure
-        return armies, figures
-
-    # --- armies and their orders ----------------------------------------------------------------
+        c = self.campaign
+        alive = {a.id for a in c.armies}
+        for army_id in list(self.figures):
+            if army_id not in alive:
+                self.figures.pop(army_id).root.removeNode()
+        for army in c.armies:
+            figure = self.figures.get(army.id)
+            if figure is None:
+                tradition = c.tradition(army.owner)
+                color = tuple(v / 255 for v in self.colors[army.owner])
+                figure = ArmyFigure(self.render, self.world.height_at, color, ACCENT[tradition], SUN,
+                                    eastern=tradition in EASTERN)
+                figure.place(*self.map_to_world(army.x, army.y))
+                self.figures[army.id] = figure
+                continue
+            walk = army.last_walk if animate else []
+            end = self.map_to_world(army.x, army.y)
+            if len(walk) > 1:
+                figure.march(self._strides(walk) + [end])
+            elif math.hypot(figure.pos.x - end[0], figure.pos.y - end[1]) > 0.5:
+                figure.march([end]) if animate else figure.place(*end)
+            army.last_walk = []
 
     def army_at(self, p):
         """The army whose miniature is under world point p, if any."""
         reach = max(7.0, self.camera_ctl.distance * 0.025)
         best = None
-        for army in self.armies:
-            figure = self.figures[army.id]
+        for army in self.campaign.armies:
+            figure = self.figures.get(army.id)
+            if figure is None:
+                continue
             d = math.hypot(figure.pos.x - p.x, figure.pos.y - p.y)
             if d < reach:
                 best, reach = army, d
@@ -181,43 +367,64 @@ class MapApp(_showbase()):
     def choose(self, army):
         self.chosen = army
         self.show_orders()
+        if army is not None:
+            self.panel.show_army(self.campaign, army)
 
     def show_orders(self):
-        """Show the chosen army's reach this month, its route, and what it is about."""
+        """Show the chosen army's reach this month and its route (for the player's own armies)."""
         from .render.orders import months_of, reach_field
         army = self.chosen
-        if army is None:
+        if army is None or army.owner != self.campaign.player:
             self.world.set_reach(None)
             self.ribbon.hide()
-            self.army_text.setText("")
             return
         if army.moves >= 1:
             self.world.set_reach(*reach_field(army.reach(self.nav)))
         else:
             self.world.set_reach(None)
-        months = months_of(army.route, army.moves, army.march_km) if army.route else []
+        months = months_of(army.route, army.moves, army.march) if army.route else []
         if months:
             self.ribbon.show(months)
         else:
             self.ribbon.hide()
-        lines = [army.name, f"{army.men:,} men",
-                 f"Can still march {army.moves:.0f} of {army.march_km:.0f} km this month"]
-        if army.route:
-            more = math.ceil(max(0.0, army.route.cost - army.moves) / army.march_km)
-            lines.append("Arrives this month" if more == 0 else f"Arrives in {more} more month{'s' * (more > 1)}")
-        self.army_text.setText("\n".join(lines))
 
     def order_march(self, army, x, y):
-        """March the army towards map pixel (x, y): as far as it can this month, the rest are orders."""
+        """March the army towards map pixel (x, y): as far as it can this month, the rest are orders. If it
+        ends next to an enemy army, they fight at once."""
+        c = self.campaign
+        target = None
+        for other in c.armies:
+            if other is not army and c.hostile(army.owner, other.owner) and math.hypot(other.x - x, other.y - y) < 8:
+                target = other
+                x, y = other.x, other.y
         if not army.order(self.nav, x, y):
             return False
-        self.walk(army)
-        return True
-
-    def walk(self, army):
         walked = army.walk()
         if len(walked) > 1:
             self.figures[army.id].march(self._strides(walked))
+        enemy = c.hostile_near(army)
+        if enemy is not None and (target is None or enemy is target):
+            c.messages = []
+            report = c.battle(army, enemy)
+            self.chronicle.add(str(c.date), c.messages)
+            self.chronicle.show()
+            self.sync_figures()
+            self.battle_dialog(report)
+        return True
+
+    def battle_dialog(self, report):
+        c = self.campaign
+        won = report["winner"] == c.player
+        title = f"Victory at {report['place']}" if won else f"Defeat at {report['place']}"
+        winner, loser = report["armies"]
+        text = (f"On the {report['terrain']} of {report['place']}, the {winner} broke the {loser}. "
+                f"{c.name(report['winner'])} lost {report['losses'][report['winner']]:,} men, "
+                f"{c.name(report['loser'])} {report['losses'][report['loser']]:,}.")
+        self.dialog.show(title, text, [("Onward", None)])
+        if self.chosen is not None and self.chosen not in c.armies:
+            self.choose(None)
+            self.panel.close()
+        self.refresh()
 
     def _strides(self, points):
         """World points every few units along a march in map pixels, for the miniature to walk."""
@@ -228,27 +435,47 @@ class MapApp(_showbase()):
                     for k in range(1, steps + 1)]
         return out
 
-    def end_month(self):
-        """The month is over: every army gets its movement back and carries on with its orders."""
-        import random
-        self.date = self.date.next()
-        self.date_text.setText(str(self.date))
-        towns = [p for p in self.provmap.provinces.values()]
-        for army in self.armies:
-            army.new_month()
-            if army.route is None and army is not self.chosen:
-                # until there is an AI: wander to a town of the realm or of its neighbours
-                own = [p for p in towns if p.owner == army.owner]
-                if own:
-                    target = random.choice(own)
-                    army.order(self.nav, *target.town)
-            self.walk(army)
+    # --- saving -----------------------------------------------------------------------------------
+
+    def save_game(self, name="quick"):
+        if self.campaign.player is None:
+            return
+        folder = saves_dir()
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f"{name}.json"
+        path.write_text(json.dumps(self.campaign.to_dict()), encoding="utf-8")
+        self.chronicle.add(str(self.campaign.date), [f"Saved ({path.name})."])
+        self.chronicle.show()
+
+    def load_game(self, name="quick"):
+        from .game.campaign import Campaign
+        path = saves_dir() / f"{name}.json"
+        if not path.exists():
+            return
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.campaign = Campaign.from_dict(data, self.provmap, self.realms, self.relations)
+        self.campaign.nav = self.nav
+        self.campaign.attach_ai(self.nav)
+        for figure in self.figures.values():
+            figure.root.removeNode()
+        self.figures = {}
+        self.chosen = None
+        self.panel.close()
+        self.sync_figures()
+        self.realm_labels.rebuild(self.owners())
+        self.redraw_overlay()
         self.show_orders()
+        self.refresh()
+        self.chronicle.add(str(self.campaign.date), ["Loaded."])
+        self.chronicle.show()
 
     # --- coordinates ----------------------------------------------------------------------------
 
     def world_xy(self, lon, lat):
         x, y = self.geo.to_map(lon, lat)
+        return x, self.geo.HEIGHT - y
+
+    def map_to_world(self, x, y):
         return x, self.geo.HEIGHT - y
 
     def mouse_ground(self):
@@ -271,7 +498,19 @@ class MapApp(_showbase()):
             z = self.world.height_at(p.x, p.y)
         return p
 
+    def over_gui(self):
+        return self.mouseWatcherNode.hasMouse() and self.mouseWatcherNode.getOverRegion() is not None
+
     # --- input ----------------------------------------------------------------------------------
+
+    def escape(self):
+        if self.dialog.open:
+            self.dialog.close()
+        elif self.panel.subject is not None:
+            self.close_panel()
+            self.choose(None)
+        else:
+            sys.exit()
 
     def _drag(self, kind):
         self.dragging = kind
@@ -282,20 +521,25 @@ class MapApp(_showbase()):
         self._drag("turn")
         m = self.mouseWatcherNode.getMouse() if self.mouseWatcherNode.hasMouse() else None
         self.right_from = (m.x, m.y) if m is not None else None
-        self.turned = 0.0
 
     def _right_up(self):
         self._drag(None)
-        if self.chosen is None or self.right_from is None or not self.mouseWatcherNode.hasMouse():
+        army = self.chosen
+        if army is None or army.owner != self.campaign.player or self.right_from is None or self.dialog.open:
+            return
+        if not self.mouseWatcherNode.hasMouse() or self.over_gui():
             return
         m = self.mouseWatcherNode.getMouse()
         if math.hypot(m.x - self.right_from[0], m.y - self.right_from[1]) > 0.02:
             return
         p = self.mouse_ground()
-        if p is not None and self.order_march(self.chosen, p.x, self.geo.HEIGHT - p.y):
+        if p is not None and self.order_march(army, p.x, self.geo.HEIGHT - p.y):
             self.show_orders()
+            self.refresh()
 
     def pick(self):
+        if self.over_gui() or self.dialog.open:
+            return
         p = self.mouse_ground()
         if p is None:
             return
@@ -308,24 +552,24 @@ class MapApp(_showbase()):
         prov = self.provmap.at(p.x, self.geo.HEIGHT - p.y)
         self.selected = prov.index if prov else None
         self.redraw_overlay()
-        if prov:
-            realm = self.realms.get(prov.owner, {})
-            ruler = realm.get("ruler", {})
-            self.info.setText(f"{prov.name}\n{realm.get('name', prov.owner)}\n{realm.get('title', '')} "
-                              f"{ruler.get('name', '')}\n{prov.terrain}, {prov.culture}, "
-                              f"{prov.religion.replace('_', ' ')}\n{prov.population * 1000:,.0f} people, "
-                              f"{prov.area:,} km²")
+        if prov is None:
+            self.panel.close()
+        elif self.campaign.player is None:
+            self.show_realm(self.campaign.provinces[prov.id].owner)
         else:
-            self.info.setText("")
+            self.panel.tab = "build"
+            self.panel.show_province(self.campaign, prov.id)
 
     def set_mode(self, mode):
         self.mode = mode
         self.redraw_overlay()
 
     def redraw_overlay(self):
-        pal = self.overlay.palette(lambda p: self.colors.get(self.owner_of.get(p.id)))
-        self.world.set_palette(pal, mix=0.62 if self.mode == "political" else 0.0)
-        self.world.set_highlight(self.selected, getattr(self, "hovered", None))
+        c = self.campaign
+        pal = self.overlay.palette(lambda p: self.colors.get(c.provinces[p.id].owner))
+        held = self.overlay.palette(lambda p: self.colors.get(c.provinces[p.id].controller))
+        self.world.set_palette(pal, mix=0.62 if self.mode == "political" else 0.0, held=held)
+        self.world.set_highlight(self.selected, self.hovered)
 
     def tick(self, task):
         dt = min(globalClock.getDt(), 0.1)  # noqa: F821 - Panda's builtin clock
@@ -353,7 +597,7 @@ class MapApp(_showbase()):
         self.ribbon.update(self.camera_ctl.distance, task.time)
         self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
         self.realm_labels.update(self.camera_ctl.distance)
-        p = self.mouse_ground()
+        p = None if self.over_gui() else self.mouse_ground()
         prov = self.provmap.at(p.x, self.geo.HEIGHT - p.y) if p is not None else None
         hovered = prov.index if prov else None
         if hovered != self.hovered:
@@ -361,46 +605,81 @@ class MapApp(_showbase()):
             self.world.set_highlight(self.selected, hovered)
         return task.cont
 
-    # --- pictures for checking the map without a display ----------------------------------------
+    # --- pictures for checking the game without a display ----------------------------------------
+
+    def _view(self, lon, lat, dist, heading, mode="political"):
+        self.mode = mode
+        self.redraw_overlay()
+        self.camera_ctl.heading = heading
+        self.camera_ctl.look_at(*self.world_xy(lon, lat), dist)
+
+    def _shoot(self, folder, name):
+        self.world.update(self.camera_ctl.position, 2.0)
+        self.ribbon.update(self.camera_ctl.distance, 2.0)
+        self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
+        self.realm_labels.update(self.camera_ctl.distance)
+        for _ in range(2):
+            self.graphicsEngine.renderFrame()
+        self.win.saveScreenshot(str(folder / f"{name}.png"))
+        print("saved", name)
 
     def shots(self, folder, only=None):
         folder.mkdir(parents=True, exist_ok=True)
-        views = {
-            "overview": (28.0, 42.0, 1900, 0, "political"),
-            "balkans": (22.5, 42.5, 700, 0, "political"),
-            "wallachia": (25.5, 44.6, 380, 0, "political"),
-            "carpathians_terrain": (25.0, 45.6, 330, 20, "terrain"),
-            "constantinople": (28.9, 41.0, 160, 330, "political"),
-            "march": (24.6, 43.9, 760, 0, "political"),
-            "march_close": (24.9, 44.0, 260, 340, "political"),
-            "march_next": (24.2, 43.3, 600, 0, "political"),
-        }
-        wallachia = next(a for a in self.armies if a.owner == "wallachia")
-        for name, (lon, lat, dist, heading, mode) in views.items():
-            if name == "march":   # the plan, before the first step
-                wallachia.march = wallachia.moves = 220.0
-                wallachia.order(self.nav, *self.provmap.provinces["sofia"].town)
-                self.choose(wallachia)
-            if name == "march_next":
-                self.walk(wallachia)
-                self._settle()
-                self.end_month()
-                self._settle()
-            if only and name not in only:
-                continue
-            self.mode = mode
-            self.selected = self.provmap.provinces["targoviste"].index if name == "wallachia" else None
+        want = (lambda name: not only or name in only)
+        c = self.campaign
+        # choosing a realm
+        if want("choose"):
+            self._view(26.0, 43.5, 1500, 0)
+            self.show_realm("wallachia")
+            self._shoot(folder, "choose")
+        self.play_as("wallachia", welcome=False)
+        if want("welcome"):
+            info = c.info["wallachia"]
+            self.dialog.show(info["name"], f"{info['situation']}\n\nSeptember 1402. The month is yours.",
+                             [("Begin", None)])
+            self._view(25.5, 44.6, 520, 0)
+            self._shoot(folder, "welcome")
+        self.dialog.close()
+        if want("province"):
+            self._view(25.5, 44.6, 420, 0)
+            self.selected = self.provmap.provinces["targoviste"].index
+            self.panel.show_province(c, "targoviste")
             self.redraw_overlay()
-            self.camera_ctl.heading = heading
-            self.camera_ctl.look_at(*self.world_xy(lon, lat), dist)
-            self.world.update(self.camera_ctl.position, 2.0)
-            self.ribbon.update(self.camera_ctl.distance, 2.0)
-            self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
-            self.realm_labels.update(self.camera_ctl.distance)
-            for _ in range(2):
-                self.graphicsEngine.renderFrame()
-            self.win.saveScreenshot(str(folder / f"{name}.png"))
-            print("saved", name)
+            self._shoot(folder, "province")
+        if want("realm"):
+            self.panel.show_realm(c, "ott_rum")
+            self._view(25.5, 43.0, 900, 0)
+            self._shoot(folder, "realm")
+        army = c.armies_of("wallachia")[0]
+        if want("army"):
+            self.choose(army)
+            army.order(self.nav, *c.static("nikopol").town)
+            self.show_orders()
+            self.panel.show_army(c, army)
+            self._view(25.0, 44.2, 520, 0)
+            self._shoot(folder, "army")
+        # a war, a few months on
+        c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
+        army.order(self.nav, *c.static("nikopol").town)
+        army.walk()
+        for _ in range(4):
+            self.end_month()
+            self.dialog.close()
+            self._settle()
+        if want("war"):
+            self.choose(army if army in c.armies else None)
+            self.panel.show_realm(c, "ott_rum")
+            self._view(25.0, 43.7, 480, 0)
+            self._shoot(folder, "war")
+        if want("years"):
+            for _ in range(18):
+                self.end_month()
+                self.dialog.close()
+            self._settle()
+            self.panel.close()
+            self.choose(None)
+            self._view(27.0, 42.5, 1700, 0)
+            self._shoot(folder, "years")
 
     def _settle(self):
         """Let the miniatures finish their marches (for the pictures)."""

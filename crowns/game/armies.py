@@ -43,6 +43,7 @@ class Army:
             self.march = min((r.type.march for r in self.regiments), default=FOOT_MARCH_KM)
         if self.moves is None:
             self.moves = self.march
+        self.last_walk = []
 
     @property
     def march_km(self):
@@ -77,11 +78,13 @@ class Army:
     def walk(self):
         """Walk the orders as far as this month's movement allows: the points walked (none if the army
         stays where it is)."""
+        self.last_walk = []
         if self.route is None or self.moves <= 0:
             return []
         walked, self.route, spent = self.route.advance(self.moves)
         self.moves = max(0.0, self.moves - spent)
         self.x, self.y = walked[-1]
+        self.last_walk = walked    # for the miniature to walk (not saved)
         return walked
 
     def new_month(self):

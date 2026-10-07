@@ -1,0 +1,1 @@
+"""The campaign's windows."""

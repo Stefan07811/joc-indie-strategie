@@ -156,3 +156,36 @@ def test_free_regiments_close_with_what_comes_near_and_held_ones_stand():
         b.set_stance(host, stance)
         b.captains(0)
         assert (host.order is not None) == expect
+
+
+def test_a_near_army_marches_to_the_battle(world):
+    provmap, realms, relations = world
+    c = Campaign(provmap, realms, relations, player="wallachia", seed=1)
+    c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
+    x, y = c.static("teleorman").town
+    ours = c.new_army("wallachia", x, y, [Regiment(u, n) for u, n in VLACH])
+    help_ = c.new_army("wallachia", x + 8, y, [Regiment("great_host", 1000)] * 2)
+    theirs = c.new_army("ott_rum", x + 2, y, [Regiment(u, n) for u, n in OTTOMAN])
+    b = tactical(c, ours, theirs, seed=4)
+    coming = [u for u in b.units if u.army == 1]
+    assert len(coming) == 2 and all(u.state == "waiting" and u.arrive > 150 for u in coming)
+    b.run(dt=1.0)
+    assert all(u.state != "waiting" for u in coming) or b.time < coming[0].arrive
+    conclude(c, b, ours, theirs)
+    assert help_ not in c.armies or help_.men <= 2000
+
+
+def test_ambush_from_the_woods():
+    b = Battle(army("wallachia", [("great_host", 1000)]), army("ott_rum", [("azaps", 600)]), UNITS, "forest", 3)
+    host, foe = b.units
+    wood = next((x, y) for y in range(400, 1200, 20) for x in range(200, 2200, 20)
+                if b.field.wooded(x, y) and not b.field.wooded(x, y + 60) and not b.field.wooded(x, y + 300))
+    host.x, host.y = wood
+    host.still = 20
+    foe.x, foe.y = wood[0], wood[1] + 300
+    assert not b.visible(host, 1)
+    foe.y = wood[1] + 60
+    assert b.visible(host, 1)
+    nerve = foe.morale
+    b._engage(host, foe)
+    assert foe.morale < nerve and any("Ambush" in line for line in b.log)

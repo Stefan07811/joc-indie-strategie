@@ -9,7 +9,8 @@ def army_at(game, fid, pid):
     return next(a for a in game.armies_of(fid) if a.province == pid)
 
 
-def test_ranks_follow_experience(game):
+def test_ranks_follow_experience(game, monkeypatch):
+    monkeypatch.setitem(generals.FALL_CHANCE, "won", 0.0)        # he must live to learn
     vlad = army_at(game, "voievodat", "targoviste")
     vlad.traits, vlad.xp, vlad.rank = [], 0, 0
     assert generals.rank_for(0) == 0 and generals.rank_for(3) == 1 and generals.rank_for(1000) == 8

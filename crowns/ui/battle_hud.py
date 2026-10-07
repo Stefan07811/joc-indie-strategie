@@ -115,7 +115,8 @@ class BattleHUD:
             flags = [u.formation] + (["at the run"] if u.run else []) + \
                 ([u.stance] if u.stance != "free" else []) + (["tired"] if u.stamina < 35 else [])
             tags["text"] = ", ".join(flags)
-            state = {"routing": " — fleeing!", "gone": " — gone", "fighting": " — fighting"}.get(u.state, "")
+            state = {"routing": " — fleeing!", "gone": " — gone", "fighting": " — fighting",
+                     "waiting": f" — on the road ({max(1, int((u.arrive - b.time) // 60) + 1)} min)"}.get(u.state, "")
             men["text"] = f"{u.men:,} men{state}"
             men["text_fg"] = RUBRIC if u.state in ("routing", "gone") else (GOLD if u.id in selected else INK)
             nerve = max(0.0, min(1.0, u.morale / 100.0)) if u.alive else 0.0

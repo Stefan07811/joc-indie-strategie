@@ -70,6 +70,7 @@ class BattleScene:
         self.units = {}
         self.models = {}
         self.selected = set()
+        self.viewer = 0                   # whose eyes we see with: the enemy hidden in woods is not drawn
         self.arcs = []
         for u in battle.units:
             self._build_unit(u)
@@ -181,6 +182,12 @@ class BattleScene:
             px, py = -dy / n * 2.0, dx / n * 2.0
             za, zb = self.height(ax, ay) + 0.15, self.height(bx, by) + 0.15
             b.quad((ax - px, ay - py, za), (bx - px, by - py, zb), (bx + px, by + py, zb), (ax + px, ay + py, za), WATER)
+        for fx, fy in self.field.fords:       # the fords: pale gravel where the stream runs shallow
+            x, y = fx * UNIT, fy * UNIT
+            z = self.height(x, y) + 0.2
+            ring = [(x + math.cos(a) * 4.5, y + math.sin(a) * 3.0, z) for a in np.linspace(0, 2 * math.pi, 13)]
+            for a, c in zip(ring, ring[1:]):
+                b.tri((x, y, z), a, c, (0.70, 0.66, 0.52))
         node = self.root.attachNewNode(b.node("stream"))
         node.setShader(_piece())
         node.hide(SHADOW_CASTERS)
@@ -261,8 +268,10 @@ class BattleScene:
                 fig.hide()
         if u.state == "routing":
             view["flag"].hide()
-        if u.state == "gone":
-            view["node"].hide()
+        if u.state in ("gone", "waiting") or not self.battle.visible(u, self.viewer):
+            view["node"].hide()          # gone, still on the road, or hidden in a wood
+        else:
+            view["node"].show()
         view["select"].show() if u.id in self.selected else view["select"].hide()
 
     # --- every frame -----------------------------------------------------------------------------------
@@ -272,9 +281,9 @@ class BattleScene:
         self.ground.setShaderInput("deploying", 0.0 if b.started else 1.0)
         for u in b.units:
             self._place(u, time, dt)
-        for kind, a, c in b.events:
-            if kind == "volley":
-                self._arc(b.units[a], b.units[c])
+        for event in b.events:
+            if event[0] == "volley":
+                self._arc(b.units[event[1]], b.units[event[2]])
         b.events.clear()
         for arc in list(self.arcs):
             arc[1] -= dt
@@ -342,7 +351,7 @@ class BattleScene:
         """The regiment under world point (wx, wy)."""
         best, dist = None, 1e9
         for u in self.battle.units:
-            if not u.alive:
+            if not u.alive or u.state == "waiting" or not self.battle.visible(u, self.viewer):
                 continue
             x, y = world(u.x, u.y)
             d = math.hypot(wx - x, wy - y)

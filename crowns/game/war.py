@@ -371,7 +371,7 @@ class Warfare:
             after[army.id] = [r.men - int(r.men * share) for r in army.regiments]
         return self.conclude_battle(attacker, defender, win, after)
 
-    def conclude_battle(self, attacker, defender, winner, after):
+    def conclude_battle(self, attacker, defender, winner, after, fates=None):
         """Apply a battle's outcome, however it was fought: `after` gives, for each army, the men left in
         each of its regiments."""
         _, terrain, place = self.battle_site(attacker, defender)
@@ -386,7 +386,7 @@ class Warfare:
                 r.experience = min(1.0, r.experience + (0.15 if army is win else 0.05))
             army.regiments = [r for r in army.regiments if r.men >= 50]
             losses[army.id] = lost
-        self.after_battle(win, lose)
+        self.after_battle(win, lose, fates)
         report = {"winner": win.owner, "loser": lose.owner, "place": place, "terrain": terrain,
                   "losses": {win.owner: losses[win.id], lose.owner: losses[lose.id]},
                   "armies": (win.name, lose.name)}

@@ -471,17 +471,37 @@ class Court:
             return 0.9
         return 1.0 + 0.04 * (self.skill(cmd, "martial") - 5)
 
-    def after_battle(self, winner, loser):
-        """Captains die in battle, the beaten more often; victors learn."""
-        for army, risk in ((winner, 0.03), (loser, 0.12)):
+    def after_battle(self, winner, loser, fates=None):
+        """Captains die in battle, the beaten more often, or are taken and ransomed; victors learn.
+        fates: {army id: "killed" / "captured"} when the battle was fought out on the field."""
+        for army, other, risk in ((winner, loser, 0.03), (loser, winner, 0.12)):
             cmd = self.commander_of(army)
-            if cmd is not None and cmd.alive and self.rng.random() < risk:
+            if cmd is None or not cmd.alive:
+                continue
+            if fates is not None:
+                fate = fates.get(army.id)
+            else:
+                roll = self.rng.random()
+                fate = "killed" if roll < risk else ("captured" if army is loser and roll < risk * 2.5 else None)
+            if fate == "killed":
                 self.dies(cmd, "in battle")
                 if army.owner == self.player or cmd.court == self.player:
                     self.tell(self.player, f"{cmd.name} fell in battle.")
+            elif fate == "captured":
+                self.ransom(cmd, army.owner, other.owner)
         cmd = self.commander_of(winner)
         if cmd is not None and cmd.alive and self.rng.random() < 0.2:
             cmd.martial = min(10, cmd.martial + 1)
+
+    def ransom(self, person, payer, taker):
+        """A captain taken in battle comes home when his lord pays for him, as was the custom."""
+        price = round(200 + 60 * self.skill(person, "martial") + (300 if person.id in self.rulers.values() else 0), -1)
+        paid = min(price, max(0.0, self.realms[payer].treasury))
+        self.realms[payer].treasury -= paid
+        self.realms[taker].treasury += paid
+        text = f"{person.name} was taken in battle; {self.name(payer)} paid {paid:,.0f} ducats to have him back."
+        self.tell(payer, text)
+        self.tell(taker, text)
 
     # --- the ruler's mark on the realm ---------------------------------------------------------------
 

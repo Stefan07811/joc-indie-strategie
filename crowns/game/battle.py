@@ -76,6 +76,8 @@ class Unit:
     stance: str = "free"                      # free: engage what comes near; hold: stand; skirmish: keep away
     stamina: float = 100.0                    # wind and legs: running and fighting tire, rest restores
     face_to: Optional[float] = None           # the facing to take once the march is done
+    army: int = 0                             # 0: the side's main army; 1, 2...: allies coming to its aid
+    arrive: float = 0.0                       # battle time at which it comes onto the field
 
     @property
     def alive(self):
@@ -83,7 +85,7 @@ class Unit:
 
     @property
     def standing(self):
-        return self.alive and self.state != "routing"
+        return self.alive and self.state not in ("routing", "waiting")
 
     @property
     def frontage(self):
@@ -157,10 +159,13 @@ class Field:
         self.woods = woods > (1 - woods_share)
         self.marsh = terrain == "marsh"
         self.river = None
+        self.fords = []
         if river:
             xs = np.linspace(0, FIELD_W, 40)
             ys = FIELD_H / 2 + 120 * np.sin(xs / 400 + rng.uniform(0, 6)) + rng.uniform(-80, 80)
             self.river = list(zip(xs, ys))
+            # two or three fords where the stream runs shallow
+            self.fords = [self.river[k] for k in sorted(rng.choice(np.arange(5, 35), size=3, replace=False))]
             for i, (rx, ry) in enumerate(self.river):
                 cx = int(rx / self.CELL)
                 for j in range(-2, 3):
@@ -180,7 +185,10 @@ class Field:
         return bool(self.woods[self._cell(x, y)])
 
     def near_river(self, x, y):
+        """In the stream (and not at a ford)."""
         if not self.river:
+            return False
+        if any(math.hypot(x - fx, y - fy) < 40 for fx, fy in self.fords):
             return False
         return min(math.hypot(x - rx, y - ry) for rx, ry in self.river[::2]) < 25
 
@@ -213,7 +221,8 @@ class Battle:
     """A battle between two armies of the campaign: the attacker (side 0) comes from the south edge."""
 
     def __init__(self, attacker, defender, unit_types, terrain="plains", seed=0, river=False,
-                 attacker_leadership=1.0, defender_leadership=1.0, place="the field"):
+                 attacker_leadership=1.0, defender_leadership=1.0, place="the field", allies=None):
+        """allies: {side: [(army, seconds before it arrives), ...]}: armies near enough to join in."""
         self.field = Field(terrain, seed, river)
         self.rng = np.random.default_rng(seed + 7919)
         self.place = place
@@ -227,8 +236,19 @@ class Battle:
         self.log = []
         self.events = []                  # (kind, ...) for the eyes: volleys and charges
         self.formed_up = set()            # the sides whose captains have chosen their formations
+        self.allies = {0: [], 1: []}
+        self.general_fate = {}            # side -> "killed" / "captured", for the general of the main army
         for side, army in enumerate(self.armies):
             self._deploy(side, army, unit_types)
+        for side, coming in (allies or {}).items():
+            for k, (army, delay) in enumerate(coming, start=1):
+                self.allies[side].append(army)
+                first = len(self.units)
+                self._deploy(side, army, unit_types)
+                for u in self.units[first:]:
+                    u.army, u.arrive, u.state, u.general = k, float(delay), "waiting", False
+                    u.x = float(np.clip(u.x + (500 if k % 2 else -500), 60, FIELD_W - 60))
+                    u.y = 20.0 if side == 0 else FIELD_H - 20.0
 
     def _deploy(self, side, army, unit_types):
         """Line the regiments up: foot in the centre, missile troops in front, horse on the wings."""
@@ -326,10 +346,18 @@ class Battle:
         if not self.started or self.winner is not None:
             return
         self.time += dt
+        for u in self.units:
+            if u.state == "waiting" and self.time >= u.arrive:
+                u.state = "formed"
+                u.still = 0.0
+                self.events.append(("arrive", u.id))
+                if u.army and not any(o.army == u.army and o.state != "waiting" and o.id != u.id
+                                      for o in self.units if o.side == u.side):
+                    self.log.append(("Our" if u.side == 0 else "Their") + " allies come onto the field!")
         order = self.rng.permutation(len(self.units))   # nobody always moves first
         for i in order:
             u = self.units[i]
-            if u.alive:
+            if u.alive and u.state != "waiting":
                 self._act(u, dt)
         self._melee(dt)
         self._missiles(dt)
@@ -419,7 +447,18 @@ class Battle:
                     u.x -= (o.x - u.x) * push
                     u.y -= (o.y - u.y) * push
 
+    def visible(self, u, side):
+        """Can `side` see regiment u? Men standing still in a wood are hidden until an enemy comes close."""
+        if u.side == side or u.state != "formed" or not self.field.wooded(u.x, u.y) or u.still < 8:
+            return True
+        return any(math.hypot(o.x - u.x, o.y - u.y) < 110 for o in self.units if o.side == side and o.standing)
+
     def _engage(self, a, b):
+        if a.state == "formed" and a.still < 30 and self.field.wooded(a.x, a.y) and b.state == "formed" and \
+                not self.field.wooded(b.x, b.y) and b.morale > BREAK and a.id not in b.shocked:
+            b.shocked.add(a.id)                   # out of the trees, onto men who never saw them
+            b.morale -= 15
+            self.log.append(f"Ambush! {self.name(a)} fall on {self.name(b).lower()} from the woods.")
         for u, o in ((a, b), (b, a)):
             if u.state != "routing":
                 u.state = "fighting"
@@ -453,6 +492,8 @@ class Battle:
             s *= 0.6
         if self.field.h(u.x, u.y) > self.field.h(foe.x, foe.y) + 4:
             s *= 1.15     # fighting down a slope
+        if self.field.near_river(u.x, u.y):
+            s *= 0.75     # floundering in the stream
         # where the blow lands on the foe: front, flank or rear
         angle = abs(_wrap(_angle_to(foe, u.x, u.y) - foe.facing))
         if foe.formation == "square":
@@ -569,7 +610,9 @@ class Battle:
                 self._shock(u)
 
     def _check_end(self):
-        standing = [self.side_units(s) for s in (0, 1)]
+        # a side is beaten when nothing of it stands on the field and no help is still on the road
+        standing = [self.side_units(s) or [u for u in self.units if u.side == s and u.state == "waiting"]
+                    for s in (0, 1)]
         if not standing[0] or not standing[1]:
             self.winner = 1 if not standing[0] else 0
         elif self.time >= TIME_LIMIT:
@@ -578,8 +621,18 @@ class Battle:
         if self.winner is not None:
             # the beaten who are still on the field are caught as they flee
             for u in self.units:
-                if u.side != self.winner and u.alive:
+                if u.side != self.winner and u.alive and u.state != "waiting":
                     u.men = int(u.men * 0.8)
+            # the beaten general: dead on the field, taken as he fled, or got away
+            for u in self.units:
+                if u.general and u.side != self.winner and u.army == 0:
+                    roll = self.rng.random()
+                    if u.men <= 0 or roll < 0.15:
+                        self.general_fate[u.side] = "killed"
+                    elif roll < 0.4:
+                        self.general_fate[u.side] = "captured"
+                elif u.general and u.side == self.winner and u.army == 0 and u.men <= 0:
+                    self.general_fate[u.side] = "killed"
             self.log.append(("The attackers" if self.winner == 0 else "The defenders") + " carry the field.")
 
     # --- the AI ---------------------------------------------------------------------------------
@@ -590,7 +643,7 @@ class Battle:
         flanks and archers; horse archers ride off from what would catch them. The defender lets the attack
         come on, unless it is the one being out-shot."""
         mine = self.side_units(side)
-        foes = [e for e in self.units if e.side != side and e.standing]
+        foes = [e for e in self.units if e.side != side and e.standing and self.visible(e, side)]
         if not mine or not foes:
             return
         forward = 1 if side == 0 else -1
@@ -681,19 +734,44 @@ class Battle:
 
     # --- the outcome --------------------------------------------------------------------------------
 
-    def survivors(self, side):
+    def survivors(self, side, army=0):
         """{regiment index: men left} for an army (the dead and the fled who never came back)."""
-        return {u.regiment: max(0, u.men) for u in self.units if u.side == side}
+        return {u.regiment: max(0, u.men) for u in self.units if u.side == side and u.army == army}
+
+
+AID_KM = 30.0          # armies this near a battle march to it
+
+
+def helpers(campaign, army, enemy, exclude):
+    """Armies near enough to come to `army`'s aid against `enemy`: its own or its allies', with how many
+    seconds of battle pass before each arrives."""
+    friends = {army.owner, *campaign.allies_of(army.owner)}
+    out = []
+    for other in campaign.armies:
+        if any(other is e for e in exclude) or other.owner not in friends or not other.regiments:
+            continue
+        if other.owner != army.owner and not campaign.hostile(other.owner, enemy.owner):
+            continue
+        km = math.hypot(other.x - army.x, other.y - army.y) * 1.5
+        if km <= AID_KM:
+            out.append((km, other))
+    out.sort(key=lambda p: p[0])
+    return [(other, 150.0 + 25.0 * km) for km, other in out[:2]]
 
 
 def tactical(campaign, attacker, defender, seed=None):
-    """A Battle between two armies of the campaign, on the ground where they meet."""
+    """A Battle between two armies of the campaign, on the ground where they meet, with any friends near
+    enough to march to the sound of it."""
     from .rules import UNITS
     prov, terrain, place = campaign.battle_site(attacker, defender)
     seed = campaign.rng.randrange(1 << 30) if seed is None else seed
     river = terrain in ("plains", "steppe", "marsh") and (seed % 3 == 0)
+    busy = [attacker, defender]
+    allies = {0: helpers(campaign, attacker, defender, busy)}
+    busy += [a for a, _ in allies[0]]
+    allies[1] = helpers(campaign, defender, attacker, busy)
     return Battle(attacker, defender, UNITS, terrain, seed, river, campaign.leadership(attacker),
-                  campaign.leadership(defender), place)
+                  campaign.leadership(defender), place, allies=allies)
 
 
 def conclude(campaign, battle, attacker, defender):
@@ -703,4 +781,14 @@ def conclude(campaign, battle, attacker, defender):
     for side, army in ((0, attacker), (1, defender)):
         left = battle.survivors(side)
         after[army.id] = [left.get(i, r.men) for i, r in enumerate(army.regiments)]
-    return campaign.conclude_battle(attacker, defender, winner, after)
+        # the allies who came: their losses, and a little of the victors' experience
+        for k, ally in enumerate(battle.allies[side], start=1):
+            left = battle.survivors(side, k)
+            for i, r in enumerate(ally.regiments):
+                r.men = max(0, min(r.men, int(left.get(i, r.men))))
+                r.experience = min(1.0, r.experience + (0.1 if side == battle.winner else 0.03))
+            ally.regiments = [r for r in ally.regiments if r.men >= 50]
+            if not ally.regiments and ally in campaign.armies:
+                campaign.armies.remove(ally)
+    fates = {(attacker, defender)[side].id: fate for side, fate in battle.general_fate.items()}
+    return campaign.conclude_battle(attacker, defender, winner, after, fates=fates)

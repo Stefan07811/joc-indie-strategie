@@ -41,6 +41,7 @@ class Audio:
         self.mood = None
         self.index = 0
         self.muted = False
+        self.loops = {}           # name -> sound, for the din of a battle
 
     def _music(self, name):
         if name not in self.tracks:
@@ -103,3 +104,27 @@ class Audio:
         if sound is not None:
             sound.setVolume(volume)
             sound.play()
+
+    def loop(self, name, volume):
+        """A sound that keeps going (the clash of a melee), at the volume asked; 0 silences it."""
+        if not self.enabled:
+            return
+        sound = self.loops.get(name)
+        if sound is None:
+            path = SOUNDS / f"{name}.ogg"
+            if not path.exists():
+                return
+            sound = self.loops[name] = self.base.loader.loadSfx(str(path))
+            sound.setLoop(True)
+        volume = 0.0 if self.muted else volume
+        if volume <= 0.01:
+            if sound.status() == sound.PLAYING:
+                sound.stop()
+            return
+        sound.setVolume(volume)
+        if sound.status() != sound.PLAYING:
+            sound.play()
+
+    def stop_loops(self):
+        for sound in self.loops.values():
+            sound.stop()

@@ -329,11 +329,39 @@ class MapApp(BattleControls, _showbase()):
         return False
 
     def ask_battle(self, attacker, defender):
+        """Before the battle: the forces, their captains, help on the road, the ground, the odds; and the
+        choice to command, to leave it to the captains, or to draw off."""
+        from .game.battle import helpers
         c = self.campaign
         _, terrain, place = c.battle_site(attacker, defender)
         ours, theirs = (attacker, defender) if attacker.owner == c.player else (defender, attacker)
-        text = (f"The {ours.name} ({ours.men:,} men) and the {theirs.name} ({theirs.men:,} men) meet on the "
-                f"{terrain} of {place}. Will you command the battle yourself, or leave it to the captains?")
+        aid_ours = helpers(c, ours, theirs, [ours, theirs])
+        aid_theirs = helpers(c, theirs, ours, [ours, theirs] + [a for a, _ in aid_ours])
+
+        def force(army, aid):
+            kinds = {}
+            for r in army.regiments:
+                kinds[r.type.kind] = kinds.get(r.type.kind, 0) + r.men
+            parts = ", ".join(f"{kinds[k]:,} {name}" for k, name in (("horse", "horse"), ("foot", "foot"),
+                                                                     ("missile", "archers")) if kinds.get(k))
+            cmd = c.commander_of(army)
+            lead = f", led by {cmd.name}" if cmd is not None and cmd.alive else ""
+            line = f"The {army.name}: {army.men:,} men ({parts}){lead}."
+            for other, delay in aid:
+                line += f" The {other.name} ({other.men:,} men) is near and would join after some " \
+                        f"{int(delay // 60)} minutes."
+            return line
+
+        def power(army, aid, defending):
+            return c.strength(army, terrain, defending) + sum(0.8 * c.strength(o, terrain, defending)
+                                                              for o, _ in aid)
+        mine = power(ours, aid_ours, ours is defender)
+        odds = mine / max(1e-6, mine + power(theirs, aid_theirs, theirs is defender))
+        verdict = ("very good" if odds > 0.7 else "good" if odds > 0.57 else "even" if odds > 0.43 else
+                   "poor" if odds > 0.3 else "very poor")
+        text = (f"{force(ours, aid_ours)}\n\n{force(theirs, aid_theirs)}\n\n"
+                f"The ground: the {terrain} of {place}. Our captains judge our chances {verdict} "
+                f"(about {round(odds * 100)} in 100).")
 
         def captains():
             report = c.battle(attacker, defender)
@@ -342,10 +370,22 @@ class MapApp(BattleControls, _showbase()):
             self.sync_figures()
             self.redraw_overlay()
             self.battle_dialog(report)
+
+        def withdraw():
+            """Draw off before the lines close: the rearguard pays for it."""
+            for r in ours.regiments:
+                r.men = int(r.men * 0.95)
+            c._retreat(ours, theirs)
+            c.tell(c.player, f"The {ours.name} draws off from {place} without giving battle.")
+            self.chronicle.add(str(c.date), c.messages[-1:])
+            self.sync_figures()
+            self.refresh()
+            self.next_proposal()
         self.audio.play("event", 0.6)
         self.dialog.show(f"Battle at {place}", text,
                          [("Command the battle", lambda: self.enter_battle(attacker, defender)),
-                          ("Leave it to the captains", captains)])
+                          ("Leave it to the captains", captains),
+                          ("Draw off (lose a twentieth of the men)", withdraw)])
 
     def enter_battle(self, attacker, defender):
         from .game.battle import FIELD_H, FIELD_W, tactical
@@ -372,6 +412,7 @@ class MapApp(BattleControls, _showbase()):
         self.topbar.show_end(False)
         self.battle_scene = BattleScene(self.render, self.battle, colors, accents, eastern, SUN, camera=self.camera,
                                         shadow_size=4096 if self.quality == "high" else 2048)
+        self.battle_scene.viewer = self.battle_side
         self.battle_cam = StrategyCamera(self.camera, self.camLens, self.battle_scene.height,
                                          limits=(22.0, 260.0), bounds=(FIELD_W * UNIT, FIELD_H * UNIT), near=0.5,
                                          pitches=(9.0, 62.0))
@@ -403,7 +444,7 @@ class MapApp(BattleControls, _showbase()):
 
     def begin_battle(self):
         self.battle.begin()
-        self.audio.play("march", 0.7)
+        self.audio.play("horn", 0.8)
 
     def select_regiment(self, uid, add=False):
         scene = self.battle_scene
@@ -448,10 +489,32 @@ class MapApp(BattleControls, _showbase()):
             self.leave_battle()
             return
         self.update_box()
+        self.battle_sounds(dt)
         self.battle_scene.update(dt, b.time)
         cam = self.battle_cam
         self.battle_scene.follow(*cam.target, cam.distance, dt)
         self.battle_hud.update(self.battle_speed, self.battle_paused, self.battle_scene.selected)
+
+    def battle_sounds(self, dt):
+        """The din, louder the closer the camera: steel where the lines are locked, a hiss for each volley,
+        hooves for each charge."""
+        b, cam = self.battle, self.battle_cam
+        tx, ty = cam.target[0] / 0.1, cam.target[1] / 0.1
+        near = max(0.25, 1.0 - cam.distance / 320.0)
+
+        def close(u):
+            return max(0.0, 1.0 - math.hypot(u.x - tx, u.y - ty) / 900.0)
+        fighting = sum(close(u) for u in b.units if u.state == "fighting")
+        self.audio.loop("clash", min(0.75, fighting * 0.12) * near)
+        self.sound_wait = max(0.0, getattr(self, "sound_wait", 0.0) - dt)
+        for event in b.events:
+            if event[0] == "volley" and self.sound_wait <= 0:
+                gain = close(b.units[event[2]]) * near
+                if gain > 0.1:
+                    self.audio.play("arrows", 0.5 * gain)
+                    self.sound_wait = 0.6
+            elif event[0] == "charge":
+                self.audio.play("charge", 0.7 * max(0.3, close(b.units[event[1]])) * near)
 
     def leave_battle(self):
         from .game.battle import conclude
@@ -459,7 +522,17 @@ class MapApp(BattleControls, _showbase()):
         b = self.battle
         attacker, defender = self.battle_armies
         c.messages = []
+        from .game.rules import UNITS
+        details = []
+        for u in b.units:
+            if u.side == self.battle_side and u.army == 0:
+                how = {"routing": ", fled", "gone": ", cut to pieces" if u.men <= 0 else ", fled the field"}.get(
+                    u.state, "")
+                details.append(f"{UNITS[u.unit].name}: {u.start_men:,} went in, {max(0, u.men):,} came out{how}")
         report = conclude(c, b, attacker, defender)
+        self.audio.stop_loops()
+        report["details"] = details
+        report["notes"] = list(c.messages)
         self.battle_hud.destroy()
         self.battle_scene.destroy()
         self.in_battle = False
@@ -767,6 +840,11 @@ class MapApp(BattleControls, _showbase()):
         text = (f"On the {report['terrain']} of {report['place']}, the {winner} broke the {loser}. "
                 f"{c.name(report['winner'])} lost {report['losses'][report['winner']]:,} men, "
                 f"{c.name(report['loser'])} {report['losses'][report['loser']]:,}.")
+        extra = [n for n in report.get("notes", []) if "taken in battle" in n or "fell in battle" in n]
+        if extra:
+            text += "\n\n" + " ".join(extra)
+        if report.get("details"):
+            text += "\n\n" + "\n".join(report["details"])
         self.dialog.show(title, text, [("Onward", None)])
         if self.chosen is not None and self.chosen not in c.armies:
             self.choose(None)

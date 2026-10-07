@@ -348,6 +348,29 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         self.armies.append(army)
         return army
 
+    def split_army(self, army):
+        """Half of the army's regiments march off as a new army; returns it (or None)."""
+        if len(army.regiments) < 2:
+            return None
+        half = army.regiments[len(army.regiments) // 2:]
+        army.regiments = army.regiments[:len(army.regiments) // 2]
+        new = self.new_army(army.owner, army.x + 2, army.y + 2, half)
+        new.moves = min(army.moves, new.march)
+        army.march = min(r.type.march for r in army.regiments)
+        return new
+
+    def merge_armies(self, army):
+        """Every army of the realm standing close by joins this one; returns how many joined."""
+        joined = 0
+        for other in list(self.armies):
+            if other is not army and other.owner == army.owner and math.hypot(other.x - army.x, other.y - army.y) < 8:
+                army.regiments += other.regiments
+                army.march = min(army.march, other.march)
+                army.moves = min(army.moves, other.moves)
+                self.armies.remove(other)
+                joined += 1
+        return joined
+
     def army_at_town(self, tag, pid):
         x, y = self.static(pid).town
         for a in self.armies_of(tag):

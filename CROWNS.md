@@ -81,6 +81,7 @@ rămâne ordin pentru lunile următoare, cu săgeți și apoi puncte. Tasta Spac
 ```bash
 pip install -r requirements.txt
 python -m crowns                 # campania: alegi un stat pe hartă și îl conduci
+                                 # (Tab = armata următoare, M = muzica, F5/F9 = salvare/încărcare)
 python -m crowns --realm hungary # direct cu un stat (wallachia, moldavia, hungary, ott_rum, serbia, venice…)
 python -m crowns --shots DIR     # capturi de verificare, fără ecran
 python tools/terrain.py          # descarcă relieful și apele, refac harta de altitudini

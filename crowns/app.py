@@ -131,8 +131,15 @@ class MapApp(_showbase()):
             "close": self.close_panel, "realm": self.show_realm, "tab": self.set_tab, "build": self.build,
             "recruit": self.recruit, "halt": self.halt, "war": self.ask_war, "diplo": self.diplo,
             "peace": self.offer_peace, "play": self.play_as, "marry": self.marry,
-            "realm_tab": self.set_realm_tab, "decide": self.decide})
+            "realm_tab": self.set_realm_tab, "decide": self.decide, "split": self.split_army,
+            "merge": self.merge_armies})
         self.chronicle = Chronicle(self.theme, self.aspect2d, aspect)
+        from direct.gui.DirectGui import DirectLabel
+        from panda3d.core import TextNode
+        self.tooltip = DirectLabel(parent=self.aspect2d, text="", scale=0.032, text_font=self.theme.text,
+                                   text_fg=(0.2, 0.13, 0.07, 1), text_align=TextNode.ALeft,
+                                   frameColor=(0.95, 0.9, 0.78, 0.92), pad=(0.4, 0.25), sortOrder=50)
+        self.tooltip.hide()
         self.dialog = Dialog(self.theme, self.aspect2d)
         self.redraw_overlay()
         from .render.towns import Towns
@@ -161,6 +168,7 @@ class MapApp(_showbase()):
         self.accept("f5", self.save_game)
         self.accept("f9", self.load_game)
         self.accept("m", self.audio.toggle)
+        self.accept("tab", self.next_army)
         self.accept("escape", self.escape)
         self.dragging = None
         self.last_mouse = None
@@ -344,6 +352,29 @@ class MapApp(_showbase()):
         self.chronicle.add(str(c.date), [why])
         self.chronicle.show()
         self.refresh()
+
+    def split_army(self, army_id):
+        army = self.army_by_id(army_id)
+        if army is not None and self.campaign.split_army(army):
+            self.sync_figures()
+            self.choose(army)
+
+    def merge_armies(self, army_id):
+        army = self.army_by_id(army_id)
+        if army is not None and self.campaign.merge_armies(army):
+            self.sync_figures()
+            self.choose(army)
+
+    def next_army(self):
+        """Tab: the next of our armies, and the camera to it."""
+        c = self.campaign
+        mine = c.armies_of(c.player) if c.player else []
+        if not mine:
+            return
+        i = (mine.index(self.chosen) + 1) % len(mine) if self.chosen in mine else 0
+        army = mine[i]
+        self.camera_ctl.look_at(*self.map_to_world(army.x, army.y), min(self.camera_ctl.distance, 450))
+        self.choose(army)
 
     def set_realm_tab(self, tab):
         self.panel.realm_tab = tab
@@ -683,11 +714,38 @@ class MapApp(_showbase()):
         self.realm_labels.update(self.camera_ctl.distance)
         p = None if self.over_gui() else self.mouse_ground()
         prov = self.provmap.at(p.x, self.geo.HEIGHT - p.y) if p is not None else None
+        self.update_tooltip(p, prov)
         hovered = prov.index if prov else None
         if hovered != self.hovered:
             self.hovered = hovered
             self.world.set_highlight(self.selected, hovered)
         return task.cont
+
+    def update_tooltip(self, p, prov):
+        """A small label by the mouse: the army or the province under it."""
+        if p is None or self.dialog.open or not self.mouseWatcherNode.hasMouse():
+            self.tooltip.hide()
+            return
+        c = self.campaign
+        army = self.army_at(p)
+        if army is not None:
+            text = f"{army.name}\n{army.men:,} men"
+            if army.owner != c.player and c.player and c.at_war(c.player, army.owner):
+                text += " — enemy"
+        elif prov is not None:
+            state = c.provinces[prov.id]
+            text = f"{prov.name}\n{c.name(state.owner)}"
+            if state.controller != state.owner:
+                text += f", held by {c.name(state.controller)}"
+            if state.siege:
+                text += f"\nBesieged ({min(99, state.siege['progress'] * 100):.0f}%)"
+        else:
+            self.tooltip.hide()
+            return
+        m = self.mouseWatcherNode.getMouse()
+        self.tooltip["text"] = text
+        self.tooltip.setPos(m.x * self.getAspectRatio() + 0.04, 0, m.y - 0.06)
+        self.tooltip.show()
 
     # --- pictures for checking the game without a display ----------------------------------------
 

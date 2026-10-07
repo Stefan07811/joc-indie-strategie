@@ -1,5 +1,7 @@
 """What the panels show, worked out from the campaign with no graphics (so it can be tested)."""
 
+import math
+
 from ..game import rules
 from ..game.rules import BUILDINGS, UNITS
 
@@ -126,7 +128,10 @@ def army_view(c, army):
             "commander": "Led by " + person_line(c, cmd) if cmd else "No captain",
             "upkeep": f"Upkeep {army.upkeep:,.0f} ducats a month", "rows": rows,
             "march": f"Can still march {army.moves:.0f} of {army.march:.0f} km this month",
-            "orders": None, "mine": army.owner == c.player}
+            "orders": None, "mine": army.owner == c.player,
+            "can_split": len(army.regiments) >= 2,
+            "can_merge": any(o is not army and o.owner == army.owner and
+                             math.hypot(o.x - army.x, o.y - army.y) < 8 for o in c.armies)}
     if army.route is not None:
         months = max(0.0, army.route.cost - army.moves) / max(1.0, army.march)
         where = c.provmap.at(*army.route.end)

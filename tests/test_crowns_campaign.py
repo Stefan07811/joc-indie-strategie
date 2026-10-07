@@ -149,3 +149,14 @@ def test_saving_and_loading(world, campaign):
         a.end_month()
     assert again.realms["wallachia"].treasury == pytest.approx(campaign.realms["wallachia"].treasury)
     assert again.rng.random() == campaign.rng.random()
+
+
+def test_splitting_and_joining_armies(campaign):
+    army = campaign.armies_of("wallachia")[0]
+    men, count = army.men, len(campaign.armies)
+    new = campaign.split_army(army)
+    assert new is not None and army.men + new.men == men and len(campaign.armies) == count + 1
+    assert campaign.merge_armies(army) == 1
+    assert army.men == men and len(campaign.armies) == count
+    lone = campaign.new_army("wallachia", 100, 100, [army.regiments[0]])
+    assert campaign.split_army(lone) is None

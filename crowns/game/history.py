@@ -385,6 +385,14 @@ def _restless(c, tag):
     return any(p.unrest > 6 for p in c.provinces_of(tag))
 
 
+def _buy_off_faction(c, tag):
+    f = c.faction(tag)
+    cost = min(max(0.0, c.realms[tag].treasury), 6 * max(10.0, c.budget(tag).income))
+    c.realms[tag].treasury -= cost
+    c.realms[tag].prestige -= 10
+    f.discontent = 45.0
+
+
 EVENTS = [
     Event("smyrna", "Timur Takes Smyrna",
           "Timur's army has stormed the Knights' castle of Smyrna in a fortnight and cut off the heads of its "
@@ -492,6 +500,31 @@ EVENTS = [
           chance=0.1, condition=lambda c, t: _restless(c, t), once=False,
           choices=[Choice("Send in the soldiers", _crush_revolt, 0.6, "The province is laid waste; order returns."),
                    Choice("Grant their demands", _grant_demands, 0.4, "Costs eight months of its income.")]),
+    # the great men of the realm
+    Event("faction_demands", "The Great Men Grumble",
+          lambda c, t: (f"{c.faction(t).name[0].upper() + c.faction(t).name[1:]} are restless: they complain of "
+                        f"the treasury, of the wars, of the ruler's counsellors"
+                        + (f", and they speak warmly of {c.pretender_of(t).name}" if c.pretender_of(t) else "")
+                        + ". Something must be done before talk becomes swords."),
+          realms=("*",), start=Date(1402, 10), end=Date(1600, 1), chance=0.12, once=False,
+          condition=lambda c, t: c.faction(t) is not None and 60 <= c.faction(t).discontent < 85,
+          choices=[Choice("Grant them lands and offices", lambda c, t: c.appease(t, "privileges"), 2.0,
+                          "Costs about two and a half months of income and a little prestige; calms them much."),
+                   Choice("Hold a great feast at court", lambda c, t: c.appease(t, "feast"), 1.0,
+                          "Costs a month of income; calms them a little."),
+                   Choice("Seize their leaders", lambda c, t: c.appease(t, "arrest"), 0.4,
+                          "Fear works, mostly: but one time in three they rise at once."),
+                   Choice("Let them grumble", lambda c, t: None, 0.6, "Nothing, for now.")]),
+    Event("faction_rises", "The Great Men Rise",
+          lambda c, t: (f"{c.faction(t).name[0].upper() + c.faction(t).name[1:]} have taken up arms"
+                        + (f" for {c.pretender_of(t).name}" if c.pretender_of(t) else "")
+                        + ". The realm's own swords will decide who rules it."),
+          realms=("*",), start=Date(1402, 10), end=Date(1600, 1), chance=0.25, once=False,
+          condition=lambda c, t: c.faction(t) is not None and c.faction(t).discontent >= 85,
+          choices=[Choice("Meet them in the field", lambda c, t: c.civil_war(t), 1.0,
+                          "A civil war: our loyal men against theirs. If they win, the pretender takes the throne."),
+                   Choice("Buy them off at any price", _buy_off_faction, 1.0,
+                          "Costs six months of income (or all the treasury); they lay down their arms, sullen.")]),
 ]
 EVENT = {e.id: e for e in EVENTS}
 

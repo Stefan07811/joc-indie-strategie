@@ -387,6 +387,7 @@ class Warfare:
             army.regiments = [r for r in army.regiments if r.men >= 50]
             losses[army.id] = lost
         self.after_battle(win, lose, fates)
+        self.note_defeat(lose.owner, min(1.0, losses[lose.id] / 3000.0 + 0.3))
         report = {"winner": win.owner, "loser": lose.owner, "place": place, "terrain": terrain,
                   "losses": {win.owner: losses[win.id], lose.owner: losses[lose.id]},
                   "armies": (win.name, lose.name)}

@@ -190,6 +190,9 @@ class SidePanel:
                 self._text(line, scale=0.026)
         if court["children"]:
             self._text("; ".join(court["children"]), scale=0.025, color=FADED)
+        if court.get("faction"):
+            hot = c.faction(tag).discontent >= 60
+            self._text(court["faction"], scale=0.026, color=RUBRIC if hot else INK)
         if c.player:
             self._text(v["relation"], scale=0.03, color=RUBRIC if c.player and c.at_war(c.player, tag) else INK)
         self._text(v["facts"], scale=0.028, color=FADED)

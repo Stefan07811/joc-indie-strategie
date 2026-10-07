@@ -17,6 +17,7 @@ from .calendar import START, Date
 from .navigation import Route
 from .rules import BUILDINGS, UNITS
 from .diplomacy import Diplomacy
+from .factions import Factions
 from .history import Chronicles
 from .people import Court
 from .war import Warfare, war_from_dict, war_to_dict
@@ -106,7 +107,7 @@ class Budget:
         return self.income - self.expenses
 
 
-class Campaign(Warfare, Diplomacy, Court, Chronicles):
+class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
     def __init__(self, provmap, realms, relations=(), player="wallachia", date=START, seed=1402, armies=True):
         self.provmap = provmap
         self.info = copy.deepcopy(realms)  # the realms' history (crowns/data/realms.json), as it changes
@@ -137,6 +138,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         self.marriages = []                # pairs of realms whose houses have married
         self._init_history(BEYOND_THE_MAP)
         self._init_people()
+        self._init_factions()
         for tag, realm in self.realms.items():
             realm.manpower = 0.6 * self.levy_pool(tag)
             realm.treasury = round(max(300.0, 2 * self.budget(tag).income), -1)
@@ -449,6 +451,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         for p in self.provinces.values():
             self._province_month(p)
         self.people_month()
+        self.factions_month()
         self.appoint_commanders()
         for army in self.armies:
             army.new_month()
@@ -527,7 +530,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
             "next_war": self._next_war, "opinions": self.opinions, "grudges": self.grudges,
             "proposals": self.proposals, "start": [self.start_date.year, self.start_date.month],
             "history": self.history, "marriages": self.marriages, "court": self.people_to_dict(),
-            "chronicle": self.history_to_dict(),
+            "chronicle": self.history_to_dict(), "factions": self.factions_to_dict(),
             "armies": [{"id": a.id, "owner": a.owner, "name": a.name, "x": a.x, "y": a.y, "march": a.march,
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments], "commander": a.commander,
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
@@ -552,6 +555,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         c.history, c.marriages = data["history"], data["marriages"]
         c.people_from_dict(data["court"])
         c.history_from_dict(data["chronicle"])
+        c.factions_from_dict(data.get("factions"))
         c.borders_changed()
         c.armies = []
         for a in data["armies"]:

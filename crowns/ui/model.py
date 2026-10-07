@@ -287,7 +287,13 @@ def person_line(c, p, role=None):
 def court_view(c, tag):
     ruler = c.ruler(tag)
     view = {"ruler": person_line(c, ruler, c.info[tag]["title"]), "spouse": None, "heir": None, "children": [],
-            "character": None}
+            "character": None, "faction": None}
+    f = c.faction(tag)
+    if f is not None:
+        from ..game.factions import mood
+        pretender = c.pretender_of(tag)
+        view["faction"] = (f"{f.name[0].upper() + f.name[1:]}: {mood(f.discontent)} ({f.discontent:.0f} of 100)"
+                           + (f"; they look to {pretender.name}" if pretender else ""))
     if ruler is None:
         return view
     traits = ", ".join(ruler.traits)

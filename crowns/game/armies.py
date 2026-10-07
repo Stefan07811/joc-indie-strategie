@@ -37,6 +37,7 @@ class Army:
     march: Optional[float] = None      # km a month; by default the pace of its slowest troops
     moves: Optional[float] = None      # km of movement left this month
     route: Optional[Route] = None      # standing orders: the march still ahead
+    commander: Optional[str] = None    # the person leading it
 
     def __post_init__(self):
         if self.march is None:

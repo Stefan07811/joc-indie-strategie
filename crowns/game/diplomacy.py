@@ -62,6 +62,8 @@ class Diplomacy:
             opinion -= 50
         if sorted((a, b)) in self.alliances:
             opinion += 15
+        opinion += min(30, 15 * self.marriages.count(sorted((a, b))))
+        opinion += (self.ruler_charm(a) + self.ruler_charm(b)) / 2
         return max(-100, min(100, opinion + self.grudges.get(_key(a, b), 0)))
 
     def opinion(self, a, b):

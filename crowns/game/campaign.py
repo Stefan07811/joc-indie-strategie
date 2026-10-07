@@ -16,6 +16,7 @@ from .calendar import START, Date
 from .navigation import Route
 from .rules import BUILDINGS, UNITS
 from .diplomacy import Diplomacy
+from .people import Court
 from .war import Warfare, war_from_dict, war_to_dict
 
 TRIBUTE = {"tributary": 0.10, "vassal": 0.15, "protectorate": 0.05, "union": 0.0}
@@ -96,7 +97,7 @@ class Budget:
         return self.income - self.expenses
 
 
-class Campaign(Warfare, Diplomacy):
+class Campaign(Warfare, Diplomacy, Court):
     def __init__(self, provmap, realms, relations=(), player="wallachia", date=START, seed=1402, armies=True):
         self.provmap = provmap
         self.info = realms                 # the realms' history (crowns/data/realms.json)
@@ -120,11 +121,15 @@ class Campaign(Warfare, Diplomacy):
         self.alliances = [sorted(r["tags"]) for r in self.relations if r["kind"] == "alliance"]
         self.battles = []                  # this month's battle reports
         self._next_war = 1
+        self.history = []                  # [date, text] of the great events: deaths, successions
+        self.marriages = []                # pairs of realms whose houses have married
+        self._init_people()
         for tag, realm in self.realms.items():
             realm.manpower = 0.6 * self.levy_pool(tag)
             realm.treasury = round(max(300.0, 2 * self.budget(tag).income), -1)
         if armies:
             self._first_armies()
+            self.appoint_commanders()
         self._init_diplomacy()
 
     def attach_ai(self, nav):
@@ -182,13 +187,16 @@ class Campaign(Warfare, Diplomacy):
             unrest += 1.0
         if p.controller != p.owner:
             unrest += 3.0
-        return max(0.0, unrest - self.effect(pid, "order"))
+        ruler = self.ruler(p.owner)
+        calm = self.trait_effect(ruler, "order", 0.0) if ruler else 0.0
+        return max(0.0, unrest - self.effect(pid, "order") - calm)
 
     def income(self, pid):
         """(tax, production, commerce) a month, before anyone takes a share."""
         p, info = self.provinces[pid], self.static(pid)
         order = max(0.3, 1.0 - p.unrest / 20.0)
-        tax = p.population * rules.TAX_PER_THOUSAND * p.prosperity * order * (1 + self.effect(pid, "tax"))
+        tax = p.population * rules.TAX_PER_THOUSAND * p.prosperity * order * (1 + self.effect(pid, "tax")) * \
+            self.ruler_tax(p.owner)
         price = rules.GOOD_PRICE.get(info.good, 15)
         production = price * math.sqrt(max(p.population, 0.0) / 10.0) * p.prosperity * \
             (1 + self.effect(pid, "production"))
@@ -352,7 +360,7 @@ class Campaign(Warfare, Diplomacy):
                     if regiments and upkeep + UNITS[u].upkeep > purse:
                         break
                     # the smallest lords keep a company, not a regiment
-                    men = max(100, min(UNITS[u].men, int(UNITS[u].men * purse / UNITS[u].upkeep)))
+                    men = max(60, min(UNITS[u].men, int(UNITS[u].men * purse / UNITS[u].upkeep)))
                 regiments.append(Regiment(u, men, 0.2))
                 upkeep += regiments[-1].upkeep
             if tag in FIELD_ARMIES:
@@ -381,10 +389,15 @@ class Campaign(Warfare, Diplomacy):
             if realm.treasury < 0:
                 self._debt(tag)
             realm.prestige += sum(self.effect(p.id, "prestige") for p in self.provinces_of(tag))
+            ruler = self.ruler(tag)
+            if ruler is not None:
+                realm.prestige += self.trait_effect(ruler, "prestige", 0.0)
             pool = self.levy_pool(tag)
             realm.manpower = min(pool, realm.manpower + pool * rules.MANPOWER_RECOVERY)
         for p in self.provinces.values():
             self._province_month(p)
+        self.people_month()
+        self.appoint_commanders()
         for army in self.armies:
             army.new_month()
             army.walk()
@@ -460,8 +473,9 @@ class Campaign(Warfare, Diplomacy):
             "wars": [war_to_dict(w) for w in self.wars], "truces": self.truces, "alliances": self.alliances,
             "next_war": self._next_war, "opinions": self.opinions, "grudges": self.grudges,
             "proposals": self.proposals, "start": [self.start_date.year, self.start_date.month],
+            "history": self.history, "marriages": self.marriages, "court": self.people_to_dict(),
             "armies": [{"id": a.id, "owner": a.owner, "name": a.name, "x": a.x, "y": a.y, "march": a.march,
-                        "moves": a.moves, "regiments": [asdict(r) for r in a.regiments],
+                        "moves": a.moves, "regiments": [asdict(r) for r in a.regiments], "commander": a.commander,
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
                        for a in self.armies],
             "rng": self.rng.getstate(),
@@ -480,12 +494,15 @@ class Campaign(Warfare, Diplomacy):
         c._next_war = data["next_war"]
         c.opinions, c.grudges, c.proposals = data["opinions"], data["grudges"], data["proposals"]
         c.start_date = Date(*data["start"])
+        c.history, c.marriages = data["history"], data["marriages"]
+        c.people_from_dict(data["court"])
         c.borders_changed()
         c.armies = []
         for a in data["armies"]:
             route = Route(a["route"]["points"], a["route"]["costs"]) if a["route"] else None
             c.armies.append(Army(a["id"], a["owner"], a["name"], a["x"], a["y"],
-                                 [Regiment(**r) for r in a["regiments"]], a["march"], a["moves"], route))
+                                 [Regiment(**r) for r in a["regiments"]], a["march"], a["moves"], route,
+                                 a.get("commander")))
         state = data["rng"]
         c.rng.setstate((state[0], tuple(state[1]), state[2]))
         return c

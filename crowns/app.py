@@ -123,7 +123,7 @@ class MapApp(_showbase()):
         self.panel = SidePanel(self.theme, self.aspect2d, aspect, {
             "close": self.close_panel, "realm": self.show_realm, "tab": self.set_tab, "build": self.build,
             "recruit": self.recruit, "halt": self.halt, "war": self.ask_war, "diplo": self.diplo,
-            "peace": self.offer_peace, "play": self.play_as})
+            "peace": self.offer_peace, "play": self.play_as, "marry": self.marry})
         self.chronicle = Chronicle(self.theme, self.aspect2d, aspect)
         self.dialog = Dialog(self.theme, self.aspect2d)
         self.redraw_overlay()
@@ -299,6 +299,14 @@ class MapApp(_showbase()):
             ok = c.send_gift(c.player, tag, amount)
             why = f"{c.name(tag)} thanks us for the gift." if ok else "We cannot afford it."
         self.chronicle.add(str(c.date), [why])
+        self.chronicle.show()
+        self.refresh()
+
+    def marry(self, ours, theirs):
+        c = self.campaign
+        c.messages = []
+        ok, why = c.propose_marriage(ours, theirs)
+        self.chronicle.add(str(c.date), c.messages or [why])
         self.chronicle.show()
         self.refresh()
 

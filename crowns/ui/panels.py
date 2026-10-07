@@ -145,6 +145,7 @@ class SidePanel:
         self._heading(v["name"], scale=0.045)
         self._text(v["owner"], font=self.theme.italic)
         self._text(v["men"] + " · " + v["upkeep"], scale=0.032)
+        self._text(v["commander"], scale=0.028, color=FADED)
         self._rule()
         for row in v["rows"]:
             self._text(row, scale=0.03)
@@ -169,7 +170,12 @@ class SidePanel:
         self._open()
         self._heading(v["name"], scale=0.042 if len(v["name"]) > 26 else 0.05)
         self._text(v["ruler"], font=self.theme.italic)
-        self._text(v["heir"], scale=0.03)
+        court = v["court"]
+        for line in (court["character"], court["spouse"], court["heir"]):
+            if line:
+                self._text(line, scale=0.026)
+        if court["children"]:
+            self._text("; ".join(court["children"]), scale=0.025, color=FADED)
         if c.player:
             self._text(v["relation"], scale=0.03, color=RUBRIC if c.player and c.at_war(c.player, tag) else INK)
         self._text(v["facts"], scale=0.028, color=FADED)
@@ -208,6 +214,8 @@ class SidePanel:
                 break
             if act["do"] == "war":
                 self._button(act["label"], self.actions["war"], [tag, act["goal"]], act["ok"], act["why"], 0.028)
+            elif act["do"] == "marry":
+                self._button(act["label"], self.actions["marry"], list(act["pair"]), act["ok"], act["why"], 0.028)
             else:
                 self._button(act["label"], self.actions["diplo"], [tag, act["do"], act.get("amount", 0)],
                              act["ok"], act["why"], 0.028)

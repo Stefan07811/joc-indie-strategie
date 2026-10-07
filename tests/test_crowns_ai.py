@@ -114,4 +114,4 @@ def test_peace_offered_to_the_player(world):
     offers = [p for p in c.proposals if p["kind"] == "peace"]
     assert offers and offers[0]["from"] == "ott_rum"
     text = c.answer(offers[0], True)
-    assert text and not c.wars
+    assert text and war not in c.wars

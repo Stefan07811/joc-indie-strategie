@@ -25,10 +25,12 @@ def good_name(good):
 
 def ruler_line(c, tag):
     info = c.info[tag]
-    ruler = info["ruler"]
-    born = ruler.get("born")
-    age = f", aged {c.date.year - born}" if born else ""
-    return f"{info['title']} {ruler['name']}{age}"
+    ruler = c.ruler(tag)
+    if ruler is None:
+        return info["title"]
+    if ruler.name == "The Rector and Great Council":
+        return ruler.name
+    return f"{info['title']} {ruler.name}, aged {c.age(ruler)}"
 
 
 def top_bar(c):
@@ -119,7 +121,9 @@ def army_view(c, army):
         g[2] += r.experience
     rows = [f"{n} × {UNITS[u].name}: {men:,} men, experience {exp / n * 100:.0f}%"
             for u, (n, men, exp) in groups.items()]
+    cmd = c.commander_of(army)
     view = {"name": army.name, "owner": c.info[army.owner]["name"], "men": f"{army.men:,} men",
+            "commander": "Led by " + person_line(c, cmd) if cmd else "No captain",
             "upkeep": f"Upkeep {army.upkeep:,.0f} ducats a month", "rows": rows,
             "march": f"Can still march {army.moves:.0f} of {army.march:.0f} km this month",
             "orders": None, "mine": army.owner == c.player}
@@ -158,10 +162,9 @@ def relation_line(c, viewer, tag):
 def realm_view(c, tag, viewer):
     info = c.info[tag]
     realm = c.realms[tag]
-    heir = info.get("heir")
     view = {
         "name": info["name"], "ruler": ruler_line(c, tag),
-        "heir": f"Heir: {heir['name']} ({heir['relation']})" if heir else "No heir named",
+        "court": court_view(c, tag),
         "relation": relation_line(c, viewer, tag),
         "situation": info["situation"],
         "facts": f"{len(c.provinces_of(tag))} provinces · {sum(p.population for p in c.provinces_of(tag)) * 1000:,.0f}"
@@ -194,6 +197,9 @@ def realm_view(c, tag, viewer):
     ok, why = c.tribute_answer(viewer, tag)
     view["actions"].append({"do": "tribute", "label": "Demand tribute", "ok": True,
                             "why": None if ok else why})
+    for offer in marriage_offers(c, viewer, tag):
+        view["actions"].append({"do": "marry", "label": offer["label"], "ok": offer["ok"], "why": offer["why"],
+                                "pair": (offer["ours"], offer["theirs"])})
     gift = max(100, int(c.budget(tag).income / 100) * 100)
     view["actions"].append({"do": "gift", "amount": gift, "label": f"Send a gift of {gift:,} ducats",
                             "ok": c.realms[viewer].treasury >= gift, "why": None})
@@ -251,3 +257,58 @@ def playable(c):
     order = {"empire": 0, "kingdom": 1, "duchy": 2, "county": 3}
     return sorted((t for t in c.realms if c.realms[t].alive),
                   key=lambda t: (order[c.info[t]["rank"]], c.info[t]["short"]))
+
+
+def person_line(c, p, role=None):
+    """'Heir: Mihail (17) — brave, just · martial 7, diplomacy 5, stewardship 6'."""
+    if p is None:
+        return ""
+    traits = ", ".join(p.traits)
+    if c.age(p) < 16:
+        return f"{role + ': ' if role else ''}{p.name} ({c.age(p)}), still a child"
+    skills = (f"martial {c.skill(p, 'martial')}, diplomacy {c.skill(p, 'diplomacy')}, "
+              f"stewardship {c.skill(p, 'stewardship')}")
+    who = f"{p.name} ({c.age(p)})"
+    if role:
+        who = f"{role}: {who}"
+    return f"{who}{' — ' + traits if traits else ''} · {skills}"
+
+
+def court_view(c, tag):
+    ruler = c.ruler(tag)
+    view = {"ruler": person_line(c, ruler, c.info[tag]["title"]), "spouse": None, "heir": None, "children": [],
+            "character": None}
+    if ruler is None:
+        return view
+    traits = ", ".join(ruler.traits)
+    view["character"] = (f"{traits.capitalize() + ' · ' if traits else ''}martial {c.skill(ruler, 'martial')}, "
+                         f"diplomacy {c.skill(ruler, 'diplomacy')}, stewardship {c.skill(ruler, 'stewardship')}")
+    if ruler.spouse:
+        view["spouse"] = person_line(c, c.people[ruler.spouse], "Wife" if not ruler.female else "Husband")
+    heir = c.heir_of(tag)
+    view["heir"] = person_line(c, heir, "Heir") if heir else (
+        "Heir: chosen by election" if c.info[tag]["government"] in ("republic", "theocracy", "order")
+        else "Heir: none — the line may fail")
+    for cid in ruler.children:
+        child = c.people[cid]
+        if child.alive and (heir is None or child.id != heir.id):
+            married = f", married to {c.people[child.spouse].name}" if child.spouse else ""
+            view["children"].append(f"{'Daughter' if child.female else 'Son'}: {child.name} ({c.age(child)}){married}")
+    return view
+
+
+def marriage_offers(c, viewer, tag, most=3):
+    """Matches the player can propose between the two houses."""
+    ours = c.marriageable(viewer)
+    theirs = c.marriageable(tag)
+    offers = []
+    for a in ours:
+        for b in theirs:
+            if a.female == b.female:
+                continue
+            ok, why = c.marriage_answer(a.id, b.id)
+            offers.append({"ours": a.id, "theirs": b.id, "ok": ok, "why": None if ok else why,
+                           "label": f"Marry {a.name} ({c.age(a)}) to {b.name} ({c.age(b)})",
+                           "gap": abs(c.age(a) - c.age(b))})
+    offers.sort(key=lambda o: (not o["ok"], o["gap"]))
+    return offers[:most]

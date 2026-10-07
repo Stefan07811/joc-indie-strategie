@@ -344,7 +344,7 @@ class Warfare:
             elif defending and terrain in ("hills", "mountains", "forest"):
                 power *= 1.2
             total += r.men / 100.0 * power * (0.5 + u.morale / 20.0) * (1 + 0.5 * r.experience)
-        return total
+        return total * self.leadership(army)
 
     def battle(self, attacker, defender):
         """Fight it out. Returns a report: {"winner", "loser", "place", "losses": {army id: men}}."""
@@ -368,6 +368,7 @@ class Warfare:
             army.regiments = [r for r in army.regiments if r.men >= 50]
             losses[army.id] = lost
         place = prov.name if prov else "the field"
+        self.after_battle(win, lose)
         report = {"winner": win.owner, "loser": lose.owner, "place": place, "terrain": terrain,
                   "losses": {win.owner: losses[win.id], lose.owner: losses[lose.id]},
                   "armies": (win.name, lose.name)}

@@ -85,3 +85,20 @@ def test_a_war_and_its_peace_offers(c):
 def test_every_realm_can_be_chosen(c):
     tags = model.playable(c)
     assert len(tags) == len(c.realms) and tags[0] in ("byzantium", "horde", "mamluks", "timurids")
+
+
+def test_the_court(c):
+    v = model.court_view(c, "wallachia")
+    assert v["ruler"].startswith("Voivode: Mircea the Elder (47)") and "strategist" in v["ruler"]
+    assert v["heir"].startswith("Heir: Mihail")
+    assert model.court_view(c, "venice")["heir"] == "Heir: chosen by election"
+    army = c.armies_of("wallachia")[0]
+    assert model.army_view(c, army)["commander"].startswith("Led by ")
+
+
+def test_marriages_can_be_proposed(c):
+    c.add_person("Jelena", 1385, True, "serbia", "Lazarević")
+    offers = model.marriage_offers(c, "wallachia", "serbia")
+    assert offers and offers[0]["ok"] and "Mihail" in offers[0]["label"] and "Jelena" in offers[0]["label"]
+    labels = [a["label"] for a in model.realm_view(c, "serbia", "wallachia")["actions"]]
+    assert any(label.startswith("Marry Mihail") for label in labels)

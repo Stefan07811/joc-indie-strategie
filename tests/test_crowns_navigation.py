@@ -100,3 +100,29 @@ def test_islands_cannot_be_reached_on_foot(nav):
     t = time.time()
     assert nav.route(*town(nav, "targoviste"), *town(nav, "nicosia")) is None
     assert time.time() - t < 0.05
+
+
+def test_fleets_carry_armies_over_the_sea(nav):
+    from crowns.game.navigation import NavalNavigation
+    sea = NavalNavigation(nav.ground, nav.provmap)
+    assert not nav.connected(*town(nav, "venice"), *town(nav, "candia"))
+    assert sea.connected(*town(nav, "venice"), *town(nav, "candia"))
+    voyage = sea.route(*town(nav, "venice"), *town(nav, "candia"))
+    km = sum(math.dist(a, b) for a, b in zip(voyage.points, voyage.points[1:])) * geo.KM_PER_PX
+    assert voyage.cost < km * 0.6                          # sailing is far quicker than marching
+    # on land the fleet changes nothing
+    assert sea.route(*town(nav, "targoviste"), *town(nav, "sofia")).cost == pytest.approx(
+        nav.route(*town(nav, "targoviste"), *town(nav, "sofia")).cost, rel=0.15)
+    # landing costs about a week
+    hop = sea.route(*town(nav, "rhodes"), *town(nav, "milas"))
+    assert hop is not None and hop.cost > 40
+
+
+def test_naval_realms_use_their_fleets():
+    from crowns.game.campaign import Campaign
+    from crowns.game.realms import load
+    realms, relations = load()
+    c = Campaign(ProvinceMap(), realms, relations, player="venice")
+    assert c.naval("venice") and c.naval("knights") and not c.naval("wallachia")
+    c.provinces["targoviste"].buildings["harbour"] = 1
+    assert c.naval("wallachia")

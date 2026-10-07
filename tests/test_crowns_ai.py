@@ -5,7 +5,7 @@ import time
 import pytest
 
 from crowns.game.campaign import Campaign
-from crowns.game.navigation import Navigation
+from crowns.game.navigation import NavalNavigation, Navigation
 from crowns.game.realms import load
 from crowns.mapdata import Ground
 from crowns.provinces import ProvinceMap
@@ -14,7 +14,9 @@ from crowns.provinces import ProvinceMap
 @pytest.fixture(scope="module")
 def world():
     provmap = ProvinceMap()
-    nav = Navigation(Ground(), provmap)
+    ground = Ground()
+    nav = Navigation(ground, provmap)
+    nav.sea = NavalNavigation(ground, provmap)
     return provmap, nav, *load()
 
 
@@ -68,7 +70,7 @@ def test_gifts_buy_goodwill(c):
 def test_the_ai_runs_the_world_for_two_years(world):
     provmap, nav, realms, relations = world
     c = Campaign(provmap, realms, relations, player="wallachia", seed=11)
-    c.attach_ai(nav)
+    c.attach_ai(nav, nav.sea)
     player_treasury = c.realms["wallachia"].treasury
     start = time.time()
     for _ in range(24):
@@ -89,7 +91,7 @@ def test_the_ai_runs_the_world_for_two_years(world):
 def test_the_ai_makes_war_and_peace(world):
     provmap, nav, realms, relations = world
     c = Campaign(provmap, realms, relations, player="wallachia", seed=5)
-    c.attach_ai(nav)
+    c.attach_ai(nav, nav.sea)
     wars, peaces = set(), 0
     for _ in range(72):
         before = {w.id for w in c.wars}
@@ -102,7 +104,7 @@ def test_the_ai_makes_war_and_peace(world):
 def test_peace_offered_to_the_player(world):
     provmap, nav, realms, relations = world
     c = Campaign(provmap, realms, relations, player="wallachia", seed=2)
-    c.attach_ai(nav)
+    c.attach_ai(nav, nav.sea)
     war = c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
     for pid in ("tarnovo", "nikopol", "vidin", "ruse", "silistra"):
         c.provinces[pid].controller = "wallachia"

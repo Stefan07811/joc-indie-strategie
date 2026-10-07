@@ -21,7 +21,7 @@ ROUTES_PER_MONTH = 40     # the AI's marching orders are expensive to work out: 
 class AI:
     def __init__(self, campaign, nav):
         self.c = campaign
-        self.nav = nav
+        self.land_nav = nav
         self.routes = 0
 
     def month(self):
@@ -248,11 +248,14 @@ class AI:
                     a.march = min(a.march, b.march)
                     c.armies.remove(b)
 
+    def nav(self, army):
+        return self.c.nav_for(army)
+
     def order(self, army, x, y):
         if self.routes >= ROUTES_PER_MONTH:
             return False
         self.routes += 1
-        return army.order(self.nav, x, y, greed=1.4)
+        return army.order(self.nav(army), x, y, greed=1.4)
 
     def move_armies(self, tag):
         c = self.c
@@ -269,7 +272,7 @@ class AI:
             prey = [e for e in c.armies if e.owner in enemies and
                     math.hypot(e.x - army.x, e.y - army.y) * 1.5 < army.march * 0.9 and
                     c.strength(e, "plains", True) * 1.3 < mine]
-            prey = [e for e in prey if self.nav.connected(army.x, army.y, e.x, e.y)]
+            prey = [e for e in prey if self.nav(army).connected(army.x, army.y, e.x, e.y)]
             if prey:
                 e = min(prey, key=lambda e: math.hypot(e.x - army.x, e.y - army.y))
                 self.order(army, e.x, e.y)
@@ -318,7 +321,7 @@ class AI:
                 score += 3.0
             if p.id in goals:
                 score += 2.0
-            if army.men < 2 * c.garrison(p.id) or not self.nav.connected(army.x, army.y, *info.town):
+            if army.men < 2 * c.garrison(p.id) or not self.nav(army).connected(army.x, army.y, *info.town):
                 continue
             # other armies of ours already besieging it
             if any(a is not army and a.owner == tag and math.hypot(a.x - info.town[0], a.y - info.town[1]) < 8
@@ -347,6 +350,6 @@ class AI:
         if cap is None:
             return
         tx, ty = c.static(cap).town
-        if math.hypot(tx - army.x, ty - army.y) > 8 and self.nav.connected(army.x, army.y, tx, ty):
+        if math.hypot(tx - army.x, ty - army.y) > 8 and self.nav(army).connected(army.x, army.y, tx, ty):
             self.order(army, tx, ty)
 

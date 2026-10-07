@@ -42,6 +42,9 @@ BEYOND_THE_MAP = {"mamluks": 9000, "timurids": 8000, "horde": 2500, "genoa": 220
                   "lithuania": 3000, "georgia": 700, "akkoyunlu": 500,
                   "knights": 900}     # the Knights' priories all over Christendom send their dues
 ARMY_SHARE = 0.45     # of its income a realm spends on the army it starts with
+# Realms with fleets to carry their armies over the sea (any realm with a harbour gets them too).
+NAVAL_REALMS = {"venice", "genoa", "knights", "cyprus", "naxos", "lesbos", "byzantium", "ott_rum", "ott_isa",
+                "ott_meh", "mamluks", "naples", "sicily", "ragusa", "tocco", "trebizond", "aydin", "mentese"}
 HOARD_MONTHS = 12     # a treasury above this many months of income is spent on the court's splendour
 LARGESSE = 0.08       # of the hoard above that, each month
 # Armies in the field in September 1402 that do not stand at their realm's capital.
@@ -135,12 +138,25 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
             self.appoint_commanders()
         self._init_diplomacy()
 
-    def attach_ai(self, nav):
+    def attach_ai(self, nav, naval=None):
         """Let the AI rule every realm but the player's (it needs the map's navigation to march)."""
         from .ai import AI
         self.nav = nav
+        if naval is not None:
+            self.naval_nav = naval
         self.ai = AI(self, nav)
         return self.ai
+
+    def naval(self, tag):
+        """Has the realm ships to carry its armies?"""
+        return tag in NAVAL_REALMS or any(p.buildings.get("harbour") for p in self.provinces_of(tag))
+
+    def nav_for(self, army):
+        """The navigation an army marches (and sails) by."""
+        naval = getattr(self, "naval_nav", None)
+        if naval is not None and self.naval(army.owner):
+            return naval
+        return self.nav
 
     # --- lookups ----------------------------------------------------------------------------------
 

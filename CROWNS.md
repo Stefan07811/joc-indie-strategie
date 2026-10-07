@@ -56,7 +56,10 @@ Pământul e o rețea de pătrate de 3 km. Câmpia se străbate ușor; pădurea,
 mai mult. Râurile mari (Dunărea, Nistrul, Niprul, Tisa, Sava…) se trec greu, cu bărci, în afara vadurilor
 și podurilor istorice (Nicopole, Giurgiu, Vidin, Silistra, Belgrad…). Strâmtorile se trec cu bacul. Când
 alegi o armată, harta arată cu cerneală roșie până unde poate ajunge luna asta și o linie fină pentru
-fiecare săptămână de marș. Cu clic dreapta îi dai ordin. Merge cât poate luna asta, iar restul drumului
+fiecare săptămână de marș. Statele cu flotă (Veneția, Genova, Cavalerii, Ciprul, Bizanțul, otomanii,
+mamelucii…) și cele care și-au construit un port își pot urca oastea pe corăbii oriunde pe coastă:
+îmbarcarea durează cam o săptămână, iar pe mare se merge de patru ori mai repede. Cu clic dreapta îi dai
+ordin. Merge cât poate luna asta, iar restul drumului
 rămâne ordin pentru lunile următoare, cu săgeți și apoi puncte. Tasta Space încheie luna.
 
 ## Harta (etapa B1)

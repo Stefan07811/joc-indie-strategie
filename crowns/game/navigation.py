@@ -269,6 +269,26 @@ class Navigation:
         return Route([points[i] for i in keep], [best[nodes[i]] for i in keep])
 
 
+class NavalNavigation(Navigation):
+    """For realms with fleets: the sea can be sailed, four times faster than marching over a plain, but
+    getting the army aboard or ashore costs about a week anywhere on the coast."""
+
+    SEA_COST = 0.25
+    EMBARK_COST = 10.0
+
+    @cached_property
+    def cost(self):
+        cost = Navigation.cost.func(self).copy()
+        land = self.ground.land[::CELL, ::CELL]
+        lakes = self.ground.lakes[::CELL, ::CELL]
+        sea = ~land & ~lakes & ~np.isfinite(cost)
+        near_land = np.zeros_like(land)
+        for dr, dc, _ in STEPS:
+            near_land |= np.roll(np.roll(land, dr, 0), dc, 1)
+        cost = np.where(sea, np.where(near_land, self.EMBARK_COST, self.SEA_COST), cost)
+        return cost.astype(np.float32)
+
+
 class Route:
     """A march along the cheapest path: its points (map pixels) and the km of movement spent to get
     to each of them."""

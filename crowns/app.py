@@ -75,7 +75,7 @@ class MapApp(_showbase()):
 
         from . import geo
         from .game.campaign import Campaign
-        from .game.navigation import Navigation
+        from .game.navigation import NavalNavigation, Navigation
         from .game.realms import load as load_realms
         from .provinces import ProvinceMap
         from .render.camera import StrategyCamera
@@ -105,7 +105,8 @@ class MapApp(_showbase()):
         self.colors = {tag: tuple(r["color"]) for tag, r in self.realms.items()}
         self.campaign = Campaign(self.provmap, self.realms, self.relations, player=None)
         self.nav = Navigation(self.world.ground, self.provmap)
-        self.campaign.nav = self.nav
+        self.naval_nav = NavalNavigation(self.world.ground, self.provmap)
+        self.campaign.nav, self.campaign.naval_nav = self.nav, self.naval_nav
         self.selected = None
         self.hovered = None
         self.mode = "political"
@@ -175,7 +176,7 @@ class MapApp(_showbase()):
     def play_as(self, tag, welcome=True):
         c = self.campaign
         c.player = tag
-        c.attach_ai(self.nav)
+        c.attach_ai(self.nav, self.naval_nav)
         self.panel.close()
         self.camera_ctl.look_at(*self.map_to_world(*c.static(c.capital(tag)).town), 520)
         self.refresh()
@@ -438,7 +439,7 @@ class MapApp(_showbase()):
             self.ribbon.hide()
             return
         if army.moves >= 1:
-            self.world.set_reach(*reach_field(army.reach(self.nav)))
+            self.world.set_reach(*reach_field(army.reach(self.campaign.nav_for(army))))
         else:
             self.world.set_reach(None)
         months = months_of(army.route, army.moves, army.march) if army.route else []
@@ -456,7 +457,7 @@ class MapApp(_showbase()):
             if other is not army and c.hostile(army.owner, other.owner) and math.hypot(other.x - x, other.y - y) < 8:
                 target = other
                 x, y = other.x, other.y
-        if not army.order(self.nav, x, y):
+        if not army.order(c.nav_for(army), x, y):
             return False
         self.audio.play("march", 0.5)
         walked = army.walk()
@@ -515,8 +516,8 @@ class MapApp(_showbase()):
             return
         data = json.loads(path.read_text(encoding="utf-8"))
         self.campaign = Campaign.from_dict(data, self.provmap, self.realms, self.relations)
-        self.campaign.nav = self.nav
-        self.campaign.attach_ai(self.nav)
+        self.campaign.nav, self.campaign.naval_nav = self.nav, self.naval_nav
+        self.campaign.attach_ai(self.nav, self.naval_nav)
         for figure in self.figures.values():
             figure.root.removeNode()
         self.figures = {}
@@ -715,7 +716,7 @@ class MapApp(_showbase()):
         army = c.armies_of("wallachia")[0]
         if want("army"):
             self.choose(army)
-            army.order(self.nav, *c.static("nikopol").town)
+            army.order(c.nav_for(army), *c.static("nikopol").town)
             self.show_orders()
             self.panel.show_army(c, army)
             self._view(25.0, 44.2, 520, 0)
@@ -741,7 +742,7 @@ class MapApp(_showbase()):
             c.provinces["arges"].unrest = 0
         # a war, a few months on
         c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
-        army.order(self.nav, *c.static("nikopol").town)
+        army.order(c.nav_for(army), *c.static("nikopol").town)
         army.walk()
         for _ in range(4):
             self.end_month()

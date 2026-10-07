@@ -400,3 +400,61 @@ REALM_NAMES = {
     "mamluks": "Mamluk Sultanate", "akkoyunlu": "Ak Koyunlu", "timurids": "Timurids", "georgia": "Georgia",
     "circassia": "Circassia", "cyprus": "Cyprus", "naples": "Naples", "sicily": "Sicily", "papal": "Papal States",
 }
+
+# --- the land's riches ------------------------------------------------------------------------------
+# The main good each province produces (others follow from its terrain: tools/provinces.py).
+GOODS = {
+    # metals and salt: the Balkan and Carpathian mines
+    "novo_brdo": "silver", "rudnik": "silver", "borac": "silver", "zolyom": "gold", "szatmar": "gold",
+    "gyulafehervar": "gold", "hradec": "silver", "kosovo": "silver", "bobovac": "iron", "graz": "iron",
+    "carinthia": "iron", "sofia": "iron", "kutaisi": "iron", "trencsen": "copper", "szepes": "copper",
+    "kolozsvar": "salt", "szekelyfold": "salt", "maramaros": "salt", "krakow": "salt", "soli": "salt",
+    "arges": "salt", "roman": "salt", "ragusa": "salt", "salzburg": "salt", "manisa": "alum", "kutahya": "alum",
+    # wine, oil, sugar, mastic, silk, cotton
+    "kassa": "wine", "eger": "wine", "monemvasia": "wine", "candia": "wine", "canea": "olive_oil",
+    "limassol": "sugar", "chios": "mastic", "lesbos": "olive_oil", "athens": "olive_oil", "naxos": "wine",
+    "bursa": "silk", "trebizond": "silk", "ayasoluk": "cotton", "milas": "cotton", "adana": "cotton",
+    "nicosia": "cotton", "corfu": "olive_oil", "zakynthos": "wine", "patras": "wine", "kalamata": "olive_oil",
+    "thebes": "silk", "brasso": "cloth", "szeben": "cloth", "prague": "cloth", "vienna": "wine", "venice": "glass",
+    "aleppo": "spices", "constantinople": "cloth", "caffa": "grain", "tana": "furs", "edirne": "cloth",
+    # the forests and the steppe
+    "kyiv": "furs", "chernihiv": "furs", "lutsk": "wax", "zhytomyr": "wax", "suceava": "wax", "hotin": "wax",
+    "soroca": "livestock", "orhei": "wax", "lapusna": "livestock", "iasi": "livestock", "barlad": "livestock",
+    "targoviste": "wax", "buzau": "livestock", "ialomita": "livestock", "braila": "fish", "chilia": "fish",
+    "cetatea_alba": "fish", "vosporo": "fish", "lower_don": "fish", "khadjibey": "grain", "dobruja": "grain",
+    "rodosto": "grain", "larissa": "grain", "vlasia": "timber", "teleorman": "grain", "caracal": "grain",
+    "solkhat": "horses", "perekop": "horses", "yedisan": "horses", "lower_dnieper": "horses", "zaporozhia": "horses",
+    "donets": "horses", "kharkiv": "horses", "poltava": "horses", "kirovohrad": "horses", "mius": "horses",
+    "kuban": "horses", "salsk": "horses", "stavropol": "horses", "kalmyk": "horses", "elbistan": "horses",
+    "palermo": "grain", "catania": "sugar", "bari": "olive_oil", "otranto": "olive_oil", "capitanata": "grain",
+}
+
+# People, in thousands, living in the province's great town (added to the countryside around it).
+CITIES = {
+    "venice": 110, "constantinople": 50, "naples": 40, "prague": 35, "aleppo": 50, "rome": 25, "bursa": 30,
+    "edirne": 25, "thessaloniki": 25, "caffa": 20, "palermo": 30, "vienna": 20, "buda": 12, "krakow": 15,
+    "breslau": 18, "candia": 15, "nicosia": 15, "trebizond": 12, "konya": 12, "sinop": 8, "ragusa": 6,
+    "brasso": 8, "szeben": 7, "kassa": 7, "pozsony": 6, "zagreb": 5, "lwow": 6, "kyiv": 8, "suceava": 6,
+    "targoviste": 6, "sofia": 8, "tarnovo": 6, "skopje": 8, "athens": 6, "thebes": 5, "mystras": 6, "rhodes": 8,
+    "famagusta": 8, "chios": 6, "ayasoluk": 6, "antioch": 8, "hama": 15, "tripoli": 15, "erzurum": 10,
+    "kutaisi": 6, "cetatea_alba": 8, "chilia": 6, "novo_brdo": 8, "zara": 6, "spalato": 5, "durazzo": 4,
+    "ankara": 10, "amasya": 8, "tokat": 8, "sivas": 10, "kayseri": 10, "antalya": 6, "manisa": 6,
+}
+
+# Fortifications in 1402: 0 none, 1 a castle, 2 strong walls, 3 a great fortress, 4 Constantinople's walls.
+FORTS = {
+    "constantinople": 4, "rhodes": 3, "monemvasia": 3, "corinth": 3, "belgrade": 3, "ragusa": 3, "venice": 3,
+    "thessaloniki": 2, "edirne": 2, "bursa": 2, "buda": 2, "suceava": 2, "cetatea_alba": 2, "chilia": 2,
+    "giurgiu": 2, "vidin": 2, "nikopol": 2, "kruja": 2, "scutari": 2, "durazzo": 2, "mystras": 2, "nauplia": 2,
+    "modon": 2, "candia": 2, "caffa": 2, "trebizond": 2, "krakow": 2, "prague": 2, "vienna": 2, "hunyad": 2,
+    "szeben": 2, "brasso": 2, "branicevo": 2, "smederevo": 1, "targoviste": 2, "arges": 2, "tarnovo": 2,
+    "novo_brdo": 2, "bobovac": 2, "jajce": 2, "zeta": 1, "ioannina": 2, "arta": 2, "athens": 2, "thebes": 1,
+    "famagusta": 2, "nicosia": 2, "chios": 2, "lesbos": 2, "kos": 2, "smyrna": 2, "sinop": 2, "kastamonu": 2,
+    "konya": 2, "amasya": 2, "tokat": 1, "aleppo": 2, "antioch": 2, "erzurum": 2, "kutaisi": 1, "gothia": 2,
+    "naples": 2, "rome": 1, "palermo": 2, "zara": 2, "spalato": 1, "kotor": 2, "severin": 2, "karansebes": 1,
+    "temes": 2, "varad": 1, "kolozsvar": 1, "gyulafehervar": 2, "pozsony": 2, "esztergom": 2, "zagreb": 1,
+    "lwow": 2, "kamieniec": 2, "lutsk": 2, "kyiv": 1, "salona": 1, "zitouni": 1, "larissa": 1,
+}
+
+# Low, wet ground: the Danube's delta and floodplain, the Kuban's mouths.
+MARSHES = {"chilia", "braila", "kuban"}

@@ -24,7 +24,20 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 from crowns import geo  # noqa: E402
 from crowns.mapdata import Ground, blur, smoothstep  # noqa: E402
-from history_1402 import PROVINCES  # noqa: E402
+from history_1402 import CITIES, FORTS, GOODS, MARSHES, PROVINCES  # noqa: E402
+
+# people per km² in 1400 by terrain, and the share of that a region had (densities from the
+# estimates for late medieval Europe: Italy and Bohemia crowded, the steppe nearly empty)
+DENSITY = {"plains": 9, "hills": 8, "forest": 6, "mountains": 4, "steppe": 2, "desert": 1.2, "marsh": 3}
+REGION = {
+    "venice": 2.2, "papal": 2.2, "naples": 2.0, "sicily": 2.0, "bohemia": 1.6, "moravia": 1.6, "austria": 1.5,
+    "bavaria": 1.6, "salzburg": 1.2, "aquileia": 1.8, "celje": 1.2, "hungary": 1.1, "frankopan": 0.9,
+    "poland": 1.0, "lithuania": 0.45, "horde": 0.15, "circassia": 0.4, "wallachia": 0.7, "moldavia": 0.45,
+    "georgia": 0.7, "trebizond": 1.0, "mamluks": 0.8, "timurids": 0.5, "akkoyunlu": 0.6, "cyprus": 1.2,
+    "genoa": 1.5, "knights": 1.2, "lesbos": 1.2, "naxos": 0.9, "ragusa": 1.5,
+}
+GOOD_OF_TERRAIN = {"plains": "grain", "hills": "wine", "forest": "timber", "mountains": "livestock",
+                   "steppe": "livestock", "desert": "livestock", "marsh": "fish"}
 
 OUT = ROOT / "crowns" / "data" / "map"
 CELL = 2           # map pixels per grid cell while the provinces grow
@@ -116,19 +129,26 @@ def majority(labels, land, passes=2):
     return labels
 
 
-def terrain_of(ground, mask, forest_share):
-    h = ground.height[mask]
-    gy, gx = np.gradient(ground.height)
-    slope = (np.hypot(gx, gy) / (geo.KM_PER_PX * 1000))[mask]
-    mean, rugged = float(np.mean(h)), float(np.mean(slope))
-    if mean > 1100 or rugged > 0.045:
+def default_good(terrain, lat):
+    """What a province without a famous product lives on: vineyards only where the grape ripens."""
+    if terrain == "hills" and lat > 47.3:
+        return "livestock"
+    return GOOD_OF_TERRAIN[terrain]
+
+
+def terrain_of(stats):
+    """The province's ground, from its relief and climate (see the thresholds' reasons in the README)."""
+    high, slope, woods, arid = stats["high"], stats["slope"], stats["woods"], stats["arid"]
+    if slope > 0.07 and (high > 0.35 or slope > 0.09):
         return "mountains"
-    if mean > 450 or rugged > 0.022:
-        return "forest_hills" if forest_share > 0.5 else "hills"
-    if forest_share > 0.55:
+    if arid > 0.7 and slope < 0.04:
+        return "desert"
+    if arid > 0.25 and slope < 0.04:
+        return "steppe"
+    if woods > 0.55:
         return "forest"
-    if mean < 40 and rugged < 0.004:
-        return "marsh"
+    if slope > 0.04:
+        return "hills"
     return "plains"
 
 
@@ -150,7 +170,7 @@ def main():
     Image.fromarray(rgb).save(OUT / "provinces.png")
 
     print("Describing them ...")
-    woods = Ground(scale=1).woods() if hasattr(Ground, "woods") else None
+    climate = ground.climate()
     sea = ~ground.land
     out = []
     for i, (pid, name, lon, lat, owner, culture, religion) in enumerate(PROVINCES, start=1):
@@ -172,12 +192,18 @@ def main():
         grown[:, :-1] |= mask[:, 1:]
         touching = np.unique(labels[grown & ~mask])
         neighbors = sorted(PROVINCES[k - 1][0] for k in touching if k > 0)
-        forest_share = float(woods[mask].mean()) if woods is not None else 0.0
+        stats = {"high": float((climate["h"][mask] > 1000).mean()), "slope": float(climate["slope"][mask].mean()),
+                 "woods": float(climate["woods"][mask].mean()), "arid": float(climate["arid"][mask].mean())}
+        terrain = "marsh" if pid in MARSHES else terrain_of(stats)
+        km2 = area * geo.KM_PER_PX ** 2
+        people = km2 * DENSITY[terrain] * REGION.get(owner, 0.8) / 1000 + CITIES.get(pid, 0)
         x, y = geo.to_map(lon, lat)
         out.append({
             "id": pid, "index": i, "name": name, "owner": owner, "culture": culture, "religion": religion,
             "town": [round(x, 1), round(y, 1)], "label": [int(c0 + lc), int(r0 + lr)],
-            "area": round(area * geo.KM_PER_PX ** 2), "terrain": terrain_of(ground, mask, forest_share),
+            "area": round(km2), "terrain": terrain, "woods": round(stats["woods"], 2),
+            "arid": round(stats["arid"], 2), "population": round(people, 1), "city": CITIES.get(pid, 0),
+            "good": GOODS.get(pid, default_good(terrain, lat)), "fort": FORTS.get(pid, 1 if CITIES.get(pid) else 0),
             "coastal": bool((grown & sea).any()), "neighbors": neighbors,
         })
     (OUT / "provinces.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -28,6 +28,12 @@ class ProvinceInfo:
     area: int
     terrain: str
     coastal: bool
+    woods: float = 0.0
+    arid: float = 0.0
+    population: float = 0.0  # thousands
+    city: float = 0.0        # thousands in the great town
+    good: str = "grain"
+    fort: int = 0
     neighbors: list = field(default_factory=list)
 
 

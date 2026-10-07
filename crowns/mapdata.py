@@ -102,8 +102,9 @@ class Ground:
 
     # --- colour ---------------------------------------------------------------------------------
 
-    def colors(self):
-        """RGB (0..1) of the land and the sea floor, `scale` texels per map pixel."""
+    def climate(self):
+        """The land's climate at this Ground's scale: heights, slope, how dry it is (arid 0..1) and
+        where the forests stand (woods 0..1), plus the noise fields that vary the colours."""
         h = self.fine(self.height)
         shape = h.shape
         lon, lat = self.lonlat(shape)
@@ -116,6 +117,17 @@ class Ground:
                        + 0.30 * _blob(lon, lat, 28.2, 44.4, 1.4) + 0.22 * _blob(lon, lat, 20.3, 46.8, 1.6)
                        + 0.25 * _blob(lon, lat, 43.5, 40.0, 2.0), 0, 1)
         arid = np.clip(arid - smoothstep(600, 2000, h) * 0.35 + (n1 - 0.5) * 0.25, 0, 1)
+        # forests: on hills and mountain sides where it is wet enough, in patches on the plains
+        hilly = blur(smoothstep(200, 900, h) + smoothstep(0.015, 0.06, slope), 3 * self.scale)
+        woods = np.clip(hilly * 0.55 + (n1 * 0.7 + n2 * 0.4 - 0.62), 0, 1) * (1 - smoothstep(0.2, 0.55, arid))
+        woods = smoothstep(0.3, 0.7, blur(woods, self.scale))
+        return {"h": h, "lon": lon, "lat": lat, "slope": slope, "noise": (n1, n2, n3), "arid": arid, "woods": woods}
+
+    def colors(self):
+        """RGB (0..1) of the land and the sea floor, `scale` texels per map pixel."""
+        c = self.climate()
+        h, lat, slope, arid, woods = c["h"], c["lat"], c["slope"], c["arid"], c["woods"]
+        n1, n2, n3 = c["noise"]
         lush = np.array([0.33, 0.47, 0.20])
         dry = np.array([0.60, 0.58, 0.34])
         desert = np.array([0.74, 0.64, 0.45])
@@ -128,10 +140,6 @@ class Ground:
                  + dry * (smoothstep(0.0, 0.55, arid) - smoothstep(0.55, 0.95, arid))[..., None]
                  + desert * smoothstep(0.55, 0.95, arid)[..., None])
         grass *= (0.88 + 0.24 * n2)[..., None]
-        # forests: on hills and mountain sides where it is wet enough, in patches on the plains
-        hilly = blur(smoothstep(200, 900, h) + smoothstep(0.015, 0.06, slope), 3 * self.scale)
-        woods = np.clip(hilly * 0.55 + (n1 * 0.7 + n2 * 0.4 - 0.62), 0, 1) * (1 - smoothstep(0.2, 0.55, arid))
-        woods = smoothstep(0.3, 0.7, blur(woods, self.scale))
         trees = forest * (1 - smoothstep(900, 1600, h))[..., None] + conifer * smoothstep(900, 1600, h)[..., None]
         trees *= (0.8 + 0.4 * n3)[..., None]
         color = grass * (1 - woods)[..., None] + trees * woods[..., None]

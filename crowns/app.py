@@ -190,7 +190,7 @@ class MapApp(BattleControls, _showbase()):
             "close": self.close_panel, "realm": self.show_realm, "tab": self.set_tab, "build": self.build,
             "recruit": self.recruit, "halt": self.halt, "war": self.ask_war, "diplo": self.diplo,
             "peace": self.offer_peace, "play": self.play_as, "marry": self.marry,
-            "realm_tab": self.set_realm_tab, "decide": self.decide, "split": self.split_army,
+            "realm_tab": self.set_realm_tab, "decide": self.decide, "split": self.split_army, "storm": self.ask_storm,
             "merge": self.merge_armies})
         self.chronicle = Chronicle(self.theme, self.aspect2d, aspect)
         from direct.gui.DirectGui import DirectLabel
@@ -234,6 +234,7 @@ class MapApp(BattleControls, _showbase()):
         self.right_from = None
         self.in_battle = False
         self.battle = None
+        self.storm_pid = None
         self.init_battle_controls()
         self.taskMgr.add(self.tick, "tick")
 
@@ -387,14 +388,65 @@ class MapApp(BattleControls, _showbase()):
                           ("Leave it to the captains", captains),
                           ("Draw off (lose a twentieth of the men)", withdraw)])
 
-    def enter_battle(self, attacker, defender):
+    def ask_storm(self, army_id):
+        """Before an assault: the walls, the garrison, the odds; command it, leave it to the captains, or wait."""
+        c = self.campaign
+        army = self.army_by_id(army_id)
+        pid = c.storm_target(army) if army is not None else None
+        if pid is None:
+            return
+        info, p = c.static(pid), c.provinces[pid]
+        garrison = c.garrison_army(pid)
+        odds = c.storm_odds(army, pid)
+        walls = ["no walls but a palisade", "walls", "strong walls", "great walls", "mighty walls"][min(4, c.fort(pid))]
+        text = (f"{info.name} has {walls} and {garrison.men:,} men to hold them. The siege is "
+                f"{int(p.siege['progress'] * 100)}% of the way to starving it out"
+                f"{', and our engines have opened a breach' if p.siege['progress'] >= 0.45 else ''}.\n\n"
+                f"The {army.name} has {army.men:,} men. Our captains give the assault about "
+                f"{round(odds * 100)} chances in 100. Ladders, a ram for the gate; the town's square must be "
+                f"taken and held.")
+
+        def captains():
+            report = c.storm(army, pid)
+            self.after_storm(report)
+        self.dialog.show(f"Storm {info.name}?", text,
+                         [("Lead the assault", lambda: self.enter_battle(army, None, storm=pid)),
+                          ("Leave it to the captains", captains),
+                          ("Not yet: keep up the siege", None)])
+
+    def after_storm(self, report):
+        c = self.campaign
+        self.chronicle.add(str(c.date), c.messages[-2:])
+        self.chronicle.show()
+        self.sync_figures()
+        self.redraw_overlay()
+        self.towns.rebuild(force=True)
+        self.audio.play("victory" if report["won"] else "defeat", 0.8)
+        title = f"{report['place']} is taken!" if report["won"] else f"Thrown back from {report['place']}"
+        text = (f"The {report['army']} carries the walls of {report['place']} and the town is ours. "
+                if report["won"] else f"The {report['army']} could not carry the walls of {report['place']}. ")
+        text += f"{report['lost']:,} men fell in the assault."
+        if report.get("details"):
+            text += "\n\n" + "\n".join(report["details"])
+        self.dialog.show(title, text, [("Onward", None)])
+        if self.chosen is not None and self.chosen not in c.armies:
+            self.choose(None)
+            self.panel.close()
+        self.refresh()
+
+    def enter_battle(self, attacker, defender, storm=None):
         from .game.battle import FIELD_H, FIELD_W, tactical
         from .render.battlefield import UNIT, BattleScene
         from .render.camera import StrategyCamera
         from .render.atmosphere import SUN
         from .ui.battle_hud import BattleHUD
         c = self.campaign
-        self.battle = tactical(c, attacker, defender)
+        self.storm_pid = storm
+        if storm is not None:
+            from .game.battle import tactical_storm
+            self.battle, defender = tactical_storm(c, attacker, storm)
+        else:
+            self.battle = tactical(c, attacker, defender)
         self.battle_armies = (attacker, defender)
         self.battle_side = 0 if attacker.owner == c.player else 1
         sides = (attacker.owner, defender.owner)
@@ -529,26 +581,37 @@ class MapApp(BattleControls, _showbase()):
                 how = {"routing": ", fled", "gone": ", cut to pieces" if u.men <= 0 else ", fled the field"}.get(
                     u.state, "")
                 details.append(f"{UNITS[u.unit].name}: {u.start_men:,} went in, {max(0, u.men):,} came out{how}")
-        report = conclude(c, b, attacker, defender)
         self.audio.stop_loops()
+        if self.storm_pid is not None:
+            from .game.battle import conclude_storm
+            report = conclude_storm(c, b, attacker, self.storm_pid)
+            report["details"] = details
+            self._back_to_campaign()
+            self.after_storm(report)
+            return
+        report = conclude(c, b, attacker, defender)
         report["details"] = details
         report["notes"] = list(c.messages)
-        self.battle_hud.destroy()
-        self.battle_scene.destroy()
-        self.in_battle = False
-        self.battle = None
-        for node in (self.world.root, self.towns.root, self.labels.root, self.realm_labels.root, self.ribbon.root):
-            node.show()
-        for figure in self.figures.values():
-            figure.root.show()
-        self.topbar.frame.show()
-        self.camera_ctl.activate()
+        self._back_to_campaign()
         self.chronicle.add(str(c.date), c.messages)
         self.chronicle.show()
         self.sync_figures()
         self.redraw_overlay()
         self.refresh()
         self.battle_dialog(report)
+
+    def _back_to_campaign(self):
+        self.battle_hud.destroy()
+        self.battle_scene.destroy()
+        self.in_battle = False
+        self.battle = None
+        self.storm_pid = None
+        for node in (self.world.root, self.towns.root, self.labels.root, self.realm_labels.root, self.ribbon.root):
+            node.show()
+        for figure in self.figures.values():
+            figure.root.show()
+        self.topbar.frame.show()
+        self.camera_ctl.activate()
 
     def next_proposal(self):
         c = self.campaign
@@ -1169,6 +1232,8 @@ class MapApp(BattleControls, _showbase()):
             c.provinces["arges"].unrest = 0
         if any(want(n) for n in ("battle_deploy", "battle_low", "battle_fight", "battle_close", "battle_end")):
             self._battle_shots(folder, want)
+        if any(want(n) for n in ("storm_walls", "storm_fight", "storm_end")):
+            self._storm_shots(folder, want)
         # a war, a few months on
         if not c.at_war("wallachia", "ott_rum"):
             c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
@@ -1261,6 +1326,53 @@ class MapApp(BattleControls, _showbase()):
         if want("battle_end"):
             self._view(25.3, 44.3, 300, 0)
             self._shoot(folder, "battle_end")
+        self.dialog.close()
+
+    def _storm_shots(self, folder, want):
+        """An assault on Nikopol: the walls, the fight on the ladders, the outcome."""
+        from .game.armies import Regiment
+        c = self.campaign
+        if not c.at_war("wallachia", "ott_rum"):
+            c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
+        x, y = c.static("nikopol").town
+        army = c.new_army("wallachia", x, y, [Regiment(u, n, 0.3) for u, n in
+                                              [("great_host", 1000)] * 4 + [("vlach_archers", 500)] * 2 +
+                                              [("boyars", 300)] * 2])
+        c.provinces["nikopol"].siege = {"by": "wallachia", "progress": 0.5, "months": 3}
+        c.appoint_commanders()
+        self.enter_battle(army, None, storm="nikopol")
+        b, w = self.battle, self.battle.siege
+
+        def render(name):
+            self.battle_scene.update(0.05, b.time)
+            self.battle_scene.follow(*self.battle_cam.target, self.battle_cam.distance)
+            self.battle_hud.update(self.battle_speed, self.battle_paused, self.battle_scene.selected)
+            for _ in range(2):
+                self.graphicsEngine.renderFrame()
+            self.win.saveScreenshot(str(folder / f"{name}.png"))
+            print("saved", name)
+        if want("storm_walls"):
+            self.battle_cam.heading = 15
+            self.battle_cam.look_at(w.gate_x * 0.1 - 10, w.y * 0.1 - 18, 95)
+            render("storm_walls")
+        b.begin()
+        for t in range(1400):
+            if t % 10 == 0:
+                b.ai(0)
+                b.ai(1)
+            b.step(0.5)
+            if t % 4 == 0:
+                self.battle_scene.update(0.05, b.time)
+            if b.winner is not None or any(u.state == "climbing" for u in b.units) and t > 500:
+                break
+        if want("storm_fight"):
+            self.battle_cam.heading = 340
+            self.battle_cam.look_at(w.gate_x * 0.1 + 6, w.y * 0.1 - 6, 70)
+            render("storm_fight")
+        b.run(dt=1.0)
+        self.battle_tick(0.05)
+        if want("storm_end"):
+            self._shoot(folder, "storm_end")
         self.dialog.close()
 
     def _settle(self):

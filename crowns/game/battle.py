@@ -44,6 +44,9 @@ BREAK = 15.0                                  # morale under which a regiment fl
 TIME_LIMIT = 1800.0                           # seconds: then the defender holds the field
 
 
+from .siege import SiegeRules, make_walls  # noqa: E402
+
+
 @dataclass
 class Unit:
     id: int
@@ -78,6 +81,8 @@ class Unit:
     face_to: Optional[float] = None           # the facing to take once the march is done
     army: int = 0                             # 0: the side's main army; 1, 2...: allies coming to its aid
     arrive: float = 0.0                       # battle time at which it comes onto the field
+    climb: float = 0.0                        # seconds left on the ladders, storming a wall
+    scaled: float = 0.0                       # seconds of disorder left after coming over a wall
 
     @property
     def alive(self):
@@ -217,12 +222,13 @@ def _wrap(a):
     return (a + math.pi) % (2 * math.pi) - math.pi
 
 
-class Battle:
+class Battle(SiegeRules):
     """A battle between two armies of the campaign: the attacker (side 0) comes from the south edge."""
 
     def __init__(self, attacker, defender, unit_types, terrain="plains", seed=0, river=False,
-                 attacker_leadership=1.0, defender_leadership=1.0, place="the field", allies=None):
-        """allies: {side: [(army, seconds before it arrives), ...]}: armies near enough to join in."""
+                 attacker_leadership=1.0, defender_leadership=1.0, place="the field", allies=None, siege=None):
+        """allies: {side: [(army, seconds before it arrives), ...]}: armies near enough to join in.
+        siege: {"fort", "progress", "town"} when the attacker storms a town held by the defender."""
         self.field = Field(terrain, seed, river)
         self.rng = np.random.default_rng(seed + 7919)
         self.place = place
@@ -238,8 +244,12 @@ class Battle:
         self.formed_up = set()            # the sides whose captains have chosen their formations
         self.allies = {0: [], 1: []}
         self.general_fate = {}            # side -> "killed" / "captured", for the general of the main army
+        self.siege = make_walls(siege, FIELD_W, FIELD_H, self.rng) if siege else None
         for side, army in enumerate(self.armies):
-            self._deploy(side, army, unit_types)
+            if self.siege is not None and side == 1:
+                self._siege_deploy(side, army, unit_types)
+            else:
+                self._deploy(side, army, unit_types)
         for side, coming in (allies or {}).items():
             for k, (army, delay) in enumerate(coming, start=1):
                 self.allies[side].append(army)
@@ -359,6 +369,8 @@ class Battle:
             u = self.units[i]
             if u.alive and u.state != "waiting":
                 self._act(u, dt)
+        if self.siege is not None:
+            self._siege_step(dt)
         self._melee(dt)
         self._missiles(dt)
         self._morale(dt)
@@ -390,6 +402,8 @@ class Battle:
             return
         if u.state == "fighting":
             return   # locked in melee
+        if u.state == "climbing":
+            return self._climbing(u, dt)
         target = None
         goal = None
         if u.order and u.order[0] == "attack":
@@ -426,8 +440,11 @@ class Battle:
             u.stamina = max(0.0, u.stamina - (0.9 if u.kind == "horse" else 1.2) * RUN_COST * dt)
         step = min(dist, u.speed(running) * dt * self.field.going(u.x, u.y, u.kind))
         if abs(turn) < 0.6:
+            x0, y0 = u.x, u.y
             u.x += math.sin(u.facing) * step
             u.y += math.cos(u.facing) * step
+            if self.siege is not None:
+                self._wall_check(u, x0, y0)
             u.still = 0.0
             if target is not None and u.kind == "horse":
                 u.charge += step
@@ -494,6 +511,8 @@ class Battle:
             s *= 1.15     # fighting down a slope
         if self.field.near_river(u.x, u.y):
             s *= 0.75     # floundering in the stream
+        if self.siege is not None:
+            s = self._siege_strength(u, foe, s)
         # where the blow lands on the foe: front, flank or rear
         angle = abs(_wrap(_angle_to(foe, u.x, u.y) - foe.facing))
         if foe.formation == "square":
@@ -559,6 +578,8 @@ class Battle:
             accuracy = 1.2 - 0.6 * dist / reach
             cover = 0.5 if self.field.wooded(target.x, target.y) else 1.0
             cover *= {"loose": 0.6, "deep": 1.15, "square": 1.15}.get(target.formation, 1.0)
+            if self.on_wall(target):
+                cover *= 0.5                        # behind the battlements
             skill = u.missile * (1 + 0.3 * u.experience)
             dmg = u.men * MISSILE_RATE * _hit(skill, target.armour, 0.25) * accuracy * cover * \
                 self.rng.uniform(0.5, 1.5)
@@ -642,6 +663,8 @@ class Battle:
         ground before a charge; the horse keeps level on the wings and, once the lines are locked, falls on
         flanks and archers; horse archers ride off from what would catch them. The defender lets the attack
         come on, unless it is the one being out-shot."""
+        if self.siege is not None:
+            return self._siege_ai(side)
         mine = self.side_units(side)
         foes = [e for e in self.units if e.side != side and e.standing and self.visible(e, side)]
         if not mine or not foes:
@@ -792,3 +815,24 @@ def conclude(campaign, battle, attacker, defender):
                 campaign.armies.remove(ally)
     fates = {(attacker, defender)[side].id: fate for side, fate in battle.general_fate.items()}
     return campaign.conclude_battle(attacker, defender, winner, after, fates=fates)
+
+
+def tactical_storm(campaign, army, pid, seed=None):
+    """The assault on a besieged town, fought on the field: the army against the garrison behind its wall."""
+    from .rules import UNITS
+    p = campaign.provinces[pid]
+    garrison = campaign.garrison_army(pid)
+    seed = campaign.rng.randrange(1 << 30) if seed is None else seed
+    terrain = campaign.static(pid).terrain
+    siege = {"fort": campaign.fort(pid), "progress": p.siege["progress"] if p.siege else 0.0,
+             "town": campaign.static(pid).name}
+    return Battle(army, garrison, UNITS, terrain if terrain != "marsh" else "plains", seed, False,
+                  campaign.leadership(army), 1.0 + 0.05 * campaign.fort(pid), campaign.static(pid).name,
+                  siege=siege), garrison
+
+
+def conclude_storm(campaign, battle, army, pid):
+    """Carry a fought assault back into the campaign."""
+    left = battle.survivors(0)
+    lost = sum(r.men - max(0, min(r.men, left.get(i, r.men))) for i, r in enumerate(army.regiments))
+    return campaign.conclude_storm(army, pid, battle.winner == 0, lost)

@@ -14,7 +14,8 @@ class BattleHUD:
         self.battle, self.side, self.actions = battle, side, actions
         a = aspect
         self.top = theme.panel(parent, -a + 0.02, a - 0.02, 0.84, 0.99)
-        theme.heading(self.top, f"Battle of {battle.place}", 0, 0.935, scale=0.05, align=TextNode.ACenter)
+        title = f"Storm of {battle.place}" if battle.siege is not None else f"Battle of {battle.place}"
+        theme.heading(self.top, title, 0, 0.935, scale=0.05, align=TextNode.ACenter)
         self.sides = theme.label(self.top, "", 0, 0.885, scale=0.032, align=TextNode.ACenter, font=theme.italic)
         self.clock = theme.label(self.top, "", -a + 0.07, 0.93, scale=0.032)
         self.help = theme.label(self.top, "", -a + 0.07, 0.885, scale=0.026, color=FADED)

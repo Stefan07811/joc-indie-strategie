@@ -140,7 +140,12 @@ def army_view(c, army):
                                               f"{int(months) + 1} more month{'s' * (int(months) + 1 > 1)}")
     prov = c.provmap.at(army.x, army.y)
     if prov is not None and c.provinces[prov.id].siege and c.provinces[prov.id].siege["by"] == army.owner:
-        view["orders"] = f"Besieging {prov.name}"
+        siege = c.provinces[prov.id].siege
+        view["orders"] = f"Besieging {prov.name}: {min(99, int(siege['progress'] * 100))}% of the way to its fall"
+    view["storm"] = None
+    target = c.storm_target(army) if army.owner == c.player else None
+    if target is not None:
+        view["storm"] = (target, c.static(target).name)
     return view
 
 

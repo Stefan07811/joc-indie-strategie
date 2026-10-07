@@ -465,11 +465,93 @@ class Warfare:
             might = min(2.0, men / (4.0 * garrison))
             p.siege["progress"] += (0.6 + 0.4 * might) * winter / (1.0 + 1.5 * fort) * self.rng.uniform(0.7, 1.3)
             p.siege["months"] += 1
+            if lead.owner != self.player and p.siege["months"] >= 2 and p.siege["progress"] < 1.0 and \
+                    self.storm_odds(lead, pid) > 0.7 and self.rng.random() < 0.4:
+                self.storm(lead, pid)                 # the captains will not wait for hunger to do the work
+                continue
             if p.siege["progress"] >= 1.0:
                 self._occupy(p, lead.owner)
         for p in self.provinces.values():
             if p.siege and p.id not in camps:
                 p.siege = None
+
+    # --- storming a town ------------------------------------------------------------------------------
+
+    def storm_target(self, army):
+        """The town this army is besieging and could storm now, or None."""
+        prov = self.provmap.at(army.x, army.y)
+        if prov is None or army.route is not None:
+            return None
+        p = self.provinces[prov.id]
+        if not p.siege or p.siege["by"] != army.owner or not self.hostile(army.owner, p.controller):
+            return None
+        return prov.id
+
+    def garrison_army(self, pid):
+        """The town's defenders as an army: its garrison and armed townsfolk, archers and foot of the
+        holder's tradition."""
+        from .armies import Army, Regiment
+        p, info = self.provinces[pid], self.static(pid)
+        tag = p.controller
+        units = self.units_for(tag)
+        cheap = sorted((u for u in units if u.tier == 0), key=lambda u: u.cost)
+        bows = next((u for u in cheap if u.kind == "missile"), cheap[0])
+        foot = next((u for u in cheap if u.kind == "foot"), bows)
+        men = int(self.garrison(pid))
+        regiments = []
+        for unit, share in ((bows, 0.4), (foot, 0.6)):
+            left = int(men * share)
+            while left >= 60:
+                n = min(left, unit.men)
+                regiments.append(Regiment(unit.id, n, 0.1 + 0.1 * self.fort(pid)))
+                left -= n
+        x, y = info.town
+        return Army(f"g-{pid}", tag, f"Garrison of {info.name}", x, y, regiments)
+
+    def storm_odds(self, army, pid):
+        """The attackers' chance of carrying the walls by assault."""
+        _, terrain, _ = self.battle_site(army, army)
+        defenders = self.garrison_army(pid)
+        fort = self.fort(pid)
+        progress = self.provinces[pid].siege["progress"] if self.provinces[pid].siege else 0.0
+        ours = self.strength(army, terrain, False)
+        theirs = self.strength(defenders, terrain, True) * (1.6 + 0.5 * fort) * (1.0 - 0.5 * progress)
+        return ours / max(1e-6, ours + theirs)
+
+    def storm(self, army, pid):
+        """An assault left to the captains: the walls are carried, or the attackers are thrown back.
+        Returns a report like a battle's."""
+        odds = self.storm_odds(army, pid)
+        won = self.rng.random() < odds
+        garrison = self.garrison_army(pid).men
+        lost = int(garrison * (0.5 + 0.25 * self.fort(pid)) * (0.7 if won else 1.3) * self.rng.uniform(0.7, 1.3))
+        return self.conclude_storm(army, pid, won, lost)
+
+    def conclude_storm(self, army, pid, won, lost):
+        """Apply a storm's outcome: the attackers' losses, the town taken or the siege going on."""
+        p, info = self.provinces[pid], self.static(pid)
+        holder = p.controller
+        total = max(1, army.men)
+        for r in army.regiments:
+            r.men = max(0, r.men - int(lost * r.men / total))
+            r.experience = min(1.0, r.experience + (0.1 if won else 0.04))
+        army.regiments = [r for r in army.regiments if r.men >= 50]
+        if won:
+            self._occupy(p, army.owner)
+            p.prosperity = max(0.3, p.prosperity - 0.05)      # a town taken by storm is sacked
+            text = f"The {army.name} storms {info.name}! The town is sacked."
+        else:
+            if p.siege:
+                p.siege["progress"] = max(0.0, p.siege["progress"] - 0.1)
+            text = f"The {army.name} is thrown back from the walls of {info.name}."
+        self.tell(army.owner, text + f" {lost:,} men lost.")
+        self.tell(holder, text)
+        for war in self.wars:
+            if holder in war.enemies(army.owner):
+                war.log.append(f"{self.date}: {text}")
+        if not army.regiments and army in self.armies:
+            self.armies.remove(army)
+        return {"won": won, "place": info.name, "lost": lost, "army": army.name, "pid": pid}
 
     def _occupy(self, p, tag):
         info = self.static(p.id)

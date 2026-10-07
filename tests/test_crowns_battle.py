@@ -189,3 +189,58 @@ def test_ambush_from_the_woods():
     nerve = foe.morale
     b._engage(host, foe)
     assert foe.morale < nerve and any("Ambush" in line for line in b.log)
+
+
+def test_a_storm_needs_ladders_or_a_way_in():
+    a = army("wallachia", [("great_host", 1000)])
+    d = army("ott_rum", [("azaps", 400)])
+    b = Battle(a, d, UNITS, "plains", seed=2, siege={"fort": 2, "progress": 0.0, "town": "Nikopol"})
+    w = b.siege
+    host = b.side_units(0)[0]
+    assert not w.breaches and not w.gate_open and not w.passable(w.gate_x + 300, 0) and w.passable(w.gate_x, 1)
+    host.x, host.y = w.gate_x + 300, w.y - 30
+    b.begin()
+    b.move(host, host.x, w.y + 100)
+    for _ in range(60):
+        b._act(host, 0.5)
+    assert host.state == "climbing" and host.y < w.y           # stopped at the wall, up the ladders
+    for _ in range(200):
+        b._act(host, 0.5)
+    assert host.state != "climbing" and host.y > w.y           # and over it
+
+
+def test_the_ram_breaks_the_gate_and_the_square_takes_the_town():
+    a = army("wallachia", [("great_host", 1000)] * 3)
+    d = army("ott_rum", [("azaps", 200)])
+    b = Battle(a, d, UNITS, "plains", seed=2, siege={"fort": 0, "progress": 0.0, "town": "Nikopol"})
+    w = b.siege
+    for k, u in enumerate(b.side_units(0)):
+        u.x, u.y = w.gate_x + (k - 1) * 30, w.y - 12
+    b.begin()
+    for _ in range(200):
+        b._siege_step(1.0)
+        if w.gate_open:
+            break
+    assert w.gate_open
+    for u in b.side_units(1):
+        u.state = "gone"
+    b.side_units(0)[0].x, b.side_units(0)[0].y = w.plaza
+    for _ in range(70):
+        b._siege_step(1.0)
+    assert b.winner == 0
+
+
+def test_the_campaign_storm(world):
+    provmap, realms, relations = world
+    c = Campaign(provmap, realms, relations, player="wallachia", seed=1)
+    c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
+    x, y = c.static("nikopol").town
+    big = c.new_army("wallachia", x, y, [Regiment("great_host", 1000) for _ in range(8)])
+    assert c.storm_target(big) is None                         # no siege yet
+    c.provinces["nikopol"].siege = {"by": "wallachia", "progress": 0.4, "months": 2}
+    assert c.storm_target(big) == "nikopol"
+    garrison = c.garrison_army("nikopol")
+    assert garrison.men > 100 and garrison.owner == c.provinces["nikopol"].controller
+    assert c.storm_odds(big, "nikopol") > 0.5
+    report = c.conclude_storm(big, "nikopol", True, 500)
+    assert report["won"] and c.provinces["nikopol"].controller == "wallachia" and abs(big.men - 7500) < 10

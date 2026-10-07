@@ -67,6 +67,9 @@ class BattleScene:
         self._build_far_country()
         self._build_woods()
         self._build_river()
+        self.gate = None
+        if battle.siege is not None:
+            self._build_walls()
         self.units = {}
         self.models = {}
         self.selected = set()
@@ -192,6 +195,77 @@ class BattleScene:
         node.setShader(_piece())
         node.hide(SHADOW_CASTERS)
 
+    def _build_walls(self):
+        """The town being stormed: its curtain wall and towers across the field, the gate, the breaches the
+        siege has made, and the houses, church and square behind."""
+        from ..game.siege import BREACH_HALF, GATE_HALF
+        from . import models as m
+        w = self.battle.siege
+        y = w.y * UNIT
+        height, thick = 4.5 + 0.6 * w.fort, 2.4
+        stone = (0.74, 0.70, 0.62)
+        part = m.Part()
+
+        def place(build, x, yy, z=None):
+            piece = m.Part()
+            build(piece)
+            z = self.height(x, yy) if z is None else z
+            part.add(piece, at=(x, yy, z))
+        gaps = sorted([(w.gate_x - GATE_HALF, w.gate_x + GATE_HALF)] +
+                      [(b - BREACH_HALF, b + BREACH_HALF) for b in w.breaches])
+        x = 0.0
+        for a, b in gaps + [(FIELD_W, FIELD_W)]:
+            a, b = a * UNIT, b * UNIT
+            n = max(1, int((a - x) / 6))
+            for k in range(n):               # the curtain, in short lengths that follow the ground
+                a0, a1 = x + (a - x) * k / n, x + (a - x) * (k + 1) / n
+                if a1 - a0 > 0.1:
+                    place(lambda pc, a0=a0, a1=a1: m.wall(pc, (0, 0), (a1 - a0, 0), height, thick, stone),
+                          a0, y, min(self.height(a0, y), self.height(a1, y)))
+            x = max(x, b)
+        for tx in w.towers + [w.gate_x - GATE_HALF - 30, w.gate_x + GATE_HALF + 30]:
+            place(lambda pc: m.square_tower(pc, 0, 0, 5.0, height + 3.0, stone,
+                                            roof=m.TILE if w.fort >= 2 else None), tx * UNIT, y)
+        rng = np.random.default_rng(5)
+        for bx in w.breaches:               # rubble where the wall came down
+            for k in range(8):
+                place(lambda pc, k=k: pc.box((0, 0, 0.4), (1.5, 1.2, 0.9), (0.64, 0.60, 0.53), yaw=k * 23),
+                      bx * UNIT + rng.uniform(-2.4, 2.4), y + rng.uniform(-1.5, 1.5))
+        # the town behind: houses about a church and its square
+        px, py = w.plaza[0] * UNIT, w.plaza[1] * UNIT
+        for k in range(30):
+            hx = rng.uniform(15, FIELD_W * UNIT - 15)
+            hy = rng.uniform(y + 9, FIELD_H * UNIT - 4)
+            if math.hypot(hx - px, hy - py) < 16 or abs(hx - w.gate_x * UNIT) < 8:
+                continue
+            walls_c = m.PLASTER if k % 3 else m.TIMBER
+            place(lambda pc, walls_c=walls_c, yaw=rng.uniform(-20, 20):
+                  m.gabled(pc, 0, 0, 3.2, 4.4, 2.6, walls_c, m.TILE, yaw=yaw), hx, hy)
+        place(lambda pc: m.orthodox_church(pc, 0, 0, big=0.5), px + 15, py + 6)
+        verts, colors = part.arrays()
+        town = self.root.attachNewNode("town")
+        town.setShader(_piece())
+        town.attachNewNode(geom_node("walls", verts, colors))
+        ink = town.attachNewNode(geom_node("walls-ink", verts, colors, smooth=True))
+        ink.setShader(_piece(outline=True), 1)
+        ink.setShaderInput("outline", 0.06)
+        ink.setAttrib(CullFaceAttrib.make(CullFaceAttrib.MCullCounterClockwise), 1)
+        ink.hide(SHADOW_CASTERS)
+        # the gate's doors, and the banner over the square
+        gate = m.Part()
+        gate.box((0, 0, height * 0.4), (GATE_HALF * 2 * UNIT, 0.5, height * 0.8), (0.42, 0.29, 0.17))
+        for k in range(-2, 3):
+            gate.box((k * 0.8, -0.3, height * 0.4), (0.12, 0.1, height * 0.8), (0.25, 0.25, 0.27))
+        self.gate = town.attachNewNode(gate.node("gate"))
+        self.gate.setPos(w.gate_x * UNIT, y, self.height(w.gate_x * UNIT, y))
+        flag = m.Part()
+        flag.limb((0, 0, 0), (0, 0, 9), 0.15, 0.12, (0.45, 0.32, 0.2))
+        cloth = m.Part()
+        cloth.slab([(0, 0), (3.2, 0), (3.2, -2.0), (0, -2.0)], self.colors[1], 0.05)
+        flag.add(cloth, at=(0, 0, 8.8))
+        self.plaza_flag = town.attachNewNode(flag.node("plaza"))
+        self.plaza_flag.setPos(px, py, self.height(px, py))
+
     # --- the regiments ---------------------------------------------------------------------------------
 
     def _figure_model(self, kind, side):
@@ -284,6 +358,12 @@ class BattleScene:
         for event in b.events:
             if event[0] == "volley":
                 self._arc(b.units[event[1]], b.units[event[2]])
+            elif event[0] == "tower":
+                target = b.units[event[3]]
+                self._arc_between(event[1], event[2], target.x, target.y, int(event[1]), lift=5.0)
+        if self.gate is not None and b.siege.gate_open:
+            self.gate.removeNode()
+            self.gate = None
         b.events.clear()
         for arc in list(self.arcs):
             arc[1] -= dt
@@ -296,13 +376,16 @@ class BattleScene:
 
     def _arc(self, shooter, target):
         """A volley: a sheaf of arrows arcing from the shooters to their mark."""
-        sx, sy = world(shooter.x, shooter.y)
-        tx, ty = world(target.x, target.y)
+        self._arc_between(shooter.x, shooter.y, target.x, target.y, shooter.id)
+
+    def _arc_between(self, x0, y0, x1, y1, seed, lift=1.2):
+        sx, sy = world(x0, y0)
+        tx, ty = world(x1, y1)
         dist = math.hypot(tx - sx, ty - sy)
         lines = LineSegs()
         lines.setThickness(1.5)
         lines.setColor(0.22, 0.14, 0.08, 1)
-        rng = np.random.default_rng(int(self.battle.time * 10) + shooter.id)
+        rng = np.random.default_rng(int(self.battle.time * 10) + seed)
         for _ in range(5):
             ox, oy = rng.uniform(-1.5, 1.5, 2)
             pts = []
@@ -310,7 +393,7 @@ class BattleScene:
                 t = k / 8
                 x = sx + ox + (tx - sx) * t
                 y = sy + oy + (ty - sy) * t
-                z = self.height(x, y) + 1.2 + math.sin(t * math.pi) * dist * 0.18
+                z = self.height(x, y) + lift * (1 - t) + 1.2 * t + math.sin(t * math.pi) * dist * 0.18
                 pts.append((x, y, z))
             lines.moveTo(*pts[0])
             for p in pts[1:]:

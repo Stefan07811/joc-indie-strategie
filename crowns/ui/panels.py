@@ -166,6 +166,8 @@ class SidePanel:
                        "enemy army to give battle.", scale=0.028, color=FADED, font=self.theme.italic)
             if army.route is not None:
                 self._button("Halt", self.actions["halt"], [army.id])
+            if v.get("storm"):
+                self._button(f"Storm the walls of {v['storm'][1]}", self.actions["storm"], [army.id])
             self._button("Split the army in two", self.actions["split"], [army.id], v["can_split"],
                          "One regiment cannot be split.")
             if v["can_merge"]:

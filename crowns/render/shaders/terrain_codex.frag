@@ -18,12 +18,16 @@ uniform vec3 haze;
 uniform vec2 map_size;
 uniform float overlay_mix;
 uniform float time;
+uniform sampler2D reach;        // the chosen army's march: km to every place / its month's budget
+uniform vec4 reach_rect;        // the map pixels that texture covers: left, top, width, height
+uniform float reach_on;
 in vec2 uv;
 in vec3 wpos;
 out vec4 frag;
 
 const vec3 INK = vec3(0.22, 0.14, 0.08);
 const vec3 PARCHMENT = vec3(0.94, 0.88, 0.73);
+const vec3 RUBRIC = vec3(0.68, 0.15, 0.09);   // the scribes' red ink
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) {
@@ -101,7 +105,7 @@ void main() {
     // borders drawn with the pen as smooth curves: dotted between provinces, a firm line between realms;
     // lines keep their width on screen as the camera rises
     if (c > 0) {
-        float w = max(0.55, d / 520.0);
+        float w = max(1.0, d / 520.0);   // at least as wide as the steps of the index texture
         float aa = max(fwidth(bd), 0.05);
         float pen = 1.0 - smoothstep(w - aa, w + aa, bd);
         float dots = step(0.45, fract((wpos.x + wpos.y) / max(1.4, d / 200.0)));
@@ -114,6 +118,23 @@ void main() {
             float gold = 1.0 - smoothstep(w * 2.2 - aa, w * 2.2 + aa, bd);
             if (other != c && other > 0) col = mix(col, vec3(0.75, 0.52, 0.10), gold);  // gold leaf
         }
+    }
+
+    // the chosen army's month of marching, ruled in red ink like an itinerary: its bound drawn firmly,
+    // a fine line for every week of the march, and the lands beyond it greyed
+    if (reach_on > 0.5) {
+        vec2 m = (vec2(wpos.x, map_size.y - wpos.y) - reach_rect.xy) / reach_rect.zw;
+        float r = 1.5;
+        if (m.x >= 0.0 && m.y >= 0.0 && m.x <= 1.0 && m.y <= 1.0) r = texture(reach, vec2(m.x, 1.0 - m.y)).r;
+        float aa = max(fwidth(r), 1e-4);
+        float inside = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, r);
+        col = mix(mix(col, vec3(dot(col, vec3(0.3, 0.45, 0.25))) * 0.92, 0.55), col, inside);
+        float bound = 1.0 - smoothstep(aa * 1.2, aa * 2.4, abs(r - 1.0));
+        col = mix(col, RUBRIC, bound * 0.9);
+        float wk = r * 4.0;
+        float week = (1.0 - smoothstep(0.0, fwidth(wk) * 1.1, abs(fract(wk + 0.5) - 0.5))) * step(0.5, wk) * inside;
+        float dotted = step(0.4, fract((wpos.x - wpos.y) / max(1.2, d / 240.0)));
+        col = mix(col, RUBRIC, week * dotted * 0.3);
     }
 
     // the edge of the sheet

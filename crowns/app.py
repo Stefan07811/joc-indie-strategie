@@ -4,7 +4,8 @@
     python -m crowns --shots DIR      render a few views to DIR and quit (works without a display)
 
 Controls: WASD or the arrows move, the mouse wheel zooms, right-drag or Q/E turns, middle-drag moves,
-left click picks a province, 1 / 2 switch between the terrain and the political map.
+left click picks a province or an army, right click orders the chosen army to march there, space or
+enter ends the month, 1 / 2 switch between the terrain and the political map.
 """
 
 import argparse
@@ -34,6 +35,7 @@ def configure(offscreen=False, size=None, fullscreen=False):
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="crowns")
     parser.add_argument("--shots", help="render views to this folder and quit")
+    parser.add_argument("--only", nargs="*", help="with --shots: just these views")
     parser.add_argument("--size", default=None, help="window size, e.g. 1920x1080")
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--style", default="codex", help="the map's look: codex (the game's) or real (for checks)")
@@ -43,7 +45,7 @@ def main(argv=None):
               fullscreen=args.fullscreen)
     app = MapApp(style=args.style)
     if args.shots:
-        app.shots(Path(args.shots))
+        app.shots(Path(args.shots), args.only)
     else:
         app.run()
 
@@ -100,7 +102,21 @@ class MapApp(_showbase()):
         self.info = OnscreenText(text="", pos=(-1.7, 0.9), scale=0.05, align=TextNode.ALeft, fg=(1, 0.95, 0.85, 1),
                                  shadow=(0, 0, 0, 0.8), font=self.font, mayChange=True, parent=self.aspect2d)
         self.redraw_overlay()
-        self.armies = self.demo_armies()
+        from .game.calendar import START
+        from .game.navigation import Navigation
+        from .render.orders import RouteRibbon
+        self.date = START
+        self.nav = Navigation(self.world.ground, self.provmap)
+        self.ribbon = RouteRibbon(self.render, self.world.height_at)
+        self.chosen = None
+        self.realm_names = REALM_NAMES
+        self.armies, self.figures = self.first_armies()
+        self.date_text = OnscreenText(text=str(self.date), pos=(0, 0.9), scale=0.065, fg=(0.24, 0.15, 0.08, 1),
+                                      shadow=(0.96, 0.9, 0.75, 0.9), font=self.title_font, mayChange=True,
+                                      parent=self.aspect2d)
+        self.army_text = OnscreenText(text="", pos=(-1.7, -0.75), scale=0.05, align=TextNode.ALeft,
+                                      fg=(1, 0.95, 0.85, 1), shadow=(0, 0, 0, 0.8), font=self.font, mayChange=True,
+                                      parent=self.aspect2d)
         print(f"map ready in {time.time() - started:.1f} s")
         self.keys = {}
         for key in ("w", "a", "s", "d", "arrow_up", "arrow_down", "arrow_left", "arrow_right", "q", "e"):
@@ -111,8 +127,10 @@ class MapApp(_showbase()):
         self.accept("mouse1", self.pick)
         self.accept("mouse2", self._drag, ["pan"])
         self.accept("mouse2-up", self._drag, [None])
-        self.accept("mouse3", self._drag, ["turn"])
-        self.accept("mouse3-up", self._drag, [None])
+        self.accept("mouse3", self._right_down)
+        self.accept("mouse3-up", self._right_up)
+        self.accept("space", self.end_month)
+        self.accept("enter", self.end_month)
         self.accept("1", self.set_mode, ["terrain"])
         self.accept("2", self.set_mode, ["political"])
         self.accept("escape", sys.exit)
@@ -121,35 +139,110 @@ class MapApp(_showbase()):
         self.Vec3 = Vec3
         self.taskMgr.add(self.tick, "tick")
 
-    def demo_armies(self):
-        """A few armies marching between towns, until the campaign (B3) moves them for real."""
+    def first_armies(self):
+        """The armies in the field in August 1402 (until the campaign raises them for real)."""
+        from .game.armies import HORSE_MARCH_KM, Army
         from .render.figures import ArmyFigure
         from .render.world import SUN
-        towns = {p.id: (p.town[0], self.geo.HEIGHT - p.town[1]) for p in self.provmap.provinces.values()}
-        routes = [  # realm, accent, eastern dress, the towns it marches through
-            ("wallachia", (0.20, 0.30, 0.62), False, ["targoviste", "vlasia", "giurgiu"]),
-            ("ott_rum", (0.94, 0.92, 0.86), True, ["edirne", "philippopolis", "sofia"]),
-            ("hungary", (0.94, 0.92, 0.86), False, ["buda", "kalocsa", "szeged"]),
-            ("serbia", (0.85, 0.75, 0.40), False, ["krusevac", "novo_brdo"]),
-            ("moldavia", (0.85, 0.72, 0.30), False, ["suceava", "iasi", "roman"]),
+        hosts = [  # realm, town, men, light horse, accent, eastern dress
+            ("wallachia", "targoviste", 9000, True, (0.20, 0.30, 0.62), False),
+            ("ott_rum", "edirne", 14000, False, (0.94, 0.92, 0.86), True),
+            ("hungary", "buda", 12000, False, (0.94, 0.92, 0.86), False),
+            ("serbia", "krusevac", 6000, False, (0.85, 0.75, 0.40), False),
+            ("moldavia", "suceava", 7000, True, (0.85, 0.72, 0.30), False),
         ]
-        armies = []
-        for realm, accent, eastern, stops in routes:
+        armies, figures = [], {}
+        for realm, town, men, horse, accent, eastern in hosts:
+            x, y = self.provmap.provinces[town].town
+            army = Army(f"{realm}-1", realm, f"Army of {self.realm_names[realm]}", x, y, men)
+            if horse:
+                army.march_km = army.moves = HORSE_MARCH_KM
             color = tuple(c / 255 for c in self.colors[realm])
-            army = ArmyFigure(self.render, self.world.height_at, color, accent, SUN, eastern=eastern)
-            army.place(*towns[stops[0]])
-            army.route = [towns[s] for s in stops]
-            army.leg = 0
+            figure = ArmyFigure(self.render, self.world.height_at, color, accent, SUN, eastern=eastern)
+            figure.place(x, self.geo.HEIGHT - y)
             armies.append(army)
-        return armies
+            figures[army.id] = figure
+        return armies, figures
 
-    def _march_on(self, army):
-        """Send a demo army on to the next town of its route, and back again at the end."""
-        army.leg = (army.leg + 1) % (2 * len(army.route) - 2 or 1)
-        i = army.leg if army.leg < len(army.route) else 2 * len(army.route) - 2 - army.leg
-        (x0, y0), (x1, y1) = (army.pos.x, army.pos.y), army.route[i]
-        steps = max(2, int(math.hypot(x1 - x0, y1 - y0) / 6))
-        army.march([(x0 + (x1 - x0) * k / steps, y0 + (y1 - y0) * k / steps) for k in range(1, steps + 1)])
+    # --- armies and their orders ----------------------------------------------------------------
+
+    def army_at(self, p):
+        """The army whose miniature is under world point p, if any."""
+        reach = max(7.0, self.camera_ctl.distance * 0.025)
+        best = None
+        for army in self.armies:
+            figure = self.figures[army.id]
+            d = math.hypot(figure.pos.x - p.x, figure.pos.y - p.y)
+            if d < reach:
+                best, reach = army, d
+        return best
+
+    def choose(self, army):
+        self.chosen = army
+        self.show_orders()
+
+    def show_orders(self):
+        """Show the chosen army's reach this month, its route, and what it is about."""
+        from .render.orders import months_of, reach_field
+        army = self.chosen
+        if army is None:
+            self.world.set_reach(None)
+            self.ribbon.hide()
+            self.army_text.setText("")
+            return
+        if army.moves >= 1:
+            self.world.set_reach(*reach_field(army.reach(self.nav)))
+        else:
+            self.world.set_reach(None)
+        months = months_of(army.route, army.moves, army.march_km) if army.route else []
+        if months:
+            self.ribbon.show(months)
+        else:
+            self.ribbon.hide()
+        lines = [army.name, f"{army.men:,} men",
+                 f"Can still march {army.moves:.0f} of {army.march_km:.0f} km this month"]
+        if army.route:
+            more = math.ceil(max(0.0, army.route.cost - army.moves) / army.march_km)
+            lines.append("Arrives this month" if more == 0 else f"Arrives in {more} more month{'s' * (more > 1)}")
+        self.army_text.setText("\n".join(lines))
+
+    def order_march(self, army, x, y):
+        """March the army towards map pixel (x, y): as far as it can this month, the rest are orders."""
+        if not army.order(self.nav, x, y):
+            return False
+        self.walk(army)
+        return True
+
+    def walk(self, army):
+        walked = army.march()
+        if len(walked) > 1:
+            self.figures[army.id].march(self._strides(walked))
+
+    def _strides(self, points):
+        """World points every few units along a march in map pixels, for the miniature to walk."""
+        out = []
+        for (ax, ay), (bx, by) in zip(points, points[1:]):
+            steps = max(1, int(math.hypot(bx - ax, by - ay) / 4))
+            out += [(ax + (bx - ax) * k / steps, self.geo.HEIGHT - (ay + (by - ay) * k / steps))
+                    for k in range(1, steps + 1)]
+        return out
+
+    def end_month(self):
+        """The month is over: every army gets its movement back and carries on with its orders."""
+        import random
+        self.date = self.date.next()
+        self.date_text.setText(str(self.date))
+        towns = [p for p in self.provmap.provinces.values()]
+        for army in self.armies:
+            army.new_month()
+            if army.route is None and army is not self.chosen:
+                # until there is an AI: wander to a town of the realm or of its neighbours
+                own = [p for p in towns if p.owner == army.owner]
+                if own:
+                    target = random.choice(own)
+                    army.order(self.nav, *target.town)
+            self.walk(army)
+        self.show_orders()
 
     # --- coordinates ----------------------------------------------------------------------------
 
@@ -183,10 +276,34 @@ class MapApp(_showbase()):
         self.dragging = kind
         self.last_mouse = None
 
+    def _right_down(self):
+        """Right button: drag to turn the view, click to order the chosen army to march."""
+        self._drag("turn")
+        m = self.mouseWatcherNode.getMouse() if self.mouseWatcherNode.hasMouse() else None
+        self.right_from = (m.x, m.y) if m is not None else None
+        self.turned = 0.0
+
+    def _right_up(self):
+        self._drag(None)
+        if self.chosen is None or self.right_from is None or not self.mouseWatcherNode.hasMouse():
+            return
+        m = self.mouseWatcherNode.getMouse()
+        if math.hypot(m.x - self.right_from[0], m.y - self.right_from[1]) > 0.02:
+            return
+        p = self.mouse_ground()
+        if p is not None and self.order_march(self.chosen, p.x, self.geo.HEIGHT - p.y):
+            self.show_orders()
+
     def pick(self):
         p = self.mouse_ground()
         if p is None:
             return
+        army = self.army_at(p)
+        if army is not None:
+            self.choose(army)
+            return
+        if self.chosen is not None:
+            self.choose(None)
         prov = self.provmap.at(p.x, self.geo.HEIGHT - p.y)
         self.selected = prov.index if prov else None
         self.redraw_overlay()
@@ -226,10 +343,9 @@ class MapApp(_showbase()):
                     self.camera_ctl.turn(mx * 120)
             self.last_mouse = (m.x, m.y)
         self.world.update(self.camera_ctl.position, task.time)
-        for army in self.armies:
-            if not army.marching:
-                self._march_on(army)
-            army.update(dt, task.time)
+        for figure in self.figures.values():
+            figure.update(dt, task.time)
+        self.ribbon.update(self.camera_ctl.distance, task.time)
         self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
         self.realm_labels.update(self.camera_ctl.distance)
         p = self.mouse_ground()
@@ -242,7 +358,7 @@ class MapApp(_showbase()):
 
     # --- pictures for checking the map without a display ----------------------------------------
 
-    def shots(self, folder):
+    def shots(self, folder, only=None):
         folder.mkdir(parents=True, exist_ok=True)
         views = {
             "overview": (28.0, 42.0, 1900, 0, "political"),
@@ -250,27 +366,44 @@ class MapApp(_showbase()):
             "wallachia": (25.5, 44.6, 380, 0, "political"),
             "carpathians_terrain": (25.0, 45.6, 330, 20, "terrain"),
             "constantinople": (28.9, 41.0, 160, 330, "political"),
-            "armies": (25.6, 44.4, 140, 20, "political"),
-            "armies_close": (26.0, 44.45, 95, 330, "political"),
+            "march": (24.6, 43.9, 760, 0, "political"),
+            "march_close": (24.9, 44.0, 260, 340, "political"),
+            "march_next": (24.2, 43.3, 600, 0, "political"),
         }
-        for army in self.armies:  # half way along their first march
-            self._march_on(army)
-            for _ in range(40):
-                army.update(0.05, 1.0)
+        wallachia = next(a for a in self.armies if a.owner == "wallachia")
         for name, (lon, lat, dist, heading, mode) in views.items():
+            if name == "march":   # the plan, before the first step
+                wallachia.march_km = wallachia.moves = 220.0
+                wallachia.order(self.nav, *self.provmap.provinces["sofia"].town)
+                self.choose(wallachia)
+            if name == "march_next":
+                self.walk(wallachia)
+                self._settle()
+                self.end_month()
+                self._settle()
+            if only and name not in only:
+                continue
             self.mode = mode
-            if name == "wallachia":
-                self.selected = self.provmap.provinces["targoviste"].index
+            self.selected = self.provmap.provinces["targoviste"].index if name == "wallachia" else None
             self.redraw_overlay()
             self.camera_ctl.heading = heading
             self.camera_ctl.look_at(*self.world_xy(lon, lat), dist)
             self.world.update(self.camera_ctl.position, 2.0)
+            self.ribbon.update(self.camera_ctl.distance, 2.0)
             self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
             self.realm_labels.update(self.camera_ctl.distance)
             for _ in range(2):
                 self.graphicsEngine.renderFrame()
             self.win.saveScreenshot(str(folder / f"{name}.png"))
             print("saved", name)
+
+    def _settle(self):
+        """Let the miniatures finish their marches (for the pictures)."""
+        for _ in range(4000):
+            if not any(f.marching for f in self.figures.values()):
+                break
+            for f in self.figures.values():
+                f.update(0.05, 1.0)
 
 
 if __name__ == "__main__":

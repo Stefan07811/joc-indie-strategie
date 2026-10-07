@@ -23,18 +23,18 @@ def town(nav, pid):
 def test_the_sea_cannot_be_marched_over(nav):
     assert not np.isfinite(nav.cost[nav.cell(*geo.to_map(34.0, 43.0))])   # the middle of the Black Sea
     assert np.isfinite(nav.cost[nav.cell(*town(nav, "targoviste"))])
-    path, cost = nav.path(*town(nav, "targoviste"), *geo.to_map(34.0, 43.0))
-    assert path is None and cost == math.inf
+    assert nav.route(*town(nav, "targoviste"), *geo.to_map(34.0, 43.0)) is None
 
 
 def test_the_danube_is_crossed_at_its_fords(nav):
     # straight across the Danube between Vidin and Nikopol, far from any crossing ...
     north, south = geo.to_map(23.9, 44.1), geo.to_map(23.9, 43.5)
     straight = math.dist(north, south) * geo.KM_PER_PX
-    path, cost = nav.path(*north, *south)
+    route = nav.route(*north, *south)
+    cost = route.cost
     # ... the army either pays for the boats or marches to a ford first
     assert cost > straight * 1.2
-    lons = [geo.to_lonlat(*p)[0] for p in path]
+    lons = [geo.to_lonlat(*p)[0] for p in route.points]
     assert cost > straight + 40 or max(abs(lon - 23.9) for lon in lons) > 0.15
 
 
@@ -55,20 +55,34 @@ def test_a_month_of_marching_from_targoviste(nav):
     assert not reach.can_reach(*town(nav, "constantinople"))
     assert reach.cost_to(*town(nav, "giurgiu")) <= 220
     # the reach agrees with the march along the cheapest path
-    path, cost = nav.path(*town(nav, "targoviste"), *town(nav, "giurgiu"))
+    cost = nav.route(*town(nav, "targoviste"), *town(nav, "giurgiu")).cost
     assert cost == pytest.approx(reach.cost_to(*town(nav, "giurgiu")), rel=0.02, abs=CELL_KM)
 
 
 def test_the_straits_are_ferried_over(nav):
-    path, cost = nav.path(*town(nav, "constantinople"), *town(nav, "bursa"))
-    assert path is not None and cost < 400
-    path, cost = nav.path(*town(nav, "targoviste"), *town(nav, "sofia"))
-    assert path is not None and 300 < cost < 600
+    assert nav.route(*town(nav, "constantinople"), *town(nav, "bursa")).cost < 400
+    assert 300 < nav.route(*town(nav, "targoviste"), *town(nav, "sofia")).cost < 600
 
 
 def test_paths_are_simplified_into_strides(nav):
-    path, _ = nav.path(*town(nav, "buda"), *town(nav, "belgrade"))
+    path = nav.route(*town(nav, "buda"), *town(nav, "belgrade")).points
     assert path[0] == town(nav, "buda") and path[-1] == town(nav, "belgrade")
     assert 2 <= len(path) < 40
     for x, y in path:
         assert np.isfinite(nav.cost[nav.cell(x, y)])
+
+
+def test_a_long_march_takes_months(nav):
+    route = nav.route(*town(nav, "suceava"), *town(nav, "caffa"))
+    assert route.costs == sorted(route.costs) and route.costs[0] == 0
+    months, left = 0, route
+    while left is not None:
+        walked, left, spent = left.advance(200)
+        months += 1
+        assert spent <= 200 + 1e-6 and len(walked) >= 2
+        if left is not None:
+            assert walked[-1] == left.points[0]
+            assert np.isfinite(nav.cost[nav.cell(*walked[-1])])
+    assert months == math.ceil(route.cost / 200)
+    near, far = route.split(200)
+    assert near[0] == town(nav, "suceava") and far[-1] == town(nav, "caffa")

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 from panda3d.core import (Geom, GeomNode, GeomTriangles, GeomVertexData, GeomVertexFormat, NodePath, SamplerState,
-                          Shader, Texture, TransparencyAttrib, Vec2, Vec3)
+                          Shader, Texture, TransparencyAttrib, Vec2, Vec3, Vec4)
 
 from .. import geo
 from ..mapdata import Ground
@@ -162,7 +162,8 @@ class MapWorld:
                                      palette=self.palette_tex, index_size=Vec2(2, 2), palette_size=2.0,
                                      coast=self.coast_tex, time=0.0, borderdist=self.coast_tex,
                                      selected=-1, hovered=-1, sun_dir=SUN, cam_pos=Vec3(0, 0, 1000),
-                                     haze=Vec3(*HAZE), map_size=self.size, overlay_mix=0.0)
+                                     haze=Vec3(*HAZE), map_size=self.size, overlay_mix=0.0,
+                                     reach=self.coast_tex, reach_rect=Vec4(0, 0, 1, 1), reach_on=0.0)
 
     def _build_water(self):
         w, h = geo.WIDTH, geo.HEIGHT
@@ -200,6 +201,15 @@ class MapWorld:
         """The map mode: a colour per province index (1 x N RGBA), and how strongly it shows."""
         self.palette_tex = self._palette_texture(rgba)
         self.terrain.setShaderInputs(palette=self.palette_tex, palette_size=float(rgba.shape[1]), overlay_mix=mix)
+
+    def set_reach(self, field=None, rect=None):
+        """Show how far the chosen army can march this month: `field` is km / budget over the map
+        pixels `rect` (left, top, width, height); None hides it."""
+        if field is None:
+            self.terrain.setShaderInput("reach_on", 0.0)
+            return
+        self.reach_tex = float_texture(field, "reach")
+        self.terrain.setShaderInputs(reach=self.reach_tex, reach_rect=Vec4(*rect), reach_on=1.0)
 
     def set_highlight(self, selected=None, hovered=None):
         self.terrain.setShaderInputs(selected=-1 if selected is None else int(selected),

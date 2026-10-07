@@ -46,6 +46,7 @@ CROSSINGS = [
     (41.10, 37.87), (38.00, 36.60), (39.00, 35.95), (34.85, 40.95), (31.80, 40.60),                    # Tigris, Euphrates, Kızılırmak, Sakarya
 ]
 CROSSING_RADIUS_KM = 9.0
+REACH_MARGIN = 1.35              # the reach is measured a little beyond the budget, so its edge is smooth
 
 
 class Navigation:
@@ -114,11 +115,12 @@ class Navigation:
     def reach(self, x, y, budget_km):
         """How far an army at map pixel (x, y) can march with budget_km of movement.
 
-        Returns a Reach: the km of budget spent to get to every cell of a window around the army
-        (inf where it cannot go this month)."""
+        Returns a Reach: the km of budget spent to get to every cell of a window around the army,
+        measured a little beyond the budget (inf further, and where it cannot go at all)."""
         cost = self.cost
         r0, c0 = self.cell(x, y)
-        radius = int(budget_km / (CELL_KM * 0.9)) + 2
+        limit = budget_km * REACH_MARGIN
+        radius = int(limit / (CELL_KM * 0.9)) + 2
         top, left = max(0, r0 - radius), max(0, c0 - radius)
         bottom, right = min(cost.shape[0], r0 + radius + 1), min(cost.shape[1], c0 + radius + 1)
         h, w = bottom - top, right - left
@@ -137,18 +139,18 @@ class Navigation:
             if not changed:
                 break
         dist = dist.copy()
-        dist[dist > budget_km] = np.inf
-        return Reach(dist, top, left, budget_km)
+        dist[dist > limit] = np.inf
+        return Reach(dist, top, left, budget_km, np.isfinite(cost[top:bottom, left:right]))
 
-    def path(self, x0, y0, x1, y1, max_km=None):
-        """The cheapest march from map pixel (x0, y0) to (x1, y1): [(x, y), ...] in map pixels, and its
-        cost in km, or (None, inf) if the target cannot be reached (A* over the grid)."""
+    def route(self, x0, y0, x1, y1, max_km=None):
+        """The cheapest march from map pixel (x0, y0) to (x1, y1) as a Route, or None if the target
+        cannot be reached (A* over the grid)."""
         cost = self.cost
         steps = self.steps
         rows, cols = cost.shape
         start, goal = self.cell(x0, y0), self.cell(x1, y1)
         if not np.isfinite(cost[goal]):
-            return None, math.inf
+            return None
         frontier = [(0.0, start)]
         best = {start: 0.0}
         came = {}
@@ -176,25 +178,72 @@ class Navigation:
                     est = math.hypot(goal[0] - nr, goal[1] - nc) * floor
                     heapq.heappush(frontier, (ng + est, (nr, nc)))
         if goal not in best:
-            return None, math.inf
+            return None
         cells = [goal]
         while cells[-1] != start:
             cells.append(came[cells[-1]])
         cells.reverse()
         points = [((c + 0.5) * CELL, (r + 0.5) * CELL) for r, c in cells]
         points[0], points[-1] = (x0, y0), (x1, y1)
-        return _simplify(points), best[goal]
+        keep = _simplify(points)
+        return Route([points[i] for i in keep], [best[cells[i]] for i in keep])
+
+
+class Route:
+    """A march along the cheapest path: its points (map pixels) and the km of movement spent to get
+    to each of them."""
+
+    def __init__(self, points, costs):
+        self.points = [tuple(p) for p in points]
+        self.costs = list(costs)
+
+    @property
+    def cost(self):
+        return self.costs[-1] - self.costs[0]
+
+    @property
+    def end(self):
+        return self.points[-1]
+
+    def at(self, spent):
+        """The point reached after `spent` km of movement, and the index of the stretch it lies on."""
+        target = self.costs[0] + spent
+        for i in range(1, len(self.points)):
+            if self.costs[i] >= target:
+                span = self.costs[i] - self.costs[i - 1]
+                t = 1.0 if span <= 0 else (target - self.costs[i - 1]) / span
+                (ax, ay), (bx, by) = self.points[i - 1], self.points[i]
+                return (ax + (bx - ax) * t, ay + (by - ay) * t), i
+        return self.points[-1], len(self.points)
+
+    def advance(self, budget):
+        """March `budget` km along the route: the points walked, the route still ahead (None once
+        arrived) and the km spent."""
+        if budget >= self.cost:
+            return list(self.points), None, self.cost
+        (x, y), i = self.at(budget)
+        walked = self.points[:i] + [(x, y)]
+        ahead = Route([(x, y)] + self.points[i:], [self.costs[0] + budget] + self.costs[i:])
+        return walked, ahead, budget
+
+    def split(self, budget):
+        """The points reachable with `budget` km, and the points beyond (for drawing this month's march
+        and the months after it)."""
+        walked, ahead, _ = self.advance(budget)
+        return walked, ahead.points if ahead else []
 
 
 class Reach:
     """The cells an army can reach this month, and what each costs (a window of the grid)."""
 
-    def __init__(self, dist, top, left, budget):
+    def __init__(self, dist, top, left, budget, passable=None):
         self.dist, self.top, self.left, self.budget = dist, top, left, budget
+        self.passable = np.isfinite(dist) if passable is None else passable   # False at sea
 
     def cost_to(self, x, y):
+        """The km of movement to get to map pixel (x, y), or inf if it is out of reach this month."""
         r, c = int(y / CELL) - self.top, int(x / CELL) - self.left
-        if 0 <= r < self.dist.shape[0] and 0 <= c < self.dist.shape[1]:
+        if 0 <= r < self.dist.shape[0] and 0 <= c < self.dist.shape[1] and self.dist[r, c] <= self.budget:
             return float(self.dist[r, c])
         return math.inf
 
@@ -208,18 +257,21 @@ class Reach:
         return self.left * CELL, self.top * CELL, w * CELL, h * CELL
 
 
-def _simplify(points, tolerance=1.2):
-    """Fewer points along straight stretches (Ramer-Douglas-Peucker), so marches look like strides."""
-    if len(points) < 3:
-        return points
-    (x0, y0), (x1, y1) = points[0], points[-1]
+def _simplify(points, tolerance=1.2, first=0, last=None):
+    """The indices of the points to keep along straight stretches (Ramer-Douglas-Peucker), so marches
+    look like strides."""
+    last = len(points) - 1 if last is None else last
+    if last - first < 2:
+        return list(range(first, last + 1))
+    (x0, y0), (x1, y1) = points[first], points[last]
     dx, dy = x1 - x0, y1 - y0
     length = math.hypot(dx, dy) or 1e-9
-    far, index = 0.0, 0
-    for i, (x, y) in enumerate(points[1:-1], start=1):
+    far, index = 0.0, first
+    for i in range(first + 1, last):
+        x, y = points[i]
         d = abs(dy * (x - x0) - dx * (y - y0)) / length
         if d > far:
             far, index = d, i
     if far <= tolerance:
-        return [points[0], points[-1]]
-    return _simplify(points[:index + 1], tolerance)[:-1] + _simplify(points[index:], tolerance)
+        return [first, last]
+    return _simplify(points, tolerance, first, index)[:-1] + _simplify(points, tolerance, index, last)

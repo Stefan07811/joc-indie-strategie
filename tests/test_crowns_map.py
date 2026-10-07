@@ -77,3 +77,26 @@ def test_realm_labels_stand_in_the_largest_piece(provmap):
     blocks = realm_blocks(provmap, {p.id: p.owner for p in provmap.provinces.values()})
     x, y, length, angle, area = blocks["wallachia"]
     assert provmap.at(x, y).owner == "wallachia" and -40 <= angle <= 40 and length > 0
+
+
+def test_the_realms_of_1402(provmap):
+    from crowns.game.realms import load
+    from crowns.render.political import realm_blocks
+    realms, relations = load()
+    owners = {p.owner for p in provmap.provinces.values()}
+    assert set(realms) == owners
+    for tag, r in realms.items():
+        assert provmap.provinces[r["capital"]].owner == tag
+        assert r["rank"] in ("empire", "kingdom", "duchy", "county")
+        assert r["ruler"]["name"] and r["situation"] and r["notable"]
+        if r["overlord"]:
+            assert r["overlord"]["tag"] in realms and r["overlord"]["tag"] != tag
+    assert realms["wallachia"]["ruler"]["name"] == "Mircea the Elder"
+    assert realms["moldavia"]["overlord"] == {"tag": "poland", "kind": "vassal"}
+    for rel in relations:
+        assert all(t in realms for t in rel["tags"])
+    # the realm's name is written over the land that holds its capital
+    owner_of = {p.id: p.owner for p in provmap.provinces.values()}
+    capitals = {t: r["capital"] for t, r in realms.items()}
+    x, y, *_ = realm_blocks(provmap, owner_of, capitals)["venice"]
+    assert provmap.at(x, y) is not None and provmap.at(x, y).id in ("venice", "istria")

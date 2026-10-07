@@ -148,8 +148,9 @@ class Labels:
                 node.setH(heading)
 
 
-def realm_blocks(provmap, owner_of):
-    """{realm: (centre x, y, length, angle in degrees, area)} for the biggest connected piece of each realm."""
+def realm_blocks(provmap, owner_of, capitals=None):
+    """{realm: (centre x, y, length, angle in degrees, area)} for the piece of each realm that holds its
+    capital (or its biggest connected piece, if the capital is lost or unknown)."""
     import math
     out = {}
     by_realm = {}
@@ -171,6 +172,9 @@ def realm_blocks(provmap, owner_of):
                     if n in ids and n not in seen:
                         seen.add(n)
                         stack.append(n)
+            if (capitals or {}).get(realm) in {q.id for q in group}:
+                best = group
+                break
             if sum(q.area for q in group) > sum(q.area for q in best):
                 best = group
         weights = np.array([q.area for q in best], np.float64)
@@ -195,7 +199,7 @@ def realm_blocks(provmap, owner_of):
 class RealmLabels:
     """Realm names written large across their lands, shown from high up (like a paper map)."""
 
-    def __init__(self, provmap, owner_of, names, height_at, font, parent):
+    def __init__(self, provmap, owner_of, names, height_at, font, parent, capitals=None):
         self.root = parent.attachNewNode("realm-labels")
         self.root.setTransparency(TransparencyAttrib.M_alpha)
         self.root.setDepthTest(False)
@@ -205,11 +209,12 @@ class RealmLabels:
         self.height_at = height_at
         self.provmap = provmap
         self.names = names
+        self.capitals = capitals or {}
         self.rebuild(owner_of)
 
     def rebuild(self, owner_of):
         self.root.getChildren().detach()
-        for realm, (x, y, length, angle, area) in realm_blocks(self.provmap, owner_of).items():
+        for realm, (x, y, length, angle, area) in realm_blocks(self.provmap, owner_of, self.capitals).items():
             if area < 3000:
                 continue  # too small to write across; the province names will do
             name = self.names.get(realm, realm).upper()

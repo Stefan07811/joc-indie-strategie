@@ -8,9 +8,9 @@ Jocul vechi cu legende (`legendele/`) rămâne în depozit până când cel nou 
 
 ![Harta în 1402](docs/crowns/overview.png)
 
-![Țara Românească, cu Târgoviștea selectată](docs/crowns/wallachia.png)
+![Oastea Țării Românești pornește spre Sofia: raza de marș pe o lună și drumul](docs/crowns/march.png)
 
-![Carpații, harta de relief](docs/crowns/carpathians_terrain.png)
+![De aproape: trecerea Dunării pe la vadul de la Nicopole](docs/crowns/march_close.png)
 
 ## Deciziile de bază
 
@@ -22,6 +22,38 @@ Jocul vechi cu legende (`legendele/`) rămâne în depozit până când cel nou 
 | Harta | Balcanii, Dunărea, toată Ungaria, sudul Poloniei și al Lituaniei, Crimeea, Anatolia, Caucazul de vest |
 | Ritmul | Războaiele se încheie cu păci negociate (scor de război), nu cu cucerirea tuturor provinciilor |
 | Bătăliile | La început se rezolvă automat pe hartă; bătăliile tactice 3D vin la final |
+| Stilul | „Codex”: harta e o hartă portulan gravată și colorată de mână, pe pergament. Armatele sunt figurine pictate 3D, cu contur de cerneală |
+| Mișcarea | Ca în Total War: armatele merg liber pe hartă, cu un buget lunar de marș |
+
+## Stilul „Codex”
+
+Ca să nu semene cu Europa Universalis sau Crusader Kings, harta arată ca un manuscris din secolul al XV-lea:
+pergament, relief desenat cu hașuri de cerneală care se îndesesc la umbră, state colorate în acuarelă care
+se adună mai închis la margini, granițe trase cu pana (punctate între provincii, ferme între state). Marea
+are liniile de coastă gravate și liniile de vânt ale hărților portulane, pornind din roze ale vânturilor.
+Armatele sunt miniaturi pictate: un călăreț și pedestrași pe un soclu, cu steagul statului care flutură.
+
+## Lumea în 1402 (etapa B2)
+
+- **64 de state** (`tools/realms_1402.py` → `crowns/data/realms.json`). Fiecare are: numele întreg, forma
+  de guvernare, titlul conducătorului, rangul (imperiu, regat, ducat, comitat), capitala, conducătorul cu
+  dinastia și anul nașterii, moștenitorul, soția sau soțul, suzeranul (vasal, tributar, protectorat sau
+  uniune), situația din 1402 și ce urmărește, plus evenimentele care l-au așteptat în istorie.
+  Unde izvoarele nu se pun de acord, intrarea o spune.
+- **28 de relații** în curs: Sigismund contra lui Ladislau de Neapole, uniunea polono-lituaniană, frații
+  otomani, Ștefan Lazarević contra Brankovićilor, Veneția contra Genovei și altele.
+- **Provinciile** au acum relieful lor (câmpie, deal, munte, pădure, stepă, mlaștină, deșert), populația
+  estimată pentru 1402 (vreo 21 de milioane de oameni pe toată harta), orașul mare, marfa (grâu, vite, vin,
+  sare, argint, aur, mătase…) și cetatea.
+
+## Mișcarea armatelor
+
+Pământul e o rețea de pătrate de 3 km. Câmpia se străbate ușor; pădurea, dealul, muntele și mlaștina cer
+mai mult. Râurile mari (Dunărea, Nistrul, Niprul, Tisa, Sava…) se trec greu, cu bărci, în afara vadurilor
+și podurilor istorice (Nicopole, Giurgiu, Vidin, Silistra, Belgrad…). Strâmtorile se trec cu bacul. Când
+alegi o armată, harta arată cu cerneală roșie până unde poate ajunge luna asta și o linie fină pentru
+fiecare săptămână de marș. Cu clic dreapta îi dai ordin. Merge cât poate luna asta, iar restul drumului
+rămâne ordin pentru lunile următoare, cu săgeți și apoi puncte. Tasta Space încheie luna.
 
 ## Harta (etapa B1)
 
@@ -30,7 +62,7 @@ Jocul vechi cu legende (`legendele/`) rămâne în depozit până când cel nou 
   1,5 km pe pixel (1778 × 1312 pixeli). Relieful e exagerat de 8 ori, ca pe orice hartă de strategie.
 - **Culoarea pământului** e calculată din relief și climă: stepa ucraineană, podișul anatolian, câmpiile
   Ungariei, pădurile Carpaților și ale Balcanilor, stâncă și zăpadă pe crestele înalte.
-- **320 de provincii** în 1402, pe 66 de state și stăpâniri: regate, despotate, beylik-uri, republici
+- **320 de provincii** în 1402, pe 64 de state și stăpâniri: regate, despotate, beylik-uri, republici
   maritime, ordine cavalerești, principate albaneze și marii nobili ai Bosniei. Lista e în
   `tools/history_1402.py`.
 - **Granițele** nu sunt desenate de mână. Fiecare provincie crește din orașul ei peste relief, iar munții,
@@ -41,19 +73,21 @@ Jocul vechi cu legende (`legendele/`) rămâne în depozit până când cel nou 
 
 ```bash
 pip install -r requirements.txt
-python -m crowns                 # harta 3D (WASD/săgeți, rotița, clic dreapta tras sau Q/E, clic stânga)
+python -m crowns                 # harta 3D (WASD/săgeți, rotița, clic dreapta tras sau Q/E, clic stânga,
+                                 # clic dreapta = marș pentru armata aleasă, Space = luna următoare)
 python -m crowns --shots DIR     # capturi de verificare, fără ecran
 python tools/terrain.py          # descarcă relieful și apele, refac harta de altitudini
 python tools/provinces.py        # refac provinciile după tools/history_1402.py
+python tools/realms_1402.py      # refac crowns/data/realms.json
 ```
 
 ## Etapele
 
 | Etapă | Ce aduce |
 |---|---|
-| **B1 — Harta 3D** (în lucru) | relief, ape, provincii, granițe, nume, cameră, selecție |
-| **B2 — Lumea în 1402** | toate statele cu conducătorii, dinastiile, vasalii și tributul lor; dezvoltarea provinciilor |
-| **B3 — Campania** | ture lunare, economie, clădiri, armate pe hartă, asedii, războaie și păci, diplomație, AI |
+| **B1 — Harta 3D** (gata) | relief, ape, provincii, granițe, nume, cameră, selecție |
+| **B2 — Lumea în 1402** (gata) | toate statele cu conducătorii, dinastiile, vasalii și tributul lor; dezvoltarea provinciilor |
+| **B3 — Campania** (în lucru: mișcarea e gata) | ture lunare, economie, clădiri, armate pe hartă, asedii, războaie și păci, diplomație, AI |
 | **B4 — Oameni** | conducători și moștenitori care îmbătrânesc și mor, dinastii, căsătorii, nobili |
 | **B5 — Istoria** | misiuni pentru fiecare țară, evenimente istorice (Interregnul, Varna, Constantinopol), decizii |
 | **B6 — Interfața și sunetul** | ferestre în stil medieval, sfaturi, muzică cu instrumente reale |

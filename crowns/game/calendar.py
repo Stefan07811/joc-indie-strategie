@@ -27,4 +27,4 @@ class Date:
         return f"{MONTHS[self.month - 1]} {self.year}"
 
 
-START = Date(1402, 8)   # the month after Ankara: Timur has broken the Ottomans, Bayezid is his prisoner
+START = Date(1402, 9)   # two months after Ankara: Timur has broken the Ottomans, Bayezid is his prisoner

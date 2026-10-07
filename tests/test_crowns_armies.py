@@ -21,11 +21,11 @@ def town(nav, pid):
 
 
 def test_the_calendar_turns_by_months():
-    assert START == Date(1402, 8) and str(START) == "August 1402"
+    assert START == Date(1402, 9) and str(START) == "September 1402"
     assert Date(1402, 12).next() == Date(1403, 1)
     assert Date(1403, 1).season == "winter" and Date(1403, 7).season == "summer"
-    assert Date(1404, 2).months_since(START) == 18
-    assert Date(1402, 9) > START
+    assert Date(1404, 2).months_since(START) == 17
+    assert Date(1402, 10) > START
 
 
 def test_an_army_marches_as_far_as_its_month_allows(nav):

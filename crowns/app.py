@@ -67,8 +67,7 @@ class MapApp(_showbase()):
         from .render.camera import StrategyCamera
         from .render.political import Labels, Overlay, RealmLabels
         from .render.world import HAZE, MapWorld
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
-        from history_1402 import REALM_COLORS, REALM_NAMES
+        from .game.realms import load as load_realms
 
         self.geo = geo
         if hasattr(self.win, "getProperties") and not self.win.getProperties().getFullscreen() and self.pipe:
@@ -85,7 +84,9 @@ class MapApp(_showbase()):
         self.provmap = ProvinceMap()
         self.overlay = Overlay(self.provmap)
         self.world.set_provinces(self.overlay.index_texture(), self.overlay.distance_texture())
-        self.colors = REALM_COLORS
+        self.realms, self.relations = load_realms()
+        REALM_NAMES = {tag: r["short"] for tag, r in self.realms.items()}
+        self.colors = {tag: tuple(r["color"]) for tag, r in self.realms.items()}
         self.owner_of = {p.id: p.owner for p in self.provmap.provinces.values()}
         self.selected = None
         self.mode = "political"
@@ -95,7 +96,8 @@ class MapApp(_showbase()):
             f.setPixelsPerUnit(64)
         self.labels = Labels(self.provmap, self.world.height_at, self.title_font, self.render)
         self.realm_labels = RealmLabels(self.provmap, self.owner_of, REALM_NAMES, self.world.height_at,
-                                        self.title_font, self.render)
+                                        self.title_font, self.render,
+                                        capitals={tag: r["capital"] for tag, r in self.realms.items()})
         self.hovered = None
         self.camera_ctl = StrategyCamera(self.camera, self.camLens, self.world.height_at)
         self.camera_ctl.look_at(*self.world_xy(25.5, 44.0), 1100)
@@ -308,7 +310,11 @@ class MapApp(_showbase()):
         self.selected = prov.index if prov else None
         self.redraw_overlay()
         if prov:
-            self.info.setText(f"{prov.name}\nHeld by {prov.owner}\n{prov.terrain}, {prov.culture}, {prov.religion}\n"
+            realm = self.realms.get(prov.owner, {})
+            ruler = realm.get("ruler", {})
+            self.info.setText(f"{prov.name}\n{realm.get('name', prov.owner)}\n{realm.get('title', '')} "
+                              f"{ruler.get('name', '')}\n{prov.terrain}, {prov.culture}, "
+                              f"{prov.religion.replace('_', ' ')}\n{prov.population * 1000:,.0f} people, "
                               f"{prov.area:,} km²")
         else:
             self.info.setText("")

@@ -1,0 +1,3088 @@
+{
+ "realms": [
+  {
+   "tag": "wallachia",
+   "name": "Principality of Wallachia",
+   "adjective": "Wallachian",
+   "government": "monarchy",
+   "title": "Voivode",
+   "rank": "duchy",
+   "capital": "targoviste",
+   "religion": "orthodox",
+   "culture": "romanian",
+   "ruler": {
+    "name": "Mircea the Elder",
+    "born": 1355,
+    "dynasty": "Basarab",
+    "approximate": true,
+    "reign_start": 1386
+   },
+   "heir": {
+    "name": "Mihail",
+    "born": 1385,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "Mircea held the Danube against Bayezid at Rovine and survived him. With the Ottomans broken at Ankara he means to take back the Dobruja and the Danube fords, and to make and unmake sultans in the coming civil war, while keeping Hungary a friend and not a master.",
+   "notable": [
+    {
+     "year": 1404,
+     "event": "Mircea retakes the Dobruja and Silistra"
+    },
+    {
+     "year": 1409,
+     "event": "Mircea backs Musa Çelebi for the Ottoman throne"
+    },
+    {
+     "year": 1418,
+     "event": "Mircea dies; the long feud of the Dănești and the Drăculești begins"
+    },
+    {
+     "year": 1456,
+     "event": "Vlad III, the Impaler, takes the throne"
+    }
+   ],
+   "uncertain": "Wallachia's standing with the Ottomans in 1402 is debated: Mircea had paid tribute after 1395 but stopped after Ankara. He also held Făgăraș and Amlaș as Hungarian fiefs.",
+   "short": "Wallachia",
+   "color": [
+    226,
+    178,
+    52
+   ]
+  },
+  {
+   "tag": "moldavia",
+   "name": "Principality of Moldavia",
+   "adjective": "Moldavian",
+   "government": "monarchy",
+   "title": "Voivode",
+   "rank": "duchy",
+   "capital": "suceava",
+   "religion": "orthodox",
+   "culture": "romanian",
+   "ruler": {
+    "name": "Alexander the Good",
+    "born": 1375,
+    "dynasty": "Mușat",
+    "approximate": true,
+    "reign_start": 1400
+   },
+   "heir": null,
+   "spouse": "Margareta Losonczy",
+   "overlord": {
+    "tag": "poland",
+    "kind": "vassal"
+   },
+   "situation": "Alexander swore homage to Władysław Jagiełło at Suceava in March 1402. Moldavia's wealth is the trade road from Lwów to Cetatea Albă and Chilia; its church was just recognised by Constantinople. Hungary and Poland both want it as their march against the steppe.",
+   "notable": [
+    {
+     "year": 1402,
+     "event": "Homage to the King of Poland at Suceava"
+    },
+    {
+     "year": 1410,
+     "event": "Moldavian troops fight for Poland at Grunwald"
+    },
+    {
+     "year": 1432,
+     "event": "Alexander dies; years of war between his sons follow"
+    },
+    {
+     "year": 1457,
+     "event": "Stephen the Great takes the throne"
+    }
+   ],
+   "uncertain": "Alexander's year of birth is not known.",
+   "short": "Moldavia",
+   "color": [
+    148,
+    64,
+    132
+   ]
+  },
+  {
+   "tag": "hungary",
+   "name": "Kingdom of Hungary",
+   "adjective": "Hungarian",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "buda",
+   "religion": "catholic",
+   "culture": "hungarian",
+   "ruler": {
+    "name": "Sigismund of Luxembourg",
+    "born": 1368,
+    "dynasty": "Luxembourg",
+    "reign_start": 1387
+   },
+   "heir": {
+    "name": "Albert of Austria",
+    "born": 1377,
+    "dynasty": "Habsburg",
+    "relation": "designated heir (1402)"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "Sigismund was held prisoner by his own barons in 1401 and many of them now call Ladislaus of Naples to the throne. He must win back his kingdom, then turn to the Ottoman danger he failed to stop at Nicopolis, and to Dalmatia, which Venice covets.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Ladislaus of Naples is crowned at Zara; the rebel barons are crushed"
+    },
+    {
+     "year": 1408,
+     "event": "Sigismund founds the Order of the Dragon"
+    },
+    {
+     "year": 1410,
+     "event": "Sigismund is elected King of the Romans"
+    },
+    {
+     "year": 1456,
+     "event": "John Hunyadi breaks the Ottoman siege of Belgrade"
+    }
+   ],
+   "uncertain": "In 1402 Sigismund named Albert IV of Austria his heir; Albert died in 1404 and the pact lapsed.",
+   "short": "Hungary",
+   "color": [
+    196,
+    78,
+    64
+   ]
+  },
+  {
+   "tag": "frankopan",
+   "name": "County of Krk, Senj and Modruš",
+   "adjective": "Frankopan",
+   "government": "monarchy",
+   "title": "Count",
+   "rank": "county",
+   "capital": "modrus",
+   "religion": "catholic",
+   "culture": "croatian",
+   "ruler": {
+    "name": "Nikola IV Frankopan",
+    "born": 1360,
+    "dynasty": "Frankopan",
+    "approximate": true,
+    "reign_start": 1393
+   },
+   "heir": {
+    "name": "Ivan VI Frankopan",
+    "born": 1395,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "hungary",
+    "kind": "vassal"
+   },
+   "situation": "The Frankopans are the greatest lords of the Croatian coast, from Krk to Modruš. Nikola weighs Sigismund against Ladislaus of Naples and means to come out of the civil war richer.",
+   "notable": [
+    {
+     "year": 1426,
+     "event": "Nikola becomes Ban of Croatia and Dalmatia"
+    },
+    {
+     "year": 1430,
+     "event": "Nikola marries his daughter to the Despot of Serbia's heir"
+    },
+    {
+     "year": 1449,
+     "event": "The Frankopan lands are divided among Nikola's sons"
+    }
+   ],
+   "short": "Frankopan",
+   "color": [
+    214,
+    140,
+    96
+   ]
+  },
+  {
+   "tag": "ragusa",
+   "name": "Republic of Ragusa",
+   "adjective": "Ragusan",
+   "government": "republic",
+   "title": "Rector",
+   "rank": "county",
+   "capital": "ragusa",
+   "religion": "catholic",
+   "culture": "croatian",
+   "ruler": {
+    "name": "The Rector and Great Council",
+    "born": null,
+    "reign_start": 1358
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "hungary",
+    "kind": "tributary"
+   },
+   "situation": "Ragusa lives by the caravans to the Serbian and Bosnian silver mines and by the sea. It pays its tribute to the King of Hungary, buys land from its neighbours when it can, and stays at peace with everyone.",
+   "notable": [
+    {
+     "year": 1419,
+     "event": "Ragusa buys Konavle from Sandalj Hranić"
+    },
+    {
+     "year": 1458,
+     "event": "Ragusa begins to pay tribute to the Ottoman sultan"
+    }
+   ],
+   "uncertain": "The Rector served for one month at a time: the 'ruler' is the republic itself.",
+   "short": "Ragusa",
+   "color": [
+    236,
+    220,
+    170
+   ]
+  },
+  {
+   "tag": "austria",
+   "name": "Duchy of Austria",
+   "adjective": "Austrian",
+   "government": "monarchy",
+   "title": "Duke",
+   "rank": "duchy",
+   "capital": "vienna",
+   "religion": "catholic",
+   "culture": "german",
+   "ruler": {
+    "name": "Albert IV",
+    "born": 1377,
+    "dynasty": "Habsburg",
+    "reign_start": 1395
+   },
+   "heir": {
+    "name": "Albert V",
+    "born": 1397,
+    "dynasty": "Habsburg",
+    "relation": "son"
+   },
+   "spouse": "Joanna Sophia of Bavaria",
+   "overlord": null,
+   "situation": "The Habsburg lands are split between the Albertine line at Vienna and the Leopoldine dukes in Styria, Carinthia and Carniola. Albert IV has just been named heir to Hungary by Sigismund.",
+   "notable": [
+    {
+     "year": 1404,
+     "event": "Albert IV dies; his son Albert V succeeds as a child"
+    },
+    {
+     "year": 1438,
+     "event": "Albert V is crowned King of Hungary and Bohemia"
+    },
+    {
+     "year": 1453,
+     "event": "Austria becomes an archduchy"
+    }
+   ],
+   "uncertain": "Duke William of the Leopoldine line ruled Inner Austria (Graz, Carinthia, Carniola, Trieste) in his own right; the game folds his lands into one realm.",
+   "short": "Austria",
+   "color": [
+    232,
+    232,
+    232
+   ]
+  },
+  {
+   "tag": "celje",
+   "name": "County of Celje",
+   "adjective": "Celjan",
+   "government": "monarchy",
+   "title": "Count",
+   "rank": "county",
+   "capital": "celje",
+   "religion": "catholic",
+   "culture": "slovene",
+   "ruler": {
+    "name": "Hermann II of Celje",
+    "born": 1365,
+    "dynasty": "Celje",
+    "approximate": true,
+    "reign_start": 1385
+   },
+   "heir": {
+    "name": "Frederick II of Celje",
+    "born": 1379,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": "Anna of Schaunberg",
+   "overlord": {
+    "tag": "austria",
+    "kind": "vassal"
+   },
+   "situation": "Hermann saved Sigismund's life at Nicopolis and is his closest friend. The Counts of Celje rise through marriages: Hermann's cousin Anna has just wed the King of Poland, his daughter Barbara will marry Sigismund.",
+   "notable": [
+    {
+     "year": 1405,
+     "event": "Barbara of Celje marries Sigismund"
+    },
+    {
+     "year": 1436,
+     "event": "The counts are made princes of the Empire"
+    },
+    {
+     "year": 1456,
+     "event": "Ulrich II of Celje is murdered at Belgrade and the house dies out"
+    }
+   ],
+   "uncertain": "Celje's lands lay in Styria under the Habsburgs, but its counts acted as Sigismund's men.",
+   "short": "Celje",
+   "color": [
+    160,
+    200,
+    140
+   ]
+  },
+  {
+   "tag": "aquileia",
+   "name": "Patriarchate of Aquileia",
+   "adjective": "Friulian",
+   "government": "theocracy",
+   "title": "Patriarch",
+   "rank": "county",
+   "capital": "friuli",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Antonio Panciera",
+    "born": 1350,
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The patriarchs rule Friuli as princes of the Empire, squeezed between Venice and the Counts of Gorizia. Antonio Panciera has just been named patriarch.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Panciera is deposed; Friuli is fought over by Sigismund and Venice"
+    },
+    {
+     "year": 1420,
+     "event": "Venice conquers Friuli and ends the patriarchs' rule"
+    }
+   ],
+   "short": "Aquileia",
+   "color": [
+    240,
+    210,
+    120
+   ]
+  },
+  {
+   "tag": "salzburg",
+   "name": "Prince-Archbishopric of Salzburg",
+   "adjective": "Salzburger",
+   "government": "theocracy",
+   "title": "Archbishop",
+   "rank": "county",
+   "capital": "salzburg",
+   "religion": "catholic",
+   "culture": "german",
+   "ruler": {
+    "name": "Gregor Schenk von Osterwitz",
+    "born": 1350,
+    "approximate": true,
+    "reign_start": 1396
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The archbishops grow rich on the salt of Hallein and keep their see free of the Bavarian and Austrian dukes.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Eberhard III von Neuhaus becomes archbishop"
+    }
+   ],
+   "short": "Salzburg",
+   "color": [
+    200,
+    160,
+    200
+   ]
+  },
+  {
+   "tag": "bavaria",
+   "name": "Duchy of Bavaria-Landshut",
+   "adjective": "Bavarian",
+   "government": "monarchy",
+   "title": "Duke",
+   "rank": "duchy",
+   "capital": "landshut",
+   "religion": "catholic",
+   "culture": "german",
+   "ruler": {
+    "name": "Henry XVI the Rich",
+    "born": 1386,
+    "dynasty": "Wittelsbach",
+    "reign_start": 1393
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "Young Henry is the richest of the Wittelsbach dukes and quarrels with his cousins of Ingolstadt.",
+   "notable": [
+    {
+     "year": 1422,
+     "event": "Henry defeats Ingolstadt at Alling"
+    },
+    {
+     "year": 1450,
+     "event": "Henry dies; Louis IX the Rich succeeds"
+    }
+   ],
+   "short": "Bavaria",
+   "color": [
+    140,
+    180,
+    230
+   ]
+  },
+  {
+   "tag": "bohemia",
+   "name": "Kingdom of Bohemia",
+   "adjective": "Bohemian",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "prague",
+   "religion": "catholic",
+   "culture": "czech",
+   "ruler": {
+    "name": "Wenceslaus IV",
+    "born": 1361,
+    "dynasty": "Luxembourg",
+    "reign_start": 1378
+   },
+   "heir": {
+    "name": "Sigismund of Luxembourg",
+    "born": 1368,
+    "relation": "brother"
+   },
+   "spouse": "Sophia of Bavaria",
+   "overlord": null,
+   "situation": "Deposed as King of the Romans in 1400, Wenceslaus was seized in March 1402 by his brother Sigismund and is held prisoner in Vienna. Prague is restless, and Jan Hus is preaching.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Wenceslaus escapes captivity and returns to Prague"
+    },
+    {
+     "year": 1415,
+     "event": "Jan Hus is burned at Constance"
+    },
+    {
+     "year": 1419,
+     "event": "The defenestration of Prague: the Hussite wars begin"
+    },
+    {
+     "year": 1458,
+     "event": "George of Poděbrady is elected king"
+    }
+   ],
+   "short": "Bohemia",
+   "color": [
+    210,
+    210,
+    120
+   ]
+  },
+  {
+   "tag": "moravia",
+   "name": "Margraviate of Moravia",
+   "adjective": "Moravian",
+   "government": "monarchy",
+   "title": "Margrave",
+   "rank": "duchy",
+   "capital": "brno",
+   "religion": "catholic",
+   "culture": "czech",
+   "ruler": {
+    "name": "Jobst of Moravia",
+    "born": 1351,
+    "dynasty": "Luxembourg",
+    "reign_start": 1375
+   },
+   "heir": {
+    "name": "Prokop of Moravia",
+    "born": 1355,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "bohemia",
+    "kind": "vassal"
+   },
+   "situation": "Jobst is the shrewdest of the Luxembourgs and a creditor of half Europe; his brother and co-margrave Prokop is Sigismund's prisoner.",
+   "notable": [
+    {
+     "year": 1405,
+     "event": "Prokop dies in Sigismund's prison"
+    },
+    {
+     "year": 1410,
+     "event": "Jobst is elected King of the Romans"
+    },
+    {
+     "year": 1411,
+     "event": "Jobst dies; Moravia passes to Wenceslaus"
+    }
+   ],
+   "short": "Moravia",
+   "color": [
+    230,
+    180,
+    90
+   ]
+  },
+  {
+   "tag": "poland",
+   "name": "Kingdom of Poland",
+   "adjective": "Polish",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "krakow",
+   "religion": "catholic",
+   "culture": "polish",
+   "ruler": {
+    "name": "Władysław II Jagiełło",
+    "born": 1362,
+    "dynasty": "Jagiellon",
+    "approximate": true,
+    "reign_start": 1386
+   },
+   "heir": null,
+   "spouse": "Anna of Celje",
+   "overlord": null,
+   "situation": "Widowed of Queen Jadwiga, Jagiełło married Anna of Celje in January 1402 to keep his crown. His great enemy is the Teutonic Order; to the south he collects the homage of Moldavia.",
+   "notable": [
+    {
+     "year": 1410,
+     "event": "Poland and Lithuania crush the Teutonic Order at Grunwald"
+    },
+    {
+     "year": 1413,
+     "event": "The Union of Horodło"
+    },
+    {
+     "year": 1444,
+     "event": "Władysław III falls at Varna"
+    },
+    {
+     "year": 1454,
+     "event": "The Thirteen Years' War against the Order begins"
+    }
+   ],
+   "short": "Poland",
+   "color": [
+    210,
+    70,
+    90
+   ]
+  },
+  {
+   "tag": "lithuania",
+   "name": "Grand Duchy of Lithuania",
+   "adjective": "Lithuanian",
+   "government": "monarchy",
+   "title": "Grand Duke",
+   "rank": "kingdom",
+   "capital": "lutsk",
+   "religion": "catholic",
+   "culture": "lithuanian",
+   "ruler": {
+    "name": "Vytautas the Great",
+    "born": 1350,
+    "dynasty": "Gediminid",
+    "approximate": true,
+    "reign_start": 1392
+   },
+   "heir": null,
+   "spouse": "Anna",
+   "overlord": {
+    "tag": "poland",
+    "kind": "union"
+   },
+   "situation": "Vytautas rules the steppe frontier to the Black Sea, but his crusade against the Tatars ended in disaster at the Vorskla in 1399. He bargains with Poland for his crown and with the Horde's khans for the steppe.",
+   "notable": [
+    {
+     "year": 1410,
+     "event": "Vytautas leads the Lithuanians at Grunwald"
+    },
+    {
+     "year": 1429,
+     "event": "The Congress of Lutsk"
+    },
+    {
+     "year": 1430,
+     "event": "Vytautas dies before he can be crowned king"
+    }
+   ],
+   "uncertain": "Vilnius lies off the map; Lutsk, one of his residences, stands in as the capital.",
+   "short": "Lithuania",
+   "color": [
+    190,
+    200,
+    110
+   ]
+  },
+  {
+   "tag": "horde",
+   "name": "Golden Horde",
+   "adjective": "Tatar",
+   "government": "tribal",
+   "title": "Khan",
+   "rank": "empire",
+   "capital": "solkhat",
+   "religion": "sunni",
+   "culture": "tatar",
+   "ruler": {
+    "name": "Shadi Beg",
+    "born": 1380,
+    "dynasty": "Jochid",
+    "approximate": true,
+    "reign_start": 1399
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The khans are puppets of the beklerbek Edigu, who crushed Vytautas at the Vorskla. The Horde still claims tribute from Moscow and the Lithuanian lands, but Timur's wars have broken its cities and its trade.",
+   "notable": [
+    {
+     "year": 1407,
+     "event": "Shadi Beg is overthrown"
+    },
+    {
+     "year": 1408,
+     "event": "Edigu besieges Moscow"
+    },
+    {
+     "year": 1441,
+     "event": "Hacı Giray founds the Khanate of Crimea"
+    }
+   ],
+   "uncertain": "Edigu, not the khan, held power; he is the Horde's real master in 1402.",
+   "short": "Golden Horde",
+   "color": [
+    180,
+    140,
+    90
+   ]
+  },
+  {
+   "tag": "theodoro",
+   "name": "Principality of Theodoro",
+   "adjective": "Gothic",
+   "government": "monarchy",
+   "title": "Prince",
+   "rank": "county",
+   "capital": "gothia",
+   "religion": "orthodox",
+   "culture": "greek",
+   "ruler": {
+    "name": "Alexios I of Theodoro",
+    "born": 1375,
+    "dynasty": "Gabras",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "A small Orthodox principality in the Crimean mountains, heir of the Byzantine Gothia. Its princes compete with the Genoese of Caffa for the southern coast and want a port of their own.",
+   "notable": [
+    {
+     "year": 1427,
+     "event": "Alexios builds the harbour fortress of Kalamita"
+    },
+    {
+     "year": 1433,
+     "event": "War with Genoa over Cembalo"
+    },
+    {
+     "year": 1475,
+     "event": "The Ottomans take Mangup and end the principality"
+    }
+   ],
+   "uncertain": "Alexios's predecessor Stephen left for Moscow either in 1391 or in 1402.",
+   "short": "Theodoro",
+   "color": [
+    150,
+    100,
+    140
+   ]
+  },
+  {
+   "tag": "genoa",
+   "name": "Genoese Gazaria and the Levant",
+   "adjective": "Genoese",
+   "government": "republic",
+   "title": "Governor",
+   "rank": "duchy",
+   "capital": "caffa",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Jean Le Maingre, Boucicaut",
+    "born": 1366,
+    "reign_start": 1401
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "Genoa is under the lordship of the King of France, governed by Marshal Boucicaut. Its colonies - Caffa, Chios, Famagusta, Chilia, Amasra - live from the Black Sea grain and slave trade and are Venice's bitter rivals.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Boucicaut raids the Levant and is beaten by Venice at Modon"
+    },
+    {
+     "year": 1409,
+     "event": "Genoa throws off French rule"
+    },
+    {
+     "year": 1475,
+     "event": "The Ottomans take Caffa"
+    }
+   ],
+   "uncertain": "The city of Genoa lies off the map: the realm is its eastern colonies, seated at Caffa.",
+   "short": "Genoa",
+   "color": [
+    200,
+    60,
+    80
+   ]
+  },
+  {
+   "tag": "circassia",
+   "name": "Circassia",
+   "adjective": "Circassian",
+   "government": "tribal",
+   "title": "Prince",
+   "rank": "duchy",
+   "capital": "kabarda",
+   "religion": "orthodox",
+   "culture": "circassian",
+   "ruler": {
+    "name": "Inal",
+    "born": 1380,
+    "approximate": true,
+    "reign_start": 1400
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The Circassian princes rule the Kuban and the Kabarda valleys, raid the steppe and sell slaves and horses through the Genoese ports.",
+   "notable": [
+    {
+     "year": 1427,
+     "event": "Inal unites much of Circassia, by tradition"
+    }
+   ],
+   "uncertain": "Inal is known mostly from tradition and his dates are disputed; the Circassians' faith mixed old Christianity and their own gods.",
+   "short": "Circassia",
+   "color": [
+    130,
+    150,
+    100
+   ]
+  },
+  {
+   "tag": "venice",
+   "name": "Republic of Venice",
+   "adjective": "Venetian",
+   "government": "republic",
+   "title": "Doge",
+   "rank": "kingdom",
+   "capital": "venice",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Michele Steno",
+    "born": 1331,
+    "reign_start": 1400
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "Venice holds the sea road to the Levant: Crete, Negroponte, Modon and Coron, Corfu, Durazzo and Scutari. With the Ottomans broken it wants Dalmatia back from Hungary, the Terraferma from the Carrara of Padua, and safe trade with whoever wins in Edirne.",
+   "notable": [
+    {
+     "year": 1405,
+     "event": "Venice takes Padua, Vicenza and Verona"
+    },
+    {
+     "year": 1409,
+     "event": "Venice buys Zara and Dalmatia from Ladislaus of Naples"
+    },
+    {
+     "year": 1423,
+     "event": "Venice takes Thessaloniki from the Byzantines"
+    },
+    {
+     "year": 1454,
+     "event": "The Peace of Lodi"
+    }
+   ],
+   "short": "Venice",
+   "color": [
+    66,
+    156,
+    198
+   ]
+  },
+  {
+   "tag": "papal",
+   "name": "Papal States",
+   "adjective": "Papal",
+   "government": "theocracy",
+   "title": "Pope",
+   "rank": "kingdom",
+   "capital": "rome",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Boniface IX",
+    "born": 1350,
+    "dynasty": "Tomacelli",
+    "approximate": true,
+    "reign_start": 1389
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The Church is split between popes in Rome and Avignon. Boniface rebuilds his authority in Rome and the Papal States with the help of Ladislaus of Naples.",
+   "notable": [
+    {
+     "year": 1404,
+     "event": "Boniface IX dies"
+    },
+    {
+     "year": 1417,
+     "event": "The Council of Constance ends the Schism"
+    },
+    {
+     "year": 1459,
+     "event": "Pius II calls a crusade at Mantua"
+    }
+   ],
+   "short": "Papal States",
+   "color": [
+    250,
+    240,
+    220
+   ]
+  },
+  {
+   "tag": "naples",
+   "name": "Kingdom of Naples",
+   "adjective": "Neapolitan",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "naples",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Ladislaus",
+    "born": 1377,
+    "dynasty": "Anjou-Durazzo",
+    "reign_start": 1386
+   },
+   "heir": {
+    "name": "Joanna",
+    "born": 1373,
+    "relation": "sister"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "Ladislaus has won back his kingdom from the Angevins of Provence and now claims Hungary, where Sigismund's barons call him in. He dreams of ruling all of Italy.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Ladislaus is crowned King of Hungary at Zara"
+    },
+    {
+     "year": 1408,
+     "event": "Ladislaus occupies Rome"
+    },
+    {
+     "year": 1414,
+     "event": "Ladislaus dies; Joanna II succeeds"
+    },
+    {
+     "year": 1442,
+     "event": "Alfonso of Aragon conquers Naples"
+    }
+   ],
+   "short": "Naples",
+   "color": [
+    110,
+    120,
+    200
+   ]
+  },
+  {
+   "tag": "sicily",
+   "name": "Kingdom of Sicily",
+   "adjective": "Sicilian",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "palermo",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Martin I",
+    "born": 1376,
+    "dynasty": "Barcelona",
+    "reign_start": 1392
+   },
+   "heir": {
+    "name": "Martin of Aragon",
+    "born": 1356,
+    "relation": "father"
+   },
+   "spouse": "Blanche of Navarre",
+   "overlord": null,
+   "situation": "Martin the Younger has subdued the Sicilian barons with Aragonese help and just married Blanche of Navarre. Sicily is bound ever closer to the crown of Aragon.",
+   "notable": [
+    {
+     "year": 1409,
+     "event": "Martin I wins at Sanluri in Sardinia and dies of fever"
+    },
+    {
+     "year": 1412,
+     "event": "Sicily passes to the Trastámara kings of Aragon"
+    }
+   ],
+   "short": "Sicily",
+   "color": [
+    240,
+    220,
+    100
+   ]
+  },
+  {
+   "tag": "ott_rum",
+   "name": "Ottoman Rumelia",
+   "adjective": "Ottoman",
+   "government": "monarchy",
+   "title": "Emir",
+   "rank": "kingdom",
+   "capital": "edirne",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Süleyman Çelebi",
+    "born": 1377,
+    "dynasty": "Osman",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": {
+    "name": "Orhan",
+    "born": 1395,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "Bayezid's eldest son escaped from Ankara and holds the European half of the empire from Edirne. He buys peace from the Christians to fight his brothers in Anatolia.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "The Treaty of Gallipoli: Thessaloniki and the coast are given back to Byzantium"
+    },
+    {
+     "year": 1411,
+     "event": "Süleyman is overthrown and killed by his brother Musa"
+    },
+    {
+     "year": 1413,
+     "event": "Mehmed defeats Musa at Çamurlu and reunites the empire"
+    },
+    {
+     "year": 1453,
+     "event": "Mehmed II takes Constantinople"
+    }
+   ],
+   "short": "Ottoman Rumelia",
+   "color": [
+    54,
+    122,
+    92
+   ]
+  },
+  {
+   "tag": "byzantium",
+   "name": "Byzantine Empire",
+   "adjective": "Byzantine",
+   "government": "monarchy",
+   "title": "Emperor",
+   "rank": "empire",
+   "capital": "constantinople",
+   "religion": "orthodox",
+   "culture": "greek",
+   "ruler": {
+    "name": "Manuel II Palaiologos",
+    "born": 1350,
+    "dynasty": "Palaiologos",
+    "reign_start": 1391
+   },
+   "heir": {
+    "name": "John VIII Palaiologos",
+    "born": 1392,
+    "relation": "son"
+   },
+   "spouse": "Helena Dragaš",
+   "overlord": null,
+   "situation": "Ankara saved the City from Bayezid's siege. Manuel is still in the West begging for help; his nephew John VII rules Constantinople and will win back Thessaloniki and the Black Sea coast from Süleyman.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Manuel returns; the Treaty of Gallipoli restores Thessaloniki"
+    },
+    {
+     "year": 1422,
+     "event": "Murad II besieges Constantinople"
+    },
+    {
+     "year": 1439,
+     "event": "The Union of the Churches at Florence"
+    },
+    {
+     "year": 1453,
+     "event": "Constantinople falls to Mehmed II"
+    }
+   ],
+   "uncertain": "Manuel II was in the West until 1403; John VII governed the City in his absence.",
+   "short": "Byzantium",
+   "color": [
+    128,
+    44,
+    120
+   ]
+  },
+  {
+   "tag": "morea",
+   "name": "Despotate of the Morea",
+   "adjective": "Moreot",
+   "government": "monarchy",
+   "title": "Despot",
+   "rank": "duchy",
+   "capital": "mystras",
+   "religion": "orthodox",
+   "culture": "greek",
+   "ruler": {
+    "name": "Theodore I Palaiologos",
+    "born": 1355,
+    "dynasty": "Palaiologos",
+    "approximate": true,
+    "reign_start": 1383
+   },
+   "heir": {
+    "name": "Theodore II Palaiologos",
+    "born": 1396,
+    "relation": "nephew"
+   },
+   "spouse": "Bartolomea Acciaioli",
+   "overlord": {
+    "tag": "byzantium",
+    "kind": "vassal"
+   },
+   "situation": "Theodore sold Corinth to the Knights of Rhodes in his fear of Bayezid and now wants it back. The Latin principality of Achaea and the Navarrese are his rivals for the peninsula.",
+   "notable": [
+    {
+     "year": 1404,
+     "event": "Corinth is bought back from the Knights"
+    },
+    {
+     "year": 1407,
+     "event": "Theodore I dies"
+    },
+    {
+     "year": 1415,
+     "event": "The Hexamilion wall is built across the Isthmus"
+    },
+    {
+     "year": 1460,
+     "event": "Mehmed II conquers the Morea"
+    }
+   ],
+   "short": "Morea",
+   "color": [
+    176,
+    92,
+    186
+   ]
+  },
+  {
+   "tag": "achaea",
+   "name": "Principality of Achaea",
+   "adjective": "Achaean",
+   "government": "monarchy",
+   "title": "Prince",
+   "rank": "duchy",
+   "capital": "glarentza",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Pedro de San Superano",
+    "born": 1340,
+    "dynasty": "San Superano",
+    "approximate": true,
+    "reign_start": 1396
+   },
+   "heir": null,
+   "spouse": "Maria II Zaccaria",
+   "overlord": null,
+   "situation": "The last Frankish principality of the Morea is held by the captains of the Navarrese Company. It is squeezed between the Despot of Mystras and Venice's ports.",
+   "notable": [
+    {
+     "year": 1402,
+     "event": "Pedro dies in November; his widow Maria Zaccaria rules as regent"
+    },
+    {
+     "year": 1404,
+     "event": "Centurione II Zaccaria becomes prince"
+    },
+    {
+     "year": 1430,
+     "event": "The Palaiologoi conquer the last of Achaea"
+    }
+   ],
+   "short": "Achaea",
+   "color": [
+    110,
+    140,
+    196
+   ]
+  },
+  {
+   "tag": "athens",
+   "name": "Duchy of Athens",
+   "adjective": "Athenian",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "thebes",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Antonio I Acciaioli",
+    "born": 1370,
+    "dynasty": "Acciaioli",
+    "approximate": true,
+    "reign_start": 1394
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "The Florentine bastard son of Nerio Acciaioli holds Thebes and is besieging the Venetians on the Acropolis of Athens, which his father had left to the Republic.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Antonio takes the Acropolis and Athens from Venice"
+    },
+    {
+     "year": 1435,
+     "event": "Antonio dies"
+    },
+    {
+     "year": 1456,
+     "event": "The Ottomans take Athens"
+    }
+   ],
+   "short": "Athens",
+   "color": [
+    70,
+    96,
+    176
+   ]
+  },
+  {
+   "tag": "ioannina",
+   "name": "Despotate of Epirus",
+   "adjective": "Epirote",
+   "government": "monarchy",
+   "title": "Despot",
+   "rank": "county",
+   "capital": "ioannina",
+   "religion": "orthodox",
+   "culture": "italian",
+   "ruler": {
+    "name": "Esau de' Buondelmonti",
+    "born": 1350,
+    "dynasty": "Buondelmonti",
+    "approximate": true,
+    "reign_start": 1385
+   },
+   "heir": {
+    "name": "Giorgio de' Buondelmonti",
+    "born": 1400,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": "Jevdokija Balšić",
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "A Florentine despot of Ioannina among Albanian clans. Esau holds on with Ottoman help against the Spata of Arta and the Zenebishi.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Esau dies; Carlo Tocco takes Ioannina"
+    },
+    {
+     "year": 1430,
+     "event": "Ioannina submits to the Ottomans"
+    }
+   ],
+   "short": "Ioannina",
+   "color": [
+    150,
+    120,
+    200
+   ]
+  },
+  {
+   "tag": "spata",
+   "name": "Despotate of Arta",
+   "adjective": "Artan",
+   "government": "monarchy",
+   "title": "Despot",
+   "rank": "county",
+   "capital": "arta",
+   "religion": "orthodox",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Muriq Shpata",
+    "born": 1360,
+    "dynasty": "Shpata",
+    "approximate": true,
+    "reign_start": 1400
+   },
+   "heir": {
+    "name": "Yaqub Shpata",
+    "born": 1365,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "The Albanian lords of Arta live by war with Ioannina and Carlo Tocco.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Muriq and Zenebishi invade Epirus"
+    },
+    {
+     "year": 1416,
+     "event": "Carlo Tocco takes Arta"
+    }
+   ],
+   "uncertain": "Some sources date Muriq's rule from 1403.",
+   "short": "Arta",
+   "color": [
+    170,
+    60,
+    50
+   ]
+  },
+  {
+   "tag": "tocco",
+   "name": "County Palatine of Cephalonia and Zakynthos",
+   "adjective": "Tocco",
+   "government": "monarchy",
+   "title": "Count",
+   "rank": "county",
+   "capital": "cephalonia",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Carlo I Tocco",
+    "born": 1372,
+    "dynasty": "Tocco",
+    "approximate": true,
+    "reign_start": 1376
+   },
+   "heir": {
+    "name": "Leonardo II Tocco",
+    "born": 1376,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": "Francesca Acciaioli",
+   "overlord": {
+    "tag": "naples",
+    "kind": "vassal"
+   },
+   "situation": "The Neapolitan lords of the Ionian islands look across the strait to Epirus, its Albanian despots and its towns.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Carlo takes Ioannina"
+    },
+    {
+     "year": 1416,
+     "event": "Carlo takes Arta"
+    },
+    {
+     "year": 1430,
+     "event": "Ioannina falls to the Ottomans"
+    }
+   ],
+   "short": "Cephalonia",
+   "color": [
+    210,
+    196,
+    120
+   ]
+  },
+  {
+   "tag": "knights",
+   "name": "Knights Hospitaller",
+   "adjective": "Hospitaller",
+   "government": "order",
+   "title": "Grand Master",
+   "rank": "duchy",
+   "capital": "rhodes",
+   "religion": "catholic",
+   "culture": "french",
+   "ruler": {
+    "name": "Philibert de Naillac",
+    "born": 1350,
+    "approximate": true,
+    "reign_start": 1396
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The Knights of Rhodes hold the castle of Smyrna and, since 1400, Corinth. Timur's armies are near Smyrna; Corinth must be returned to the Despot.",
+   "notable": [
+    {
+     "year": 1402,
+     "event": "Timur takes Smyrna from the Knights in December"
+    },
+    {
+     "year": 1404,
+     "event": "The Knights begin the castle of Bodrum"
+    },
+    {
+     "year": 1444,
+     "event": "The Mamluks besiege Rhodes"
+    }
+   ],
+   "short": "Knights of Rhodes",
+   "color": [
+    90,
+    60,
+    50
+   ]
+  },
+  {
+   "tag": "lesbos",
+   "name": "Lordship of Lesbos",
+   "adjective": "Gattilusi",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "lesbos",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Francesco II Gattilusio",
+    "born": 1365,
+    "dynasty": "Gattilusi",
+    "approximate": true,
+    "reign_start": 1384
+   },
+   "heir": {
+    "name": "Jacopo Gattilusio",
+    "born": 1390,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": "Valentina Doria",
+   "overlord": {
+    "tag": "byzantium",
+    "kind": "vassal"
+   },
+   "situation": "Genoese lords married into the imperial house, holding Lesbos and Ainos as vassals of the emperor and living from the alum and grain trade.",
+   "notable": [
+    {
+     "year": 1404,
+     "event": "Francesco II dies"
+    },
+    {
+     "year": 1462,
+     "event": "Mehmed II takes Mytilene"
+    }
+   ],
+   "short": "Lesbos",
+   "color": [
+    226,
+    120,
+    150
+   ]
+  },
+  {
+   "tag": "naxos",
+   "name": "Duchy of the Archipelago",
+   "adjective": "Naxiot",
+   "government": "monarchy",
+   "title": "Duke",
+   "rank": "county",
+   "capital": "naxos",
+   "religion": "catholic",
+   "culture": "italian",
+   "ruler": {
+    "name": "Giacomo I Crispo",
+    "born": 1360,
+    "dynasty": "Crispo",
+    "approximate": true,
+    "reign_start": 1397
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "venice",
+    "kind": "vassal"
+   },
+   "situation": "A Latin duchy of the Cyclades under Venice's protection, plagued by Turkish corsairs.",
+   "notable": [
+    {
+     "year": 1418,
+     "event": "Giacomo I dies"
+    },
+    {
+     "year": 1537,
+     "event": "The duchy becomes an Ottoman tributary"
+    }
+   ],
+   "short": "Naxos",
+   "color": [
+    100,
+    190,
+    200
+   ]
+  },
+  {
+   "tag": "cyprus",
+   "name": "Kingdom of Cyprus",
+   "adjective": "Cypriot",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "nicosia",
+   "religion": "catholic",
+   "culture": "french",
+   "ruler": {
+    "name": "Janus",
+    "born": 1375,
+    "dynasty": "Lusignan",
+    "reign_start": 1398
+   },
+   "heir": null,
+   "spouse": "Anglesia Visconti",
+   "overlord": null,
+   "situation": "The Lusignan kings want Famagusta back from the Genoese and fear the Mamluks, whose coasts their ships raid.",
+   "notable": [
+    {
+     "year": 1426,
+     "event": "The Mamluks invade; Janus is captured at Khirokitia"
+    },
+    {
+     "year": 1427,
+     "event": "Cyprus becomes a Mamluk tributary"
+    },
+    {
+     "year": 1489,
+     "event": "Venice takes Cyprus"
+    }
+   ],
+   "short": "Cyprus",
+   "color": [
+    240,
+    200,
+    160
+   ]
+  },
+  {
+   "tag": "serbia",
+   "name": "Despotate of Serbia",
+   "adjective": "Serbian",
+   "government": "monarchy",
+   "title": "Despot",
+   "rank": "duchy",
+   "capital": "krusevac",
+   "religion": "orthodox",
+   "culture": "serbian",
+   "ruler": {
+    "name": "Stefan Lazarević",
+    "born": 1377,
+    "dynasty": "Lazarević",
+    "reign_start": 1389
+   },
+   "heir": {
+    "name": "Vuk Lazarević",
+    "born": 1380,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "Stefan fought for Bayezid at Ankara and came home through Constantinople with the title of Despot. He wants to be free of the Ottomans and master of the Serbian lands, and the Brankovićs stand in his way.",
+   "notable": [
+    {
+     "year": 1402,
+     "event": "Stefan defeats the Brankovićs and the Ottomans at Tripolje (November)"
+    },
+    {
+     "year": 1403,
+     "event": "Stefan becomes Sigismund's vassal and receives Belgrade"
+    },
+    {
+     "year": 1427,
+     "event": "Stefan dies; Đurađ Branković succeeds"
+    },
+    {
+     "year": 1459,
+     "event": "The Ottomans take Smederevo"
+    }
+   ],
+   "short": "Serbia",
+   "color": [
+    170,
+    50,
+    60
+   ]
+  },
+  {
+   "tag": "brankovic",
+   "name": "Lands of the Brankovići",
+   "adjective": "Branković",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "kosovo",
+   "religion": "orthodox",
+   "culture": "serbian",
+   "ruler": {
+    "name": "Đurađ Branković",
+    "born": 1377,
+    "dynasty": "Branković",
+    "approximate": true,
+    "reign_start": 1396
+   },
+   "heir": {
+    "name": "Grgur Branković",
+    "born": 1375,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "vassal"
+   },
+   "situation": "The sons of Vuk Branković hold Kosovo, Peć and Prizren as Ottoman vassals and refuse the Despot's rule; Đurađ was briefly Stefan's prisoner after Ankara.",
+   "notable": [
+    {
+     "year": 1402,
+     "event": "The Brankovićs lose to Stefan at Tripolje"
+    },
+    {
+     "year": 1412,
+     "event": "Đurađ reconciles with Stefan, his uncle"
+    },
+    {
+     "year": 1427,
+     "event": "Đurađ becomes Despot of Serbia"
+    }
+   ],
+   "short": "Branković",
+   "color": [
+    200,
+    120,
+    150
+   ]
+  },
+  {
+   "tag": "bosnia",
+   "name": "Kingdom of Bosnia",
+   "adjective": "Bosnian",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "bobovac",
+   "religion": "bosnian_church",
+   "culture": "bosnian",
+   "ruler": {
+    "name": "Stephen Ostoja",
+    "born": 1360,
+    "dynasty": "Kotromanić",
+    "approximate": true,
+    "reign_start": 1398
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "Ostoja reigns at the pleasure of the great magnates, Hrvoje above all. He wavers between Sigismund and Ladislaus of Naples.",
+   "notable": [
+    {
+     "year": 1404,
+     "event": "The magnates depose Ostoja for Tvrtko II"
+    },
+    {
+     "year": 1409,
+     "event": "Ostoja returns to the throne"
+    },
+    {
+     "year": 1463,
+     "event": "The Ottomans conquer Bosnia"
+    }
+   ],
+   "short": "Bosnia",
+   "color": [
+    60,
+    90,
+    160
+   ]
+  },
+  {
+   "tag": "hrvoje",
+   "name": "Lands of Hrvoje Vukčić",
+   "adjective": "Hrvatinić",
+   "government": "monarchy",
+   "title": "Grand Duke",
+   "rank": "duchy",
+   "capital": "jajce",
+   "religion": "bosnian_church",
+   "culture": "bosnian",
+   "ruler": {
+    "name": "Hrvoje Vukčić Hrvatinić",
+    "born": 1350,
+    "dynasty": "Hrvatinić",
+    "approximate": true,
+    "reign_start": 1380
+   },
+   "heir": null,
+   "spouse": "Jelena Nelipčić",
+   "overlord": {
+    "tag": "bosnia",
+    "kind": "vassal"
+   },
+   "situation": "The mightiest man in Bosnia makes and unmakes kings. He backs Ladislaus of Naples, who will make him Duke of Split.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Ladislaus makes Hrvoje Duke of Split"
+    },
+    {
+     "year": 1409,
+     "event": "Hrvoje goes over to Sigismund"
+    },
+    {
+     "year": 1415,
+     "event": "Hrvoje calls in the Ottomans against Hungary"
+    },
+    {
+     "year": 1416,
+     "event": "Hrvoje dies"
+    }
+   ],
+   "uncertain": "Hrvoje's faith is debated: he patronised both the Bosnian Church and Catholics.",
+   "short": "Hrvoje",
+   "color": [
+    80,
+    140,
+    120
+   ]
+  },
+  {
+   "tag": "kosaca",
+   "name": "Lands of Sandalj Hranić",
+   "adjective": "Kosača",
+   "government": "monarchy",
+   "title": "Grand Duke",
+   "rank": "county",
+   "capital": "hum",
+   "religion": "bosnian_church",
+   "culture": "bosnian",
+   "ruler": {
+    "name": "Sandalj Hranić Kosača",
+    "born": 1370,
+    "dynasty": "Kosača",
+    "approximate": true,
+    "reign_start": 1392
+   },
+   "heir": {
+    "name": "Vukac Hranić",
+    "born": 1372,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "bosnia",
+    "kind": "vassal"
+   },
+   "situation": "Sandalj rules Hum and the hills behind Ragusa, and plays the Bosnian king, Hrvoje, Ragusa and the Ottomans against each other.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Sandalj marries Jelena, the Despot's sister"
+    },
+    {
+     "year": 1419,
+     "event": "Sandalj sells Konavle to Ragusa"
+    },
+    {
+     "year": 1448,
+     "event": "His nephew Stjepan takes the title Herceg: Herzegovina"
+    }
+   ],
+   "short": "Kosača",
+   "color": [
+    140,
+    110,
+    180
+   ]
+  },
+  {
+   "tag": "pavlovic",
+   "name": "Lands of Pavle Radinović",
+   "adjective": "Pavlović",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "borac",
+   "religion": "bosnian_church",
+   "culture": "bosnian",
+   "ruler": {
+    "name": "Pavle Radinović",
+    "born": 1360,
+    "dynasty": "Pavlović",
+    "approximate": true,
+    "reign_start": 1391
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "bosnia",
+    "kind": "vassal"
+   },
+   "situation": "The lord of Borač and its silver mines, at Sandalj's elbow and in his way.",
+   "notable": [
+    {
+     "year": 1415,
+     "event": "Pavle is murdered at Sandalj's instigation"
+    },
+    {
+     "year": 1463,
+     "event": "The Ottomans take the Pavlović lands"
+    }
+   ],
+   "short": "Pavlović",
+   "color": [
+    120,
+    160,
+    210
+   ]
+  },
+  {
+   "tag": "zeta",
+   "name": "Lordship of Zeta",
+   "adjective": "Zetan",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "zeta",
+   "religion": "orthodox",
+   "culture": "serbian",
+   "ruler": {
+    "name": "Đurađ II Balšić",
+    "born": 1365,
+    "dynasty": "Balšić",
+    "approximate": true,
+    "reign_start": 1385
+   },
+   "heir": {
+    "name": "Balša III",
+    "born": 1387,
+    "relation": "son"
+   },
+   "spouse": "Jelena Lazarević",
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "The Balšići have lost Scutari to Venice and want it back. Đurađ is ailing; his son Balša will fight Venice for the coast.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Đurađ II dies; Balša III succeeds"
+    },
+    {
+     "year": 1405,
+     "event": "The first Scutari war against Venice"
+    },
+    {
+     "year": 1421,
+     "event": "Balša III dies and leaves Zeta to the Despot of Serbia"
+    }
+   ],
+   "short": "Zeta",
+   "color": [
+    190,
+    170,
+    220
+   ]
+  },
+  {
+   "tag": "thopia",
+   "name": "Lordship of Kruja",
+   "adjective": "Thopia",
+   "government": "monarchy",
+   "title": "Lady",
+   "rank": "county",
+   "capital": "kruja",
+   "religion": "catholic",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Helena Thopia",
+    "born": 1365,
+    "dynasty": "Thopia",
+    "approximate": true,
+    "reign_start": 1394
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "venice",
+    "kind": "protectorate"
+   },
+   "situation": "Karl Thopia's daughter holds Kruja with Venetian backing; her half-brother Niketa wants it.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Niketa Thopia takes Kruja from Helena"
+    },
+    {
+     "year": 1415,
+     "event": "Kruja falls to the Ottomans"
+    }
+   ],
+   "uncertain": "Helena's first husband, the Venetian Marco Barbarigo, ruled in her name; Venice's protection is the game's reading of that.",
+   "short": "Thopia",
+   "color": [
+    220,
+    90,
+    60
+   ]
+  },
+  {
+   "tag": "kastrioti",
+   "name": "Lordship of Kastrioti",
+   "adjective": "Kastrioti",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "dibra",
+   "religion": "orthodox",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Gjon Kastrioti",
+    "born": 1375,
+    "dynasty": "Kastrioti",
+    "approximate": true,
+    "reign_start": 1389
+   },
+   "heir": {
+    "name": "Stanisha Kastrioti",
+    "born": 1395,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": "Voisava",
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "vassal"
+   },
+   "situation": "Gjon holds Mat and Dibra between the Ottomans and Venice, switching faith and allegiance as he must. His youngest son, George, will be born in 1405.",
+   "notable": [
+    {
+     "year": 1405,
+     "event": "George Kastrioti, Skanderbeg, is born"
+    },
+    {
+     "year": 1443,
+     "event": "Skanderbeg rises against the Ottomans"
+    },
+    {
+     "year": 1444,
+     "event": "The League of Lezhë"
+    }
+   ],
+   "uncertain": "When Gjon began to rule is not known exactly.",
+   "short": "Kastrioti",
+   "color": [
+    150,
+    30,
+    40
+   ]
+  },
+  {
+   "tag": "dukagjini",
+   "name": "Lordship of Dukagjini",
+   "adjective": "Dukagjini",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "dukagjin",
+   "religion": "catholic",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Tanush the Great",
+    "born": 1360,
+    "dynasty": "Dukagjini",
+    "approximate": true,
+    "reign_start": 1393
+   },
+   "heir": {
+    "name": "Pal Dukagjini",
+    "born": 1390,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "venice",
+    "kind": "protectorate"
+   },
+   "situation": "The Dukagjini hold the mountains behind Lezhë and treat with Venice over the town.",
+   "notable": [
+    {
+     "year": 1444,
+     "event": "The Dukagjini join the League of Lezhë"
+    }
+   ],
+   "uncertain": "Lekë Dukagjini's sons Progon and Tanush shared the lordship; dates are approximate.",
+   "short": "Dukagjini",
+   "color": [
+    110,
+    40,
+    70
+   ]
+  },
+  {
+   "tag": "arianiti",
+   "name": "Lordship of Arianiti",
+   "adjective": "Arianiti",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "shpat",
+   "religion": "orthodox",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Komnen Arianiti",
+    "born": 1360,
+    "dynasty": "Arianiti",
+    "approximate": true,
+    "reign_start": 1390
+   },
+   "heir": {
+    "name": "Gjergj Arianiti",
+    "born": 1383,
+    "relation": "son"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "vassal"
+   },
+   "situation": "The Arianiti hold the mountains of Shpat between the Shkumbin and Ohrid.",
+   "notable": [
+    {
+     "year": 1432,
+     "event": "Gjergj Arianiti rises against the Ottomans"
+    },
+    {
+     "year": 1451,
+     "event": "His daughter Donika marries Skanderbeg"
+    }
+   ],
+   "uncertain": "Komnen Arianiti's dates are approximate.",
+   "short": "Arianiti",
+   "color": [
+    230,
+    150,
+    120
+   ]
+  },
+  {
+   "tag": "muzaka",
+   "name": "Lordship of Berat",
+   "adjective": "Muzaka",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "berat",
+   "religion": "orthodox",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Teodor III Muzaka",
+    "born": 1370,
+    "dynasty": "Muzaka",
+    "approximate": true,
+    "reign_start": 1396
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "The Muzaka hold Berat and the plain of Myzeqe, the richest corner of Albania.",
+   "notable": [
+    {
+     "year": 1417,
+     "event": "The Ottomans take Berat"
+    },
+    {
+     "year": 1437,
+     "event": "Teodor rises against the Ottomans"
+    }
+   ],
+   "short": "Muzaka",
+   "color": [
+    130,
+    70,
+    40
+   ]
+  },
+  {
+   "tag": "valona",
+   "name": "Principality of Valona",
+   "adjective": "Valonan",
+   "government": "monarchy",
+   "title": "Lady",
+   "rank": "county",
+   "capital": "valona",
+   "religion": "orthodox",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Regina Balšić",
+    "born": 1365,
+    "dynasty": "Balšić",
+    "approximate": true,
+    "reign_start": 1396
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "The widow of Mrkša Žarković holds Valona and Kanina, and offers them to Venice in turn.",
+   "notable": [
+    {
+     "year": 1414,
+     "event": "Regina dies"
+    },
+    {
+     "year": 1417,
+     "event": "The Ottomans take Valona"
+    }
+   ],
+   "short": "Valona",
+   "color": [
+    180,
+    150,
+    90
+   ]
+  },
+  {
+   "tag": "zenebishi",
+   "name": "Lordship of Gjirokastër",
+   "adjective": "Zenebishi",
+   "government": "monarchy",
+   "title": "Lord",
+   "rank": "county",
+   "capital": "gjirokaster",
+   "religion": "orthodox",
+   "culture": "albanian",
+   "ruler": {
+    "name": "Gjin Zenebishi",
+    "born": 1350,
+    "dynasty": "Zenebishi",
+    "approximate": true,
+    "reign_start": 1386
+   },
+   "heir": {
+    "name": "Simon Zenebishi",
+    "born": 1380,
+    "approximate": true,
+    "relation": "son"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "ott_rum",
+    "kind": "tributary"
+   },
+   "situation": "The lord of Gjirokastër raids Epirus and once held Esau of Ioannina for ransom.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Zenebishi and the Spata invade Epirus"
+    },
+    {
+     "year": 1418,
+     "event": "Gjin Zenebishi dies"
+    },
+    {
+     "year": 1419,
+     "event": "The Ottomans take Gjirokastër"
+    }
+   ],
+   "short": "Zenebishi",
+   "color": [
+    196,
+    110,
+    70
+   ]
+  },
+  {
+   "tag": "ott_isa",
+   "name": "Ottomans of Bursa",
+   "adjective": "Ottoman",
+   "government": "monarchy",
+   "title": "Çelebi",
+   "rank": "duchy",
+   "capital": "bursa",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "İsa Çelebi",
+    "born": 1380,
+    "dynasty": "Osman",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "After Timur's men sacked Bursa, Bayezid's son İsa took the old capital and calls himself sultan. His brothers Mehmed and Süleyman both want it.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Mehmed defeats İsa at Ulubad"
+    },
+    {
+     "year": 1403,
+     "event": "İsa is killed"
+    }
+   ],
+   "short": "Ottomans of Bursa",
+   "color": [
+    34,
+    148,
+    126
+   ]
+  },
+  {
+   "tag": "ott_meh",
+   "name": "Ottomans of Amasya",
+   "adjective": "Ottoman",
+   "government": "monarchy",
+   "title": "Çelebi",
+   "rank": "duchy",
+   "capital": "amasya",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Mehmed Çelebi",
+    "born": 1386,
+    "dynasty": "Osman",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "The youngest of Bayezid's free sons holds Amasya and Tokat, far from Timur's reach. He is patient, and he means to have the whole empire.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Mehmed takes Bursa from İsa"
+    },
+    {
+     "year": 1413,
+     "event": "Mehmed reunites the empire as Mehmed I"
+    },
+    {
+     "year": 1421,
+     "event": "Mehmed I dies; Murad II succeeds"
+    }
+   ],
+   "short": "Ottomans of Amasya",
+   "color": [
+    96,
+    150,
+    60
+   ]
+  },
+  {
+   "tag": "candar",
+   "name": "Beylik of Candar",
+   "adjective": "Candarid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "duchy",
+   "capital": "kastamonu",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "İsfendiyar Bey",
+    "born": 1350,
+    "dynasty": "Candar",
+    "approximate": true,
+    "reign_start": 1385
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Timur gave İsfendiyar back Kastamonu. He holds Sinop's harbour and copper mines and wants to keep the Ottomans divided.",
+   "notable": [
+    {
+     "year": 1417,
+     "event": "Mehmed I takes Çankırı from İsfendiyar"
+    },
+    {
+     "year": 1461,
+     "event": "The Ottomans annex the beylik"
+    }
+   ],
+   "short": "Candar",
+   "color": [
+    120,
+    170,
+    180
+   ]
+  },
+  {
+   "tag": "germiyan",
+   "name": "Beylik of Germiyan",
+   "adjective": "Germiyanid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "duchy",
+   "capital": "kutahya",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Yakub II",
+    "born": 1367,
+    "dynasty": "Germiyan",
+    "approximate": true,
+    "reign_start": 1387
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Restored by Timur to his old lands around Kütahya, Yakub is a poet and a schemer who fears both the Ottomans and Karaman.",
+   "notable": [
+    {
+     "year": 1411,
+     "event": "Yakub is imprisoned by Karaman"
+    },
+    {
+     "year": 1429,
+     "event": "Yakub leaves Germiyan to the Ottomans"
+    }
+   ],
+   "short": "Germiyan",
+   "color": [
+    180,
+    200,
+    90
+   ]
+  },
+  {
+   "tag": "saruhan",
+   "name": "Beylik of Saruhan",
+   "adjective": "Saruhanid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "county",
+   "capital": "manisa",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Hızır Şah",
+    "born": 1365,
+    "dynasty": "Saruhan",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Restored by Timur, the last Saruhanid holds Manisa and the alum of the Hermus valley.",
+   "notable": [
+    {
+     "year": 1410,
+     "event": "Mehmed Çelebi kills Hızır Şah and takes Saruhan"
+    }
+   ],
+   "short": "Saruhan",
+   "color": [
+    150,
+    120,
+    60
+   ]
+  },
+  {
+   "tag": "aydin",
+   "name": "Beylik of Aydın",
+   "adjective": "Aydınid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "county",
+   "capital": "ayasoluk",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "İsa Bey",
+    "born": 1370,
+    "dynasty": "Aydın",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": {
+    "name": "Umur II",
+    "born": 1372,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Timur gave the brothers İsa and Umur back the coast of Ephesus and Smyrna; the adventurer Cüneyd waits for his chance.",
+   "notable": [
+    {
+     "year": 1405,
+     "event": "Cüneyd seizes the beylik"
+    },
+    {
+     "year": 1425,
+     "event": "The Ottomans annex Aydın"
+    }
+   ],
+   "short": "Aydın",
+   "color": [
+    220,
+    200,
+    100
+   ]
+  },
+  {
+   "tag": "mentese",
+   "name": "Beylik of Menteşe",
+   "adjective": "Menteşid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "county",
+   "capital": "milas",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "İlyas Bey",
+    "born": 1370,
+    "dynasty": "Menteşe",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Restored by Timur, İlyas holds Milas and the coast facing Rhodes, and trades with Venice.",
+   "notable": [
+    {
+     "year": 1421,
+     "event": "İlyas dies"
+    },
+    {
+     "year": 1425,
+     "event": "The Ottomans annex Menteşe"
+    }
+   ],
+   "short": "Menteşe",
+   "color": [
+    90,
+    170,
+    150
+   ]
+  },
+  {
+   "tag": "teke",
+   "name": "Beylik of Teke",
+   "adjective": "Tekeid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "county",
+   "capital": "elmali",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Osman Çelebi",
+    "born": 1370,
+    "dynasty": "Teke",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Osman is back in the hills of Elmalı and wants Antalya, the great port his family lost to Bayezid.",
+   "notable": [
+    {
+     "year": 1423,
+     "event": "Osman is killed besieging Antalya"
+    }
+   ],
+   "uncertain": "Whether Antalya itself was in Teke's or Ottoman hands in 1402 is unclear.",
+   "short": "Teke",
+   "color": [
+    200,
+    140,
+    50
+   ]
+  },
+  {
+   "tag": "karaman",
+   "name": "Beylik of Karaman",
+   "adjective": "Karamanid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "kingdom",
+   "capital": "konya",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Mehmed II of Karaman",
+    "born": 1370,
+    "dynasty": "Karaman",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": {
+    "name": "Bengi Ali",
+    "born": 1372,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Freed by Timur, the sons of Alaeddin Ali are back in Konya with a few more fortresses. Karaman claims the heritage of the Seljuks and is the Ottomans' oldest enemy.",
+   "notable": [
+    {
+     "year": 1414,
+     "event": "Mehmed of Karaman takes and burns Bursa"
+    },
+    {
+     "year": 1423,
+     "event": "Mehmed dies besieging Antalya"
+    },
+    {
+     "year": 1468,
+     "event": "The Ottomans annex Karaman"
+    }
+   ],
+   "short": "Karaman",
+   "color": [
+    100,
+    110,
+    60
+   ]
+  },
+  {
+   "tag": "ramazan",
+   "name": "Beylik of Ramazan",
+   "adjective": "Ramazanid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "county",
+   "capital": "adana",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Ahmed Bey",
+    "born": 1350,
+    "dynasty": "Ramazan",
+    "approximate": true,
+    "reign_start": 1383
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "mamluks",
+    "kind": "vassal"
+   },
+   "situation": "The Turkmen lords of Adana guard the Mamluks' northern march in Cilicia.",
+   "notable": [
+    {
+     "year": 1415,
+     "event": "Ahmed takes Tarsus from Karaman"
+    },
+    {
+     "year": 1416,
+     "event": "Ahmed dies"
+    }
+   ],
+   "short": "Ramazan",
+   "color": [
+    230,
+    110,
+    90
+   ]
+  },
+  {
+   "tag": "dulkadir",
+   "name": "Beylik of Dulkadir",
+   "adjective": "Dulkadirid",
+   "government": "monarchy",
+   "title": "Bey",
+   "rank": "county",
+   "capital": "elbistan",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Nasireddin Mehmed Bey",
+    "born": 1365,
+    "dynasty": "Dulkadir",
+    "approximate": true,
+    "reign_start": 1399
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "mamluks",
+    "kind": "vassal"
+   },
+   "situation": "The Turkmen of Elbistan and Maraş balance between the Mamluks and the Ottomans and marry their daughters to both.",
+   "notable": [
+    {
+     "year": 1403,
+     "event": "Mehmed marries a daughter to Mehmed Çelebi"
+    },
+    {
+     "year": 1442,
+     "event": "Nasireddin Mehmed dies"
+    }
+   ],
+   "short": "Dulkadir",
+   "color": [
+    140,
+    90,
+    60
+   ]
+  },
+  {
+   "tag": "trebizond",
+   "name": "Empire of Trebizond",
+   "adjective": "Trapezuntine",
+   "government": "monarchy",
+   "title": "Emperor",
+   "rank": "kingdom",
+   "capital": "trebizond",
+   "religion": "orthodox",
+   "culture": "greek",
+   "ruler": {
+    "name": "Manuel III Megas Komnenos",
+    "born": 1364,
+    "dynasty": "Komnenos",
+    "reign_start": 1390
+   },
+   "heir": {
+    "name": "Alexios IV Megas Komnenos",
+    "born": 1382,
+    "relation": "son"
+   },
+   "spouse": "Anna Philanthropene",
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "Manuel bowed to Timur and sent him ships. Trebizond lives from the silk road's end and its Genoese and Venetian merchants.",
+   "notable": [
+    {
+     "year": 1417,
+     "event": "Manuel III dies"
+    },
+    {
+     "year": 1461,
+     "event": "Mehmed II takes Trebizond"
+    }
+   ],
+   "short": "Trebizond",
+   "color": [
+    240,
+    170,
+    60
+   ]
+  },
+  {
+   "tag": "timurids",
+   "name": "Timurid Empire",
+   "adjective": "Timurid",
+   "government": "monarchy",
+   "title": "Emir",
+   "rank": "empire",
+   "capital": "erzincan",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Timur",
+    "born": 1336,
+    "dynasty": "Timurid",
+    "reign_start": 1370
+   },
+   "heir": {
+    "name": "Muhammad Sultan",
+    "born": 1375,
+    "relation": "grandson"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "The conqueror has broken the Ottomans and his armies winter in western Anatolia. He has restored the beyliks as his vassals; in the east he holds Erzincan, Erzurum and Mardin through his vassals. He will soon turn back towards China.",
+   "notable": [
+    {
+     "year": 1402,
+     "event": "Timur takes Smyrna from the Knights in December"
+    },
+    {
+     "year": 1403,
+     "event": "Timur leaves Anatolia; Bayezid dies a prisoner"
+    },
+    {
+     "year": 1405,
+     "event": "Timur dies on his way to China"
+    }
+   ],
+   "uncertain": "Timur's capital, Samarkand, is far off the map; Erzincan stands in for his eastern vassals.",
+   "short": "Timurids",
+   "color": [
+    90,
+    70,
+    140
+   ]
+  },
+  {
+   "tag": "akkoyunlu",
+   "name": "Aq Qoyunlu",
+   "adjective": "Aq Qoyunlu",
+   "government": "tribal",
+   "title": "Bey",
+   "rank": "duchy",
+   "capital": "diyarbakir",
+   "religion": "sunni",
+   "culture": "turkish",
+   "ruler": {
+    "name": "Qara Osman",
+    "born": 1356,
+    "dynasty": "Aq Qoyunlu",
+    "approximate": true,
+    "reign_start": 1402
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": {
+    "tag": "timurids",
+    "kind": "vassal"
+   },
+   "situation": "The White Sheep Turkmen fought for Timur at Ankara and were given Diyarbakır. Their enemies are the Black Sheep of Qara Yusuf.",
+   "notable": [
+    {
+     "year": 1435,
+     "event": "Qara Osman falls in battle against the Qara Qoyunlu"
+    },
+    {
+     "year": 1467,
+     "event": "Uzun Hasan destroys the Qara Qoyunlu"
+    }
+   ],
+   "uncertain": "Qara Osman led the confederation in fact before he was its formal head.",
+   "short": "Ak Koyunlu",
+   "color": [
+    230,
+    230,
+    200
+   ]
+  },
+  {
+   "tag": "georgia",
+   "name": "Kingdom of Georgia",
+   "adjective": "Georgian",
+   "government": "monarchy",
+   "title": "King",
+   "rank": "kingdom",
+   "capital": "kutaisi",
+   "religion": "orthodox",
+   "culture": "georgian",
+   "ruler": {
+    "name": "George VII",
+    "born": 1370,
+    "dynasty": "Bagrationi",
+    "approximate": true,
+    "reign_start": 1393
+   },
+   "heir": {
+    "name": "Constantine",
+    "born": 1369,
+    "approximate": true,
+    "relation": "brother"
+   },
+   "spouse": null,
+   "overlord": null,
+   "situation": "Georgia has been ravaged by Timur's eight invasions and still resists. The king wants his land rebuilt and his vassals in the west kept loyal.",
+   "notable": [
+    {
+     "year": 1407,
+     "event": "George VII falls fighting the Qara Qoyunlu"
+    },
+    {
+     "year": 1412,
+     "event": "Alexander I begins to rebuild"
+    },
+    {
+     "year": 1466,
+     "event": "The kingdom splits into Kartli, Kakheti and Imereti"
+    }
+   ],
+   "uncertain": "Tbilisi lies just off the map; Kutaisi stands in as the capital.",
+   "short": "Georgia",
+   "color": [
+    200,
+    60,
+    120
+   ]
+  },
+  {
+   "tag": "mamluks",
+   "name": "Mamluk Sultanate",
+   "adjective": "Mamluk",
+   "government": "monarchy",
+   "title": "Sultan",
+   "rank": "empire",
+   "capital": "aleppo",
+   "religion": "sunni",
+   "culture": "arab",
+   "ruler": {
+    "name": "an-Nasir Faraj",
+    "born": 1386,
+    "dynasty": "Burji",
+    "reign_start": 1399
+   },
+   "heir": null,
+   "spouse": null,
+   "overlord": null,
+   "situation": "The boy sultan's Syria was sacked by Timur in 1400-1401: Aleppo and Damascus burned. The emirs fight over the regency while the Turkmen of the north drift away.",
+   "notable": [
+    {
+     "year": 1405,
+     "event": "Faraj is briefly deposed"
+    },
+    {
+     "year": 1412,
+     "event": "Faraj is killed in Damascus"
+    },
+    {
+     "year": 1426,
+     "event": "The Mamluks defeat and capture King Janus of Cyprus at Khirokitia"
+    }
+   ],
+   "uncertain": "Cairo lies far off the map; Aleppo stands in as the capital. The Mamluk elite were Circassians and Turks ruling an Arab country.",
+   "short": "Mamluk Sultanate",
+   "color": [
+    210,
+    190,
+    130
+   ]
+  }
+ ],
+ "relations": [
+  {
+   "tags": [
+    "hungary",
+    "naples"
+   ],
+   "kind": "rivalry",
+   "note": "Ladislaus of Naples claims the Hungarian crown against Sigismund."
+  },
+  {
+   "tags": [
+    "hungary",
+    "bohemia"
+   ],
+   "kind": "rivalry",
+   "note": "Sigismund holds his brother King Wenceslaus prisoner."
+  },
+  {
+   "tags": [
+    "hungary",
+    "moravia"
+   ],
+   "kind": "rivalry",
+   "note": "Sigismund holds his cousin Prokop prisoner; Jobst wants him back."
+  },
+  {
+   "tags": [
+    "hungary",
+    "austria"
+   ],
+   "kind": "alliance",
+   "note": "Sigismund has named Albert IV of Austria his heir."
+  },
+  {
+   "tags": [
+    "hungary",
+    "celje"
+   ],
+   "kind": "alliance",
+   "note": "Hermann of Celje is Sigismund's closest friend."
+  },
+  {
+   "tags": [
+    "poland",
+    "lithuania"
+   ],
+   "kind": "union",
+   "note": "The Polish-Lithuanian union, renewed at Vilnius and Radom in 1401."
+  },
+  {
+   "tags": [
+    "poland",
+    "celje"
+   ],
+   "kind": "marriage",
+   "note": "Władysław Jagiełło married Anna of Celje in January 1402."
+  },
+  {
+   "tags": [
+    "poland",
+    "moldavia"
+   ],
+   "kind": "alliance",
+   "note": "Alexander of Moldavia swore homage to Poland in March 1402."
+  },
+  {
+   "tags": [
+    "lithuania",
+    "horde"
+   ],
+   "kind": "rivalry",
+   "note": "Edigu crushed Vytautas at the Vorskla in 1399."
+  },
+  {
+   "tags": [
+    "venice",
+    "genoa"
+   ],
+   "kind": "rivalry",
+   "note": "The old enemies of the Levant trade; war will flare at Modon in 1403."
+  },
+  {
+   "tags": [
+    "venice",
+    "hungary"
+   ],
+   "kind": "rivalry",
+   "note": "Venice wants Dalmatia back from the crown of Hungary."
+  },
+  {
+   "tags": [
+    "venice",
+    "zeta"
+   ],
+   "kind": "rivalry",
+   "note": "The Balšići want back Scutari, which they sold to Venice in 1396."
+  },
+  {
+   "tags": [
+    "hrvoje",
+    "naples"
+   ],
+   "kind": "alliance",
+   "note": "Hrvoje backs Ladislaus of Naples for the crown of Hungary."
+  },
+  {
+   "tags": [
+    "serbia",
+    "brankovic"
+   ],
+   "kind": "war",
+   "note": "Stefan Lazarević and the Brankovićs fight for Serbia; Tripolje is near."
+  },
+  {
+   "tags": [
+    "serbia",
+    "zeta"
+   ],
+   "kind": "marriage",
+   "note": "Đurađ Balšić is married to Stefan Lazarević's sister Jelena."
+  },
+  {
+   "tags": [
+    "ott_rum",
+    "ott_isa"
+   ],
+   "kind": "rivalry",
+   "note": "The sons of Bayezid fight for his throne."
+  },
+  {
+   "tags": [
+    "ott_isa",
+    "ott_meh"
+   ],
+   "kind": "war",
+   "note": "İsa and Mehmed will fight for Bursa within the year."
+  },
+  {
+   "tags": [
+    "ott_rum",
+    "byzantium"
+   ],
+   "kind": "rivalry",
+   "note": "Süleyman must buy peace from the Christians he can no longer frighten; the Treaty of Gallipoli is coming."
+  },
+  {
+   "tags": [
+    "byzantium",
+    "morea"
+   ],
+   "kind": "alliance",
+   "note": "The Despot of the Morea is the emperor's brother."
+  },
+  {
+   "tags": [
+    "morea",
+    "knights"
+   ],
+   "kind": "rivalry",
+   "note": "The Despot wants Corinth back from the Knights."
+  },
+  {
+   "tags": [
+    "karaman",
+    "ott_meh"
+   ],
+   "kind": "rivalry",
+   "note": "Karaman is the Ottomans' oldest enemy in Anatolia."
+  },
+  {
+   "tags": [
+    "timurids",
+    "mamluks"
+   ],
+   "kind": "rivalry",
+   "note": "Timur sacked Aleppo and Damascus in 1400-1401."
+  },
+  {
+   "tags": [
+    "timurids",
+    "georgia"
+   ],
+   "kind": "war",
+   "note": "Timur's armies have invaded Georgia again and again."
+  },
+  {
+   "tags": [
+    "timurids",
+    "knights"
+   ],
+   "kind": "war",
+   "note": "Timur's armies march on the Knights' castle at Smyrna."
+  },
+  {
+   "tags": [
+    "cyprus",
+    "genoa"
+   ],
+   "kind": "rivalry",
+   "note": "The Genoese hold Famagusta, the kingdom's great port."
+  },
+  {
+   "tags": [
+    "ioannina",
+    "spata"
+   ],
+   "kind": "war",
+   "note": "The Despot of Ioannina and the Spata of Arta fight over Epirus."
+  },
+  {
+   "tags": [
+    "tocco",
+    "spata"
+   ],
+   "kind": "rivalry",
+   "note": "Carlo Tocco has his eyes on Arta."
+  },
+  {
+   "tags": [
+    "athens",
+    "venice"
+   ],
+   "kind": "war",
+   "note": "Antonio Acciaioli besieges the Venetians on the Acropolis."
+  }
+ ]
+}

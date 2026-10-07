@@ -240,6 +240,15 @@ class MapApp(BattleControls, MenuControls, _showbase()):
         self.storm_pid = None
         self.init_battle_controls()
         self.init_menus()
+        from .ui.panels import ModeBar
+        from .ui.ledger import Alerts, Ledger
+        self.mode_bar = ModeBar(self.theme, self.aspect2d, self.getAspectRatio(), self.set_mode)
+        self.mode_bar.update(self.mode)
+        self.ledger = Ledger(self.theme, self.aspect2d, self.getAspectRatio(), self.ledger_army, self.ledger_province)
+        self.alerts = Alerts(self.theme, self.aspect2d, self.getAspectRatio())
+        self.topbar.ledger_button = self.theme.button(self.topbar.frame, "Ledger (L)", -0.38, 0.918, self.toggle_ledger,
+                                                      width=0.24, scale=0.032)
+        self.accept("l", self.toggle_ledger)
         if title:
             self.show_title()
         self.taskMgr.add(self.tick, "tick")
@@ -263,8 +272,9 @@ class MapApp(BattleControls, MenuControls, _showbase()):
         self.refresh()
         if welcome:
             info = c.info[tag]
+            then = (lambda: self.guide(0)) if self.settings.tutorial else None
             self.dialog.show(info["name"], f"{info['situation']}\n\nSeptember 1402. The month is yours.",
-                             [("Begin", None)])
+                             [("Begin", then)])
 
     def refresh(self):
         """Bring the bar and the open panel up to date (and the music to the mood of the realm)."""
@@ -297,6 +307,7 @@ class MapApp(BattleControls, MenuControls, _showbase()):
         c.end_month()
         self.autosave()
         self.chronicle.add(before, c.messages)
+        self.alerts.from_messages(c.messages)
         self.chronicle.show()
         self.sync_figures(animate=True)
         self.towns.rebuild()
@@ -500,6 +511,9 @@ class MapApp(BattleControls, MenuControls, _showbase()):
         self.tooltip.hide()
         self.topbar.frame.hide()
         self.topbar.show_end(False)
+        self.mode_bar.show(False)
+        self.ledger.close()
+        self.alerts.clear()
         self.battle_scene = BattleScene(self.render, self.battle, colors, accents, eastern, SUN, camera=self.camera,
                                         shadow_size=4096 if self.quality == "high" else 2048)
         self.battle_scene.viewer = self.battle_side
@@ -649,6 +663,7 @@ class MapApp(BattleControls, MenuControls, _showbase()):
         for figure in self.figures.values():
             figure.root.show()
         self.topbar.frame.show()
+        self.mode_bar.show(True)
         self.camera_ctl.activate()
 
     def next_proposal(self):
@@ -710,6 +725,43 @@ class MapApp(BattleControls, MenuControls, _showbase()):
 
     def show_realm(self, tag):
         self.panel.show_realm(self.campaign, tag, choosing=self.campaign.player is None)
+
+    def toggle_ledger(self):
+        if self.campaign.player is None or self.in_battle:
+            return
+        self.ledger.toggle(self.campaign)
+
+    def ledger_army(self, army_id):
+        army = self.army_by_id(army_id)
+        if army is not None:
+            self.choose(army)
+            self.camera_ctl.look_at(*self.map_to_world(army.x, army.y), min(self.camera_ctl.distance, 450))
+
+    def ledger_province(self, pid):
+        c = self.campaign
+        self.panel.tab = "build"
+        self.panel.show_province(c, pid)
+        self.selected = self.provmap.provinces[pid].index
+        self.redraw_overlay()
+        self.camera_ctl.look_at(*self.map_to_world(*c.static(pid).town), min(self.camera_ctl.distance, 520))
+
+    # --- the guide for a new player ------------------------------------------------------------------------
+
+    def guide(self, step=0):
+        from .ui.ledger import GUIDE
+        if step >= len(GUIDE):
+            return self.end_guide()
+        title, text = GUIDE[step]
+        last = step == len(GUIDE) - 1
+        answers = [("Begin" if last else "Next", lambda: self.guide(step + 1))]
+        if not last:
+            answers.append(("Skip the guide", self.end_guide))
+        self.dialog.show(f"{title}  ({step + 1}/{len(GUIDE)})", text, answers)
+
+    def end_guide(self):
+        self.dialog.close()
+        self.settings.tutorial = False
+        self.settings.save()
 
     def show_my_realm(self):
         if self.campaign.player:
@@ -1115,12 +1167,15 @@ class MapApp(BattleControls, MenuControls, _showbase()):
     def set_mode(self, mode):
         self.mode = mode
         self.redraw_overlay()
+        self.mode_bar.update(mode)
 
     def redraw_overlay(self):
+        from .ui.mapmodes import painter
         c = self.campaign
-        pal = self.overlay.palette(lambda p: self.colors.get(c.provinces[p.id].owner))
-        held = self.overlay.palette(lambda p: self.colors.get(c.provinces[p.id].controller))
-        self.world.set_palette(pal, mix=0.62 if self.mode == "political" else 0.0, held=held)
+        pal = self.overlay.palette(painter(c, self.mode, self.colors))
+        held = self.overlay.palette(lambda p: self.colors.get(c.provinces[p.id].controller)) \
+            if self.mode == "political" else None
+        self.world.set_palette(pal, mix=0.0 if self.mode == "terrain" else 0.62, held=held)
         self.world.set_highlight(self.selected, self.hovered)
 
     def tick(self, task):
@@ -1145,6 +1200,7 @@ class MapApp(BattleControls, MenuControls, _showbase()):
                     cam.turn(mx * 120)
             self.last_mouse = (m.x, m.y)
         self.audio.update(dt)
+        self.alerts.update(dt)
         if self.in_battle:
             self.battle_tick(dt)
             return task.cont
@@ -1227,6 +1283,12 @@ class MapApp(BattleControls, MenuControls, _showbase()):
             self._view(25.5, 44.6, 520, 0)
             self._shoot(folder, "welcome")
         self.dialog.close()
+        for mode in ("religion", "diplomacy", "trade"):
+            if want(f"mode_{mode}"):
+                self._view(26.5, 42.5, 1500, 0, mode=mode)
+                self.mode_bar.update(mode)
+                self._shoot(folder, f"mode_{mode}")
+                self.set_mode("political")
         if want("towns"):
             self.panel.close()
             for lon, lat, dist, heading, label in ((25.45, 44.93, 120, 20, "towns"),
@@ -1299,6 +1361,17 @@ class MapApp(BattleControls, MenuControls, _showbase()):
             self.panel.show_realm(c, "ott_rum")
             self._view(25.0, 43.7, 480, 0)
             self._shoot(folder, "war")
+        if want("ledger"):
+            self.dialog.close()
+            self.ledger.show(c, "armies")
+            self._shoot(folder, "ledger")
+            self.ledger.show(c, "treasury")
+            self._shoot(folder, "ledger_treasury")
+            self.ledger.close()
+        if want("guide"):
+            self.guide(2)
+            self._shoot(folder, "guide")
+            self.dialog.close()
         if want("years"):
             for _ in range(18):
                 self.end_month()

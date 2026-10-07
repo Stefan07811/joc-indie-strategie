@@ -5,6 +5,7 @@ An entry is remade when the code version or any of the source files it depends o
 
 import hashlib
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -27,13 +28,23 @@ def _key(name, sources):
     return h.hexdigest()[:16]
 
 
+SEED = Path(__file__).resolve().parent / "cache_seed"   # maps made when the game was packaged
+
+
 def cached(name, sources, make):
-    """make() -> numpy array, kept in the cache until a source changes."""
+    """make() -> numpy array, kept in the cache until a source changes. A packaged game brings the maps
+    already made (see tools/build_crowns.py), so its first start is as quick as any other."""
     folder = home() / "cache"
     path = folder / f"{name}-{_key(name, sources)}.npy"
     if path.exists():
         try:
             return np.load(path)
+        except (OSError, ValueError):
+            pass
+    seed = SEED / f"{name}.npy"
+    if getattr(sys, "frozen", False) and seed.exists():
+        try:
+            return np.load(seed)
         except (OSError, ValueError):
             pass
     value = make()

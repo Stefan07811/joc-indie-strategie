@@ -121,6 +121,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions, Trade, Crusades)
         self.proposals = []                # offers to the player waiting for an answer
         self.interactive_battles = False   # the player's battles wait for the player (in the game itself)
         self.difficulty = "normal"
+        self.treasury_log = []             # the player's [year, month, treasury, balance], month by month
         self.pending_battles = []          # (army id, army id) met this month, for the player to fight
         self.rng = random.Random(seed)
         self.provinces = {p.id: ProvinceState(p.id, p.owner, p.owner, p.population)
@@ -445,6 +446,9 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions, Trade, Crusades)
         for tag, b in budgets.items():
             realm = self.realms[tag]
             realm.treasury += b.balance
+            if tag == self.player:
+                self.treasury_log = (self.treasury_log + [[self.date.year, self.date.month,
+                                                           round(realm.treasury), round(b.balance)]])[-240:]
             if realm.treasury < 0:
                 self._debt(tag)
             realm.prestige += sum(self.effect(p.id, "prestige") for p in self.provinces_of(tag))
@@ -542,7 +546,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions, Trade, Crusades)
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments], "commander": a.commander,
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
                        for a in self.armies],
-            "rng": self.rng.getstate(), "difficulty": self.difficulty,
+            "rng": self.rng.getstate(), "difficulty": self.difficulty, "treasury_log": self.treasury_log,
         }
 
     @classmethod
@@ -550,6 +554,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions, Trade, Crusades)
         c = cls(provmap, realms, relations, player=data["player"], date=Date(*data["date"]), armies=False)
         c._next_army = data["next_army"]
         c.difficulty = data.get("difficulty", "normal")
+        c.treasury_log = data.get("treasury_log", [])
         c.provinces = {p["id"]: ProvinceState(**p) for p in data["provinces"]}
         c.realms = {r["tag"]: RealmState(**r) for r in data["realms"]}
         c.overlord = {tag: tuple(v) if v else None for tag, v in data["overlord"].items()}

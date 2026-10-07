@@ -39,9 +39,30 @@ def write_icon():
     return path
 
 
+def seed_cache():
+    """Make the maps that take a minute at the first start, to ship them inside the game."""
+    sys.path.insert(0, str(ROOT))
+    import numpy as np
+    from crowns.mapdata import Ground
+    from crowns.provinces import ProvinceMap
+    from crowns.render.political import _border_distance, _rounded, _spread, _upscale
+    from crowns.render.world import EXAGGERATION
+    folder = BUILD / "cache_seed"
+    folder.mkdir(parents=True, exist_ok=True)
+    g = Ground()
+    fine = _spread(_rounded(_upscale(ProvinceMap().labels, 2))).astype(np.uint16)
+    for name, make in (("colors", g.color_map), (f"normals-{EXAGGERATION}", lambda: g.normal_map(EXAGGERATION)),
+                       ("coast", g.coast_distance), ("province-index", lambda: fine),
+                       ("province-border-distance", lambda: _border_distance(fine))):
+        np.save(folder / f"{name}.npy", make())
+        print("seeded", name)
+    return folder
+
+
 def main():
     import PyInstaller.__main__
     sep = os.pathsep  # PyInstaller's "source<sep>destination" for --add-data
+    seed = seed_cache()
     args = [
         str(ROOT / "tools" / "crowns_launcher.py"),
         "--name", NAME,
@@ -56,6 +77,7 @@ def main():
         "--add-data", f"{ROOT / 'crowns' / 'data'}{sep}crowns/data",
         "--add-data", f"{ROOT / 'crowns' / 'assets'}{sep}crowns/assets",
         "--add-data", f"{ROOT / 'crowns' / 'render' / 'shaders'}{sep}crowns/render/shaders",
+        "--add-data", f"{seed}{sep}crowns/cache_seed",
         "--collect-submodules", "crowns",
         # Panda3D's display, sound and video plugins are loaded by name at run time
         "--collect-binaries", "panda3d",

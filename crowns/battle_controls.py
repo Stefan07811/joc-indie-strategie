@@ -66,8 +66,10 @@ class BattleControls:
 
     def _digit(self, n):
         if not self.in_battle:
-            if n in (1, 2):
-                self.set_mode("terrain" if n == 1 else "political")
+            from .ui.mapmodes import MODES
+            order = ["terrain", "political", "religion", "culture", "diplomacy", "trade"]
+            if 1 <= n <= len(order):
+                self.set_mode(order[n - 1])
             return
         if self._down("control"):
             self.groups[n] = set(self.battle_scene.selected)

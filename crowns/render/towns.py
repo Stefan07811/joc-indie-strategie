@@ -22,6 +22,10 @@ TILE = (0.70, 0.30, 0.21)
 SHINGLE = (0.40, 0.31, 0.24)
 LEAD = (0.55, 0.60, 0.64)
 FELT = (0.90, 0.86, 0.76)
+BRICK = (0.66, 0.36, 0.26)
+# how each tradition walled its towns
+WALL_STYLE = {"vlach": "wood", "latin": "square", "greek": "banded", "balkan": "round", "ottoman": "round",
+              "levant": "round", "steppe": "round"}
 GROUND = (0.60, 0.53, 0.38)
 NORTH = {"romanian", "ruthenian", "polish", "lithuanian", "hungarian", "czech", "german", "slovak", "slovene",
          "croatian"}
@@ -79,7 +83,25 @@ def _mosque(b, x, y, big):
     b.cylinder((x + 0.8 * big, y - 0.6 * big, 2.3 * big), 0.14 * big, 0.45 * big, LEAD, sides=6, top=0.0)
 
 
-def _walls(b, radius, fort):
+def _palisade(b, radius, fort):
+    """An oak palisade with wooden towers, as the Wallachian and Moldavian towns had."""
+    n = int(radius * 9)
+    for k in range(n):
+        a = 2 * math.pi * k / n
+        x, y = math.cos(a) * radius, math.sin(a) * radius
+        h = 0.55 + 0.1 * (k % 3) / 2
+        b.cylinder((x, y, 0), 0.09, h, TIMBER, sides=4)
+        b.cylinder((x, y, h), 0.09, 0.12, TIMBER, sides=4, top=0.0)
+    for k in range(3 + fort):
+        a = 2 * math.pi * (k + 0.5) / (3 + fort)
+        x, y = math.cos(a) * radius, math.sin(a) * radius
+        b.box((x, y, 0.5), (0.5, 0.5, 1.0), TIMBER)
+        b.cylinder((x, y, 1.0), 0.42, 0.45, SHINGLE, sides=4, top=0.0)
+
+
+def _walls(b, radius, fort, style="round"):
+    if style == "wood":
+        return _palisade(b, radius, fort)
     height = 0.55 + 0.25 * fort
     towers = 4 + 2 * fort
     segments = towers * 2
@@ -89,17 +111,28 @@ def _walls(b, radius, fort):
         length = 2 * radius * math.sin(math.pi / segments) + 0.05
         b.box((math.cos(mid) * radius, math.sin(mid) * radius, height / 2), (0.22, length, height), STONE,
               yaw=math.degrees(mid))
+        if style == "banded":      # courses of brick through the stone, as the Byzantines built
+            b.box((math.cos(mid) * radius, math.sin(mid) * radius, height * 0.55), (0.24, length + 0.01, 0.07),
+                  BRICK, yaw=math.degrees(mid))
     for k in range(towers):
         a = 2 * math.pi * (k + 0.5) / towers
         x, y = math.cos(a) * radius, math.sin(a) * radius
-        b.cylinder((x, y, 0), 0.3, height + 0.35, DARK_STONE, sides=6)
-        b.cylinder((x, y, height + 0.35), 0.36, 0.45, TILE, sides=6, top=0.0)
+        if style in ("square", "banded"):
+            b.box((x, y, (height + 0.35) / 2), (0.55, 0.55, height + 0.35), STONE if style == "banded" else DARK_STONE,
+                  yaw=math.degrees(a))
+            if style == "square":
+                b.cylinder((x, y, height + 0.35), 0.42, 0.55, TILE, sides=4, top=0.0)
+            else:
+                b.box((x, y, height * 0.55), (0.57, 0.57, 0.07), BRICK, yaw=math.degrees(a))
+        else:
+            b.cylinder((x, y, 0), 0.3, height + 0.35, DARK_STONE, sides=6)
+            b.cylinder((x, y, height + 0.35), 0.36, 0.45, TILE, sides=6, top=0.0)
     if fort >= 2:   # a keep at the heart
         b.box((0, 0.3, (height + 0.9) / 2), (0.8, 0.8, height + 0.9), DARK_STONE)
         b.cylinder((0, 0.3, height + 0.9), 0.62, 0.55, SHINGLE, sides=4, top=0.0)
 
 
-def town_model(city, fort, religion, culture, seed):
+def town_model(city, fort, religion, culture, seed, style="round"):
     """The triangles of one town: (verts (n, 3, 3), colours (n, 4)), centred on (0, 0) at ground level."""
     rng = np.random.default_rng(seed)
     b = Builder()
@@ -133,8 +166,10 @@ def town_model(city, fort, religion, culture, seed):
             _orthodox(b, *church_at, big)
         else:
             _catholic(b, *church_at, big)
+    if style == "wood" and fort >= 3:
+        style = "round"                     # a great fortress is built of stone, whoever holds it
     if fort > 0:
-        _walls(b, radius, min(fort, 4))
+        _walls(b, radius, min(fort, 4), style)
     verts, colors = b.arrays()
     return verts * SCALE, colors
 
@@ -152,9 +187,13 @@ class Towns:
         self.signature = None
         self.rebuild()
 
+    def _style(self, pid):
+        c = self.campaign
+        return WALL_STYLE.get(c.tradition(c.provinces[pid].controller), "round")
+
     def _signature(self):
         c = self.campaign
-        return tuple(c.fort(pid) for pid in sorted(c.provinces))
+        return tuple((c.fort(pid), self._style(pid)) for pid in sorted(c.provinces))
 
     def rebuild(self, force=False):
         signature = self._signature()
@@ -166,10 +205,11 @@ class Towns:
         for pid, p in sorted(c.provinces.items()):
             info = c.static(pid)
             fort = c.fort(pid)
-            key = (_size(info.city), min(fort, 4), info.religion, info.culture)
+            style = self._style(pid)
+            key = (_size(info.city), min(fort, 4), info.religion, info.culture, style)
             if key not in self.models:
                 self.models[key] = town_model(info.city, fort, info.religion, info.culture,
-                                              zlib.crc32(repr(key).encode()))
+                                              zlib.crc32(repr(key).encode()), style)
             verts, colors = self.models[key]
             yaw = (zlib.crc32(pid.encode()) % 360) * math.pi / 180
             rot = np.array([[math.cos(yaw), -math.sin(yaw), 0], [math.sin(yaw), math.cos(yaw), 0], [0, 0, 1]])

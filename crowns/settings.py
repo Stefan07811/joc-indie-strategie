@@ -29,6 +29,7 @@ class Settings:
     fullscreen: bool = False
     difficulty: str = "normal"
     autosave: bool = True
+    tutorial: bool = True         # show the guide at the start of the next new campaign
 
     @classmethod
     def load(cls):

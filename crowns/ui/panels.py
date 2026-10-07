@@ -1,6 +1,7 @@
 """The campaign's windows: the bar along the top, the side panel (a province, an army or a realm), the
 month's chronicle, and dialogs (offers of peace, battles, the choice of a realm)."""
 
+from direct.gui.DirectGui import DirectFrame
 from panda3d.core import TextNode
 
 from . import model
@@ -344,3 +345,30 @@ class Dialog:
     @property
     def open(self):
         return self.frame is not None
+
+
+class ModeBar:
+    """The ways of looking at the map, along the bottom left, with a line saying what the colours mean."""
+
+    def __init__(self, theme, parent, aspect, on_mode):
+        from .mapmodes import MODES
+        self.theme = theme
+        self.frame = DirectFrame(parent=parent, frameColor=(0, 0, 0, 0))
+        self.buttons = {}
+        x = -0.74                       # clear of the side panel on the left
+        keys = {"terrain": 1, "political": 2, "religion": 3, "culture": 4, "diplomacy": 5, "trade": 6}
+        for mode, label in MODES:
+            w = 0.07 + 0.017 * len(label)
+            self.buttons[mode] = theme.button(self.frame, f"{label} ({keys[mode]})", x, -0.955, on_mode, [mode],
+                                              width=w + 0.05, scale=0.024, align="left")
+            x += w + 0.06
+        self.legend = theme.label(self.frame, "", -0.73, -0.905, scale=0.025, color=FADED)
+
+    def update(self, mode):
+        from .mapmodes import LEGEND
+        for key, button in self.buttons.items():
+            button["text_fg"] = GOLD if key == mode else INK
+        self.legend["text"] = LEGEND.get(mode, "")
+
+    def show(self, on=True):
+        self.frame.show() if on else self.frame.hide()

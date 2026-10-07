@@ -63,3 +63,20 @@ def test_difficulty_moves_the_purses():
         incomes[level] = (c.budget("wallachia").tax, c.budget("hungary").tax)
     assert incomes["easy"][0] > incomes["normal"][0] > incomes["hard"][0]
     assert incomes["easy"][1] < incomes["normal"][1] < incomes["hard"][1]
+
+
+def test_a_packaged_game_brings_its_maps(home, tmp_path, monkeypatch):
+    import sys
+
+    import numpy as np
+
+    from crowns import cache
+    seed = tmp_path / "seed"
+    seed.mkdir()
+    np.save(seed / "coast.npy", np.arange(4))
+    monkeypatch.setattr(cache, "SEED", seed)
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+
+    def never():
+        raise AssertionError("made again")
+    assert list(cache.cached("coast", [], never)) == [0, 1, 2, 3]

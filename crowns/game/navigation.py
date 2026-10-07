@@ -112,13 +112,29 @@ class Navigation:
         """The grid cell (row, col) of map pixel (x, y)."""
         return int(np.clip(y / CELL, 0, self.cost.shape[0] - 1)), int(np.clip(x / CELL, 0, self.cost.shape[1] - 1))
 
+    def land_cell(self, x, y, radius=6):
+        """The cell of map pixel (x, y), or the nearest passable cell to it (a town on the shore or in a
+        lagoon stands in the water on this grid); None if there is no land near."""
+        r, c = self.cell(x, y)
+        cost = self.cost
+        if np.isfinite(cost[r, c]):
+            return r, c
+        h, w = cost.shape
+        win = cost[max(0, r - radius):r + radius + 1, max(0, c - radius):c + radius + 1]
+        rr, cc = np.nonzero(np.isfinite(win))
+        if len(rr) == 0:
+            return None
+        rr, cc = rr + max(0, r - radius), cc + max(0, c - radius)
+        i = int(np.argmin((rr - r) ** 2 + (cc - c) ** 2))
+        return int(rr[i]), int(cc[i])
+
     def reach(self, x, y, budget_km):
         """How far an army at map pixel (x, y) can march with budget_km of movement.
 
         Returns a Reach: the km of budget spent to get to every cell of a window around the army,
         measured a little beyond the budget (inf further, and where it cannot go at all)."""
         cost = self.cost
-        r0, c0 = self.cell(x, y)
+        r0, c0 = self.land_cell(x, y) or self.cell(x, y)
         limit = budget_km * REACH_MARGIN
         radius = int(limit / (CELL_KM * 0.9)) + 2
         top, left = max(0, r0 - radius), max(0, c0 - radius)
@@ -142,51 +158,115 @@ class Navigation:
         dist[dist > limit] = np.inf
         return Reach(dist, top, left, budget_km, np.isfinite(cost[top:bottom, left:right]))
 
-    def route(self, x0, y0, x1, y1, max_km=None):
+    @cached_property
+    def regions(self):
+        """A label for every cell: cells with the same label are joined by land (or a ferry); 0 at sea.
+        Islands are their own regions, so a march to one is known to be impossible at once."""
+        passable = np.isfinite(self.cost)
+        labels = np.zeros(passable.shape, np.int32)
+        parent = [0]
+
+        def find(i):
+            while parent[i] != i:
+                parent[i] = parent[parent[i]]
+                i = parent[i]
+            return i
+
+        previous = []   # runs of the row above: (start, end, run id)
+        runs_of_rows = []
+        for r in range(passable.shape[0]):
+            row = np.concatenate(([False], passable[r], [False])).astype(np.int8)
+            edges = np.flatnonzero(np.diff(row))
+            runs = []
+            j = 0
+            for start, end in zip(edges[::2], edges[1::2] - 1):
+                rid = len(parent)
+                parent.append(rid)
+                while j < len(previous) and previous[j][1] < start:
+                    j += 1
+                k = j
+                while k < len(previous) and previous[k][0] <= end:   # overlaps the run above
+                    a, b = find(rid), find(previous[k][2])
+                    if a != b:
+                        parent[max(a, b)] = min(a, b)
+                    k += 1
+                runs.append((int(start), int(end), rid))
+            runs_of_rows.append(runs)
+            previous = runs
+        for r, runs in enumerate(runs_of_rows):
+            for start, end, rid in runs:
+                labels[r, start:end + 1] = find(rid)
+        return labels
+
+    def connected(self, x0, y0, x1, y1):
+        """Can an army at map pixel (x0, y0) march to (x1, y1) at all?"""
+        a, b = self.land_cell(x0, y0), self.cell(x1, y1)
+        return a is not None and self.regions[a] != 0 and self.regions[a] == self.regions[b]
+
+    @cached_property
+    def _flat_steps(self):
+        """The step costs on a grid padded with a border of inf, flattened, for a quick A*: (width,
+        [(offset, memoryview of costs) for every step])."""
+        h, w = self.cost.shape
+        out = []
+        for (dr, dc, _), step in zip(STEPS, self.steps):
+            padded = np.full((h + 2, w + 2), np.inf, np.float32)
+            padded[1:-1, 1:-1] = step
+            out.append((dr * (w + 2) + dc, memoryview(padded.ravel())))
+        return w + 2, out
+
+    def route(self, x0, y0, x1, y1, max_km=None, greed=1.0):
         """The cheapest march from map pixel (x0, y0) to (x1, y1) as a Route, or None if the target
-        cannot be reached (A* over the grid)."""
-        cost = self.cost
-        steps = self.steps
-        rows, cols = cost.shape
-        start, goal = self.cell(x0, y0), self.cell(x1, y1)
-        if not np.isfinite(cost[goal]):
+        cannot be reached (A* over the grid). A greed above 1 finds a good route much sooner, though
+        not always the very best (the AI's armies use it)."""
+        start, goal = self.land_cell(x0, y0), self.cell(x1, y1)
+        if start is None or not np.isfinite(self.cost[goal]) or self.regions[start] != self.regions[goal]:
             return None
-        frontier = [(0.0, start)]
-        best = {start: 0.0}
+        width, steps = self._flat_steps
+        s0 = (start[0] + 1) * width + start[1] + 1
+        g0 = (goal[0] + 1) * width + goal[1] + 1
+        gr, gc = divmod(g0, width)
+        floor = float(np.min(self.cost)) * CELL_KM * greed
+        diag = SQRT2 - 1.0
+        frontier = [(0.0, s0)]
+        best = {s0: 0.0}
         came = {}
-        floor = float(np.min(cost)) * CELL_KM
         done = set()
+        push, pop, inf = heapq.heappush, heapq.heappop, math.inf
+        limit = inf if max_km is None else max_km
         while frontier:
-            _, node = heapq.heappop(frontier)
-            if node == goal:
+            _, node = pop(frontier)
+            if node == g0:
                 break
             if node in done:
                 continue
             done.add(node)
             g = best[node]
-            if max_km is not None and g > max_km:
+            if g > limit:
                 continue
-            r, c = node
-            for k, (dr, dc, _) in enumerate(STEPS):
-                nr, nc = r + dr, c + dc
-                if not (0 <= nr < rows and 0 <= nc < cols):
-                    continue
-                ng = g + float(steps[k][nr, nc])
-                if ng < best.get((nr, nc), math.inf):
-                    best[(nr, nc)] = ng
-                    came[(nr, nc)] = node
-                    est = math.hypot(goal[0] - nr, goal[1] - nc) * floor
-                    heapq.heappush(frontier, (ng + est, (nr, nc)))
-        if goal not in best:
+            for offset, step in steps:
+                nxt = node + offset
+                ng = g + step[nxt]
+                if ng < best.get(nxt, inf):
+                    best[nxt] = ng
+                    came[nxt] = node
+                    r, c = divmod(nxt, width)
+                    dy, dx = abs(gr - r), abs(gc - c)
+                    est = (dx + dy + (diag - 1.0) * min(dx, dy)) * floor
+                    push(frontier, (ng + est, nxt))
+        if g0 not in best:
             return None
-        cells = [goal]
-        while cells[-1] != start:
-            cells.append(came[cells[-1]])
-        cells.reverse()
-        points = [((c + 0.5) * CELL, (r + 0.5) * CELL) for r, c in cells]
+        nodes = [g0]
+        while nodes[-1] != s0:
+            nodes.append(came[nodes[-1]])
+        nodes.reverse()
+        points = []
+        for n in nodes:
+            r, c = divmod(n, width)
+            points.append(((c - 1 + 0.5) * CELL, (r - 1 + 0.5) * CELL))
         points[0], points[-1] = (x0, y0), (x1, y1)
         keep = _simplify(points)
-        return Route([points[i] for i in keep], [best[cells[i]] for i in keep])
+        return Route([points[i] for i in keep], [best[nodes[i]] for i in keep])
 
 
 class Route:

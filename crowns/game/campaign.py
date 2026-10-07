@@ -15,6 +15,7 @@ from .armies import Army, Regiment
 from .calendar import START, Date
 from .navigation import Route
 from .rules import BUILDINGS, UNITS
+from .diplomacy import Diplomacy
 from .war import Warfare, war_from_dict, war_to_dict
 
 TRIBUTE = {"tributary": 0.10, "vassal": 0.15, "protectorate": 0.05, "union": 0.0}
@@ -38,6 +39,8 @@ BEYOND_THE_MAP = {"mamluks": 9000, "timurids": 8000, "horde": 2500, "genoa": 220
                   "lithuania": 3000, "georgia": 700, "akkoyunlu": 500,
                   "knights": 900}     # the Knights' priories all over Christendom send their dues
 ARMY_SHARE = 0.45     # of its income a realm spends on the army it starts with
+HOARD_MONTHS = 12     # a treasury above this many months of income is spent on the court's splendour
+LARGESSE = 0.08       # of the hoard above that, each month
 # Armies in the field in September 1402 that do not stand at their realm's capital.
 FIELD_ARMIES = {
     # Timur's host wintered in western Anatolia after Ankara and the sack of Bursa
@@ -93,13 +96,16 @@ class Budget:
         return self.income - self.expenses
 
 
-class Campaign(Warfare):
+class Campaign(Warfare, Diplomacy):
     def __init__(self, provmap, realms, relations=(), player="wallachia", date=START, seed=1402, armies=True):
         self.provmap = provmap
         self.info = realms                 # the realms' history (crowns/data/realms.json)
         self.relations = list(relations)
         self.player = player
         self.date = date
+        self.start_date = date
+        self.ai = None
+        self.proposals = []                # offers to the player waiting for an answer
         self.rng = random.Random(seed)
         self.provinces = {p.id: ProvinceState(p.id, p.owner, p.owner, p.population)
                           for p in provmap.provinces.values()}
@@ -119,6 +125,14 @@ class Campaign(Warfare):
             realm.treasury = round(max(300.0, 2 * self.budget(tag).income), -1)
         if armies:
             self._first_armies()
+        self._init_diplomacy()
+
+    def attach_ai(self, nav):
+        """Let the AI rule every realm but the player's (it needs the map's navigation to march)."""
+        from .ai import AI
+        self.nav = nav
+        self.ai = AI(self, nav)
+        return self.ai
 
     # --- lookups ----------------------------------------------------------------------------------
 
@@ -203,6 +217,9 @@ class Campaign(Warfare):
         gross = b.tax + b.production + b.commerce + b.beyond
         b.court = min(rules.COURT_UPKEEP[self.info[tag]["rank"]], 0.25 * gross) + gross * rules.COURT_SHARE
         b.armies = sum(a.upkeep for a in self.armies_of(tag))
+        hoard = self.realms[tag].treasury - HOARD_MONTHS * gross
+        if hoard > 0:   # palaces, feasts, gifts to the church: a full treasury does not stay full
+            b.court += hoard * LARGESSE
         lord = self.overlord.get(tag)
         if lord:
             b.tribute_out = gross * TRIBUTE[lord[1]]
@@ -352,6 +369,11 @@ class Campaign(Warfare):
         """Close the month: money, works, people, troops. Returns the messages for the player."""
         self.messages = []
         self.battles = []
+        self.proposals = [p for p in self.proposals if p.get("fresh")]
+        for p in self.proposals:
+            p["fresh"] = False
+        if self.ai is not None:
+            self.ai.month()
         budgets = {tag: self.budget(tag) for tag in self.realms if self.realms[tag].alive}
         for tag, b in budgets.items():
             realm = self.realms[tag]
@@ -367,6 +389,7 @@ class Campaign(Warfare):
             army.new_month()
             army.walk()
         self.war_month()
+        self.diplomacy_month()
         self.date = self.date.next()
         return self.messages
 
@@ -405,6 +428,27 @@ class Campaign(Warfare):
                                f"joined the {army.name}.")
             p.recruits = []
 
+    # --- offers to the player ----------------------------------------------------------------------
+
+    def propose_peace(self, tag, war, terms):
+        if any(p["kind"] == "peace" and p["war"] == war.id for p in self.proposals):
+            return
+        self.proposals.append({"kind": "peace", "from": tag, "war": war.id, "terms": terms, "fresh": True})
+        self.messages.append(f"{self.name(tag)} offers peace: {self.peace_text(war, terms)}")
+
+    def answer(self, proposal, yes):
+        """The player's answer to an offer."""
+        if proposal in self.proposals:
+            self.proposals.remove(proposal)
+        if proposal["kind"] == "peace":
+            war = next((w for w in self.wars if w.id == proposal["war"]), None)
+            if war is None:
+                return None
+            if yes:
+                return self.make_peace(war, proposal["terms"])
+            self.nudge(self.player, proposal["from"], -5)
+        return None
+
     # --- saving -----------------------------------------------------------------------------------
 
     def to_dict(self):
@@ -414,7 +458,8 @@ class Campaign(Warfare):
             "realms": [asdict(r) for r in self.realms.values()],
             "overlord": self.overlord,
             "wars": [war_to_dict(w) for w in self.wars], "truces": self.truces, "alliances": self.alliances,
-            "next_war": self._next_war,
+            "next_war": self._next_war, "opinions": self.opinions, "grudges": self.grudges,
+            "proposals": self.proposals, "start": [self.start_date.year, self.start_date.month],
             "armies": [{"id": a.id, "owner": a.owner, "name": a.name, "x": a.x, "y": a.y, "march": a.march,
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments],
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
@@ -433,6 +478,9 @@ class Campaign(Warfare):
         c.truces = data["truces"]
         c.alliances = data["alliances"]
         c._next_war = data["next_war"]
+        c.opinions, c.grudges, c.proposals = data["opinions"], data["grudges"], data["proposals"]
+        c.start_date = Date(*data["start"])
+        c.borders_changed()
         c.armies = []
         for a in data["armies"]:
             route = Route(a["route"]["points"], a["route"]["costs"]) if a["route"] else None

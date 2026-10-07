@@ -63,9 +63,9 @@ class Army:
     def reach(self, nav):
         return nav.reach(self.x, self.y, self.moves)
 
-    def order(self, nav, x, y):
+    def order(self, nav, x, y, greed=1.0):
         """Order a march to map pixel (x, y); False if no road leads there."""
-        route = nav.route(self.x, self.y, x, y)
+        route = nav.route(self.x, self.y, x, y, greed=greed)
         if route is None:
             return False
         self.route = route

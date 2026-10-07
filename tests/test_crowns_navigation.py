@@ -86,3 +86,17 @@ def test_a_long_march_takes_months(nav):
     assert months == math.ceil(route.cost / 200)
     near, far = route.split(200)
     assert near[0] == town(nav, "suceava") and far[-1] == town(nav, "caffa")
+
+
+def test_islands_cannot_be_reached_on_foot(nav):
+    import time
+    from collections import Counter
+    regions = nav.regions
+    big = Counter(regions[regions > 0].ravel().tolist()).most_common(1)[0][0]
+    assert regions[nav.cell(*town(nav, "targoviste"))] == big == regions[nav.cell(*town(nav, "konya"))]
+    assert regions[nav.cell(*town(nav, "candia"))] not in (0, big)                   # Crete
+    assert nav.connected(*town(nav, "constantinople"), *town(nav, "bursa"))           # the Bosporus ferry
+    assert not nav.connected(*town(nav, "targoviste"), *town(nav, "rhodes"))
+    t = time.time()
+    assert nav.route(*town(nav, "targoviste"), *town(nav, "nicosia")) is None
+    assert time.time() - t < 0.05

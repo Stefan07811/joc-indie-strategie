@@ -249,6 +249,10 @@ class Warfare:
             for d in war.defenders:
                 self.truces[_pair(a, d)] = [until.year, until.month]
         self.wars.remove(war)
+        self.borders_changed()
+        for a in war.attackers:
+            for d in war.defenders:
+                self.nudge(a, d, -15 if loser else 0)
         text = f"Peace: {self.war_name(war)} is over. {self.peace_text(war, terms)}"
         for tag in sides:
             self.tell(tag, text)

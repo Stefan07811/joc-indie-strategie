@@ -15,26 +15,37 @@ NEAR_PITCH, FAR_PITCH = 38.0, 72.0  # degrees below the horizon
 
 
 class StrategyCamera:
-    def __init__(self, camera, lens, height_at=None):
+    def __init__(self, camera, lens, height_at=None, limits=(MIN_DIST, MAX_DIST), bounds=None, near=8.0,
+                 pitches=(NEAR_PITCH, FAR_PITCH)):
         self.camera = camera
+        self.near_pitch, self.far_pitch = pitches
         self.lens = lens
         self.height_at = height_at or (lambda x, y: 0.0)
-        self.target = [geo.WIDTH * 0.45, geo.HEIGHT * 0.55]
-        self.distance = 900.0
+        self.min_dist, self.max_dist = limits
+        self.bounds = bounds or (geo.WIDTH, geo.HEIGHT)
+        self.target = [self.bounds[0] * 0.45, self.bounds[1] * 0.55]
+        self.distance = min(900.0, self.max_dist)
         self.heading = 0.0  # degrees, 0 = north up
+        self.near = near
         lens.setFov(40)
-        lens.setNearFar(8.0, 8000.0)
+        lens.setNearFar(near, 8000.0)
+        self.apply()
+
+    def activate(self):
+        """Make this the camera's controller again (after another one used the lens)."""
+        self.lens.setNearFar(self.near, 8000.0)
         self.apply()
 
     @property
     def zoom(self):
         """0 close to the ground .. 1 as high as it goes."""
-        return (math.log(self.distance) - math.log(MIN_DIST)) / (math.log(MAX_DIST) - math.log(MIN_DIST))
+        return (math.log(self.distance) - math.log(self.min_dist)) / \
+            (math.log(self.max_dist) - math.log(self.min_dist))
 
     @property
     def pitch(self):
         z = self.zoom
-        return NEAR_PITCH + (FAR_PITCH - NEAR_PITCH) * z * z
+        return self.near_pitch + (self.far_pitch - self.near_pitch) * z * z
 
     def look_at(self, x, y, distance=None):
         self.target = [x, y]
@@ -51,7 +62,7 @@ class StrategyCamera:
         self.apply()
 
     def zoom_by(self, factor):
-        self.distance = min(MAX_DIST, max(MIN_DIST, self.distance * factor))
+        self.distance = min(self.max_dist, max(self.min_dist, self.distance * factor))
         self.apply()
 
     def turn(self, degrees):
@@ -59,8 +70,8 @@ class StrategyCamera:
         self.apply()
 
     def apply(self):
-        self.target[0] = min(geo.WIDTH, max(0.0, self.target[0]))
-        self.target[1] = min(geo.HEIGHT, max(0.0, self.target[1]))
+        self.target[0] = min(self.bounds[0], max(0.0, self.target[0]))
+        self.target[1] = min(self.bounds[1], max(0.0, self.target[1]))
         ground = self.height_at(*self.target)
         p, h = math.radians(self.pitch), math.radians(self.heading)
         back = self.distance * math.cos(p)

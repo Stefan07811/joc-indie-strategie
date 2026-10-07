@@ -26,8 +26,9 @@ HORSE_ARCHERS = {"horse_archers", "akinjis", "sipahis", "mamluks", "calarasi", "
 HORSE_RANGE = 140.0
 VOLLEY = 4.0                                  # seconds between volleys
 AMMO = 30
-MELEE_RATE = 0.0016                           # men struck down a second, per point of strength
-MISSILE_RATE = 0.0018
+MELEE_RATE = 0.025                            # blows a second from each man in the front ranks
+MISSILE_RATE = 0.03                           # arrows that tell, a volley, from each archer
+PRESSURE = 0.12                               # nerve lost a second in melee, by how the fight is going
 BREAK = 15.0                                  # morale under which a regiment flees
 TIME_LIMIT = 1800.0                           # seconds: then the defender holds the field
 
@@ -166,6 +167,11 @@ def _angle_to(a, x, y):
     return math.atan2(x - a.x, y - a.y)
 
 
+def _hit(attack, defence, base=0.3):
+    """The share of blows (or arrows) that tell: skill against armour and shield."""
+    return min(0.95, max(0.04, base + 0.045 * (attack - defence)))
+
+
 def _wrap(a):
     return (a + math.pi) % (2 * math.pi) - math.pi
 
@@ -186,6 +192,7 @@ class Battle:
         self.started = False
         self.winner = None
         self.log = []
+        self.events = []                  # (kind, ...) for the eyes: volleys and charges
         for side, army in enumerate(self.armies):
             self._deploy(side, army, unit_types)
 
@@ -198,7 +205,10 @@ class Battle:
         y_line = 220.0 if side == 0 else FIELD_H - 220.0
         forward = 1 if side == 0 else -1
         facing = 0.0 if side == 0 else math.pi
-        rows = [(missile, y_line + forward * 70), (foot, y_line), (horse, y_line - forward * 90)]
+        wings = len(horse) > 1
+        rows = [(missile, y_line + forward * 70), (foot, y_line), (horse, y_line - forward * (30 if wings else 90))]
+        line = foot or missile
+        half = min(150.0, (FIELD_W - 500) / max(1, len(line))) * (len(line) - 1) / 2 + 60 if line else 0.0
         general_done = False
         for group, y in rows:
             if not group:
@@ -208,9 +218,9 @@ class Battle:
             for k, (i, r) in enumerate(group):
                 t = unit_types[r.unit]
                 x = x0 + k * spacing
-                if group is horse and len(group) > 1:   # horse to the wings
+                if group is horse and wings:            # horse on the wings of the line
                     left = k % 2 == 0
-                    x = FIELD_W / 2 + (-1 if left else 1) * (500 + 130 * (k // 2))
+                    x = FIELD_W / 2 + (-1 if left else 1) * (half + 110 + 120 * (k // 2))
                 u = Unit(len(self.units), side, r.unit, r.men, r.men, x, y, facing, t.melee, t.missile, t.defence,
                          t.morale, t.kind, r.experience, regiment=i)
                 u.morale = 45 + 3.5 * t.morale + 15 * r.experience
@@ -355,6 +365,7 @@ class Battle:
         if a.kind == "horse" and a.charge > 80:
             a.charging = 8.0
             self.log.append(f"{self.name(a)} charges home.")
+            self.events.append(("charge", a.id, b.id))
         a.charge = 0.0
 
     def name(self, u):
@@ -397,18 +408,23 @@ class Battle:
                 continue
             foe = min(foes, key=lambda e: math.hypot(e.x - u.x, e.y - u.y))
             pairs.append((u, foe))
-        hits = {}
+        hits, dealt = {}, {}
         for u, foe in pairs:
             engaged = min(u.men, u.frontage * 2.2)
-            dmg = self._strength(u, foe) * engaged * MELEE_RATE * dt / max(3.0, foe.defence * 0.6) * \
-                self.rng.uniform(0.6, 1.4)
+            dmg = engaged * MELEE_RATE * _hit(self._strength(u, foe), foe.defence) * dt * self.rng.uniform(0.6, 1.4)
             if foe.state == "routing":
                 dmg *= 2.5    # cut down as they run
             hits[foe.id] = hits.get(foe.id, 0.0) + dmg
+            dealt[u.id] = dealt.get(u.id, 0.0) + dmg / max(1, foe.start_men)
             angle = abs(_wrap(_angle_to(foe, u.x, u.y) - foe.facing))
             if angle > 1.0 and u.id not in foe.shocked:
                 foe.shocked.add(u.id)
                 foe.morale -= 12 if angle > 2.2 else 7
+        for u, foe in pairs:
+            # a regiment losing the fight loses heart faster than one winning it
+            taken = hits.get(u.id, 0.0) / max(1, u.start_men)
+            ratio = (taken + 1e-4) / (dealt.get(u.id, 0.0) + 1e-4)
+            u.morale -= PRESSURE * dt * min(4.0, max(0.25, ratio))
         for uid, dmg in hits.items():
             self._lose(self.units[uid], dmg)
 
@@ -434,9 +450,11 @@ class Battle:
             dist = math.hypot(target.x - u.x, target.y - u.y)
             accuracy = 1.2 - 0.6 * dist / reach
             cover = 0.5 if self.field.wooded(target.x, target.y) else 1.0
-            dmg = u.missile * (1 + 0.5 * u.experience) * u.men * MISSILE_RATE * VOLLEY * accuracy * cover / \
-                max(2.0, target.defence * 0.5) * self.rng.uniform(0.5, 1.5)
+            skill = u.missile * (1 + 0.3 * u.experience)
+            dmg = u.men * MISSILE_RATE * _hit(skill, target.defence, 0.25) * accuracy * cover * \
+                self.rng.uniform(0.5, 1.5)
             hits.append((target, dmg))
+            self.events.append(("volley", u.id, target.id))
         for target, dmg in hits:   # the volleys of a moment land together
             self._lose(target, dmg)
             target.morale -= 0.6 * dmg / max(1, target.men) * 100 * 0.3
@@ -499,24 +517,63 @@ class Battle:
     # --- the AI ---------------------------------------------------------------------------------
 
     def ai(self, side):
-        """Simple orders for a side: shoot what comes near, hit the closest enemy, horse go for the archers."""
-        for u in self.side_units(side):
+        """The captains' plan. The line goes forward together; the archers shoot at what comes near and give
+        ground before a charge; the horse keeps level on the wings and, once the lines are locked, falls on
+        flanks and archers; horse archers ride off from what would catch them. The defender lets the attack
+        come on, unless it is the one being out-shot."""
+        mine = self.side_units(side)
+        foes = [e for e in self.units if e.side != side and e.standing]
+        if not mine or not foes:
+            return
+        forward = 1 if side == 0 else -1
+
+        def dist(a, b):
+            return math.hypot(a.x - b.x, a.y - b.y)
+
+        line = [u for u in mine if u.kind != "horse"] or mine
+        line_y = sum(u.y for u in line) / len(line)
+        closest = min(dist(u, e) for u in line for e in foes)
+        engaged = any(u.state == "fighting" for u in self.units)
+        shooting = sum(u.men * u.missile for u in mine if u.ranged())
+        against = sum(e.men * e.missile for e in foes if e.ranged())
+        hold = side == 1 and self.time < 300 and closest > 300 and shooting >= 0.7 * against
+        for u in mine:
             if u.state == "fighting":
+                continue
+            nearest = min(foes, key=lambda e: dist(u, e))
+            d = dist(u, nearest)
+            melee_near = [e for e in foes if not e.ranged() and e.state != "fighting" and dist(u, e) < 110]
+            reach = u.ranged()
+            if reach and u.ammo > 0:
+                if melee_near and u.kind == "horse":          # ride off and shoot again
+                    e = melee_near[0]
+                    away = math.atan2(u.x - e.x, u.y - e.y)
+                    self.move(u, u.x + math.sin(away) * 160, u.y + math.cos(away) * 160)
+                elif melee_near and (u.y - line_y) * forward > -30:   # give ground behind the line
+                    self.move(u, u.x, u.y - forward * 90)
+                elif u.order and u.order[0] == "move" and melee_near:
+                    continue
+                elif d <= reach or not hold:
+                    self.attack(u, nearest)
                 continue
             if u.order and u.order[0] == "attack" and self.units[u.order[1]].standing:
                 continue
-            foes = [e for e in self.units if e.side != side and e.standing]
-            if not foes:
-                return
             if u.kind == "horse":
-                shooters = [e for e in foes if e.kind == "missile"]
-                target = min(shooters or foes, key=lambda e: math.hypot(e.x - u.x, e.y - u.y))
+                if engaged or d < 160:
+                    locked = [e for e in foes if e.state == "fighting"]
+                    shooters = [e for e in foes if e.kind == "missile"]
+                    self.attack(u, min(shooters + locked or foes, key=lambda e: dist(u, e)))
+                elif not hold and abs(u.y - line_y) > 25:      # keep level with the line
+                    self.move(u, u.x, line_y - forward * 10)
+                continue
+            if hold:
+                continue
+            if d < 260 or engaged:
+                self.attack(u, nearest)
+            elif (u.y - line_y) * forward > 40:                # wait for the rest of the line
+                self.halt(u)
             else:
-                target = min(foes, key=lambda e: math.hypot(e.x - u.x, e.y - u.y))
-            defending = side == 1 and self.time < 120
-            if defending and u.kind != "missile":
-                continue   # the defender waits for the attack to come on, at first
-            self.attack(u, target)
+                self.move(u, u.x, u.y + forward * min(150.0, d - 220))
 
     def run(self, dt=1.0, ai_sides=(0, 1), limit=None):
         """Fight it out with the AI for the given sides (for auto-resolving and tests)."""

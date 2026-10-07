@@ -112,6 +112,8 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         self.start_date = date
         self.ai = None
         self.proposals = []                # offers to the player waiting for an answer
+        self.interactive_battles = False   # the player's battles wait for the player (in the game itself)
+        self.pending_battles = []          # (army id, army id) met this month, for the player to fight
         self.rng = random.Random(seed)
         self.provinces = {p.id: ProvinceState(p.id, p.owner, p.owner, p.population)
                           for p in provmap.provinces.values()}
@@ -419,6 +421,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         """Close the month: money, works, people, troops. Returns the messages for the player."""
         self.messages = []
         self.battles = []
+        self.pending_battles = []
         self.proposals = [p for p in self.proposals if p.get("fresh")]
         for p in self.proposals:
             p["fresh"] = False

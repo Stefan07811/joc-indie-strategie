@@ -199,14 +199,14 @@ class MapApp(_showbase()):
         for key in ("w", "a", "s", "d", "arrow_up", "arrow_down", "arrow_left", "arrow_right", "q", "e"):
             self.accept(key, self.keys.__setitem__, [key, True])
             self.accept(key + "-up", self.keys.__setitem__, [key, False])
-        self.accept("wheel_up", self.camera_ctl.zoom_by, [0.85])
-        self.accept("wheel_down", self.camera_ctl.zoom_by, [1 / 0.85])
+        self.accept("wheel_up", self.zoom, [0.85])
+        self.accept("wheel_down", self.zoom, [1 / 0.85])
         self.accept("mouse1", self.pick)
         self.accept("mouse2", self._drag, ["pan"])
         self.accept("mouse2-up", self._drag, [None])
         self.accept("mouse3", self._right_down)
         self.accept("mouse3-up", self._right_up)
-        self.accept("space", self.end_month)
+        self.accept("space", self.space)
         self.accept("enter", self.end_month)
         self.accept("1", self.set_mode, ["terrain"])
         self.accept("2", self.set_mode, ["political"])
@@ -218,6 +218,8 @@ class MapApp(_showbase()):
         self.dragging = None
         self.last_mouse = None
         self.right_from = None
+        self.in_battle = False
+        self.battle = None
         self.taskMgr.add(self.tick, "tick")
 
     # --- the campaign ----------------------------------------------------------------------------
@@ -232,6 +234,7 @@ class MapApp(_showbase()):
     def play_as(self, tag, welcome=True):
         c = self.campaign
         c.player = tag
+        c.interactive_battles = True
         c.attach_ai(self.nav, self.naval_nav)
         self.panel.close()
         self.camera_ctl.look_at(*self.map_to_world(*c.static(c.capital(tag)).town), 520)
@@ -283,9 +286,213 @@ class MapApp(_showbase()):
         self.refresh()
         self.next_proposal()
 
+    @property
+    def active_cam(self):
+        return self.battle_cam if self.in_battle else self.camera_ctl
+
+    def zoom(self, factor):
+        self.active_cam.zoom_by(factor)
+
+    def space(self):
+        if self.in_battle:
+            self.battle_paused = not self.battle_paused
+        else:
+            self.end_month()
+
+    # --- tactical battles --------------------------------------------------------------------------
+
+    def next_battle(self):
+        """Ask about the next battle the player's armies must fight this month."""
+        c = self.campaign
+        while c.pending_battles:
+            a_id, b_id = c.pending_battles.pop(0)
+            a, b = self.army_by_id(a_id), self.army_by_id(b_id)
+            if a is None or b is None or not c.hostile(a.owner, b.owner):
+                continue
+            self.ask_battle(a, b)
+            return True
+        return False
+
+    def ask_battle(self, attacker, defender):
+        c = self.campaign
+        _, terrain, place = c.battle_site(attacker, defender)
+        ours, theirs = (attacker, defender) if attacker.owner == c.player else (defender, attacker)
+        text = (f"The {ours.name} ({ours.men:,} men) and the {theirs.name} ({theirs.men:,} men) meet on the "
+                f"{terrain} of {place}. Will you command the battle yourself, or leave it to the captains?")
+
+        def captains():
+            report = c.battle(attacker, defender)
+            self.chronicle.add(str(c.date), c.messages[-2:])
+            self.chronicle.show()
+            self.sync_figures()
+            self.redraw_overlay()
+            self.battle_dialog(report)
+        self.audio.play("event", 0.6)
+        self.dialog.show(f"Battle at {place}", text,
+                         [("Command the battle", lambda: self.enter_battle(attacker, defender)),
+                          ("Leave it to the captains", captains)])
+
+    def enter_battle(self, attacker, defender):
+        from .game.battle import FIELD_H, FIELD_W, tactical
+        from .render.battlefield import UNIT, BattleScene
+        from .render.camera import StrategyCamera
+        from .render.world import SUN
+        from .ui.battle_hud import BattleHUD
+        c = self.campaign
+        self.battle = tactical(c, attacker, defender)
+        self.battle_armies = (attacker, defender)
+        self.battle_side = 0 if attacker.owner == c.player else 1
+        sides = (attacker.owner, defender.owner)
+        colors = [tuple(v / 255 for v in self.colors[t]) for t in sides]
+        accents = [ACCENT[c.tradition(t)] for t in sides]
+        eastern = [c.tradition(t) in EASTERN for t in sides]
+        for node in (self.world.root, self.towns.root, self.labels.root, self.realm_labels.root, self.ribbon.root):
+            node.hide()
+        for figure in self.figures.values():
+            figure.root.hide()
+        self.panel.close()
+        self.chronicle.hide()
+        self.tooltip.hide()
+        self.topbar.frame.hide()
+        self.topbar.show_end(False)
+        self.battle_scene = BattleScene(self.render, self.battle, colors, accents, eastern, SUN)
+        self.battle_cam = StrategyCamera(self.camera, self.camLens, self.battle_scene.height,
+                                         limits=(25.0, 260.0), bounds=(FIELD_W * UNIT, FIELD_H * UNIT), near=0.5,
+                                         pitches=(22.0, 64.0))
+        line_y = 24.0 if self.battle_side == 0 else FIELD_H * UNIT - 24.0      # our deployment line
+        self.battle_cam.heading = 0.0 if self.battle_side == 0 else 180.0
+        self.battle_cam.look_at(FIELD_W * UNIT / 2, line_y, 140)
+        names = [self.campaign.name(sides[self.battle_side]), self.campaign.name(sides[1 - self.battle_side])]
+        self.battle_hud = BattleHUD(self.theme, self.aspect2d, self.getAspectRatio(), self.battle, self.battle_side,
+                                    names, {"pause": self.toggle_battle_pause, "x1": self.battle_speed_to, "x2":
+                                            self.battle_speed_to, "x4": self.battle_speed_to,
+                                            "auto": self.finish_battle_by_ai, "retreat": self.retreat_from_battle,
+                                            "begin": self.begin_battle, "select": self.select_regiment})
+        self.battle_hud.buttons["x1"]["extraArgs"] = [1.0]
+        self.battle_hud.buttons["x2"]["extraArgs"] = [2.0]
+        self.battle_hud.buttons["x4"]["extraArgs"] = [4.0]
+        self.battle_speed, self.battle_paused, self.battle_clock = 2.0, False, 0.0
+        self.in_battle = True
+        self.audio.set_mood("war")
+
+    def toggle_battle_pause(self):
+        self.battle_paused = not self.battle_paused
+
+    def battle_speed_to(self, speed):
+        self.battle_speed = speed
+        self.battle_paused = False
+
+    def begin_battle(self):
+        self.battle.begin()
+        self.audio.play("march", 0.7)
+
+    def select_regiment(self, uid, add=False):
+        scene = self.battle_scene
+        if not add:
+            scene.selected.clear()
+        u = self.battle.units[uid]
+        if u.side == self.battle_side and u.alive:
+            scene.selected.add(uid)
+            x, y = u.x * 0.1, u.y * 0.1
+            self.battle_cam.look_at(x, y)
+
+    def finish_battle_by_ai(self):
+        """Let the captains fight the rest of it."""
+        b = self.battle
+        if not b.started:
+            b.begin()
+        b.run(dt=1.0)
+
+    def retreat_from_battle(self):
+        """Our regiments leave the field: the battle is lost, but fewer men with it."""
+        b = self.battle
+        if not b.started:
+            b.begin()
+        for u in b.units:
+            if u.side == self.battle_side and u.alive:
+                u.men = int(u.men * 0.9)
+                u.state = "gone"
+        b.winner = 1 - self.battle_side
+        b.log.append("We sound the retreat.")
+
+    def battle_tick(self, dt):
+        b = self.battle
+        if b.started and not self.battle_paused and b.winner is None:
+            self.battle_clock += dt * self.battle_speed * 8.0      # a second on screen is eight on the field
+            while self.battle_clock >= 0.5 and b.winner is None:
+                self.battle_clock -= 0.5
+                if int(b.time * 2) % 10 == 0:
+                    b.ai(1 - self.battle_side)
+                b.step(0.5)
+        if b.winner is not None and not self.dialog.open:
+            self.leave_battle()
+            return
+        self.battle_scene.update(dt, b.time)
+        self.battle_hud.update(self.battle_speed, self.battle_paused, self.battle_scene.selected)
+
+    def leave_battle(self):
+        from .game.battle import conclude
+        c = self.campaign
+        b = self.battle
+        attacker, defender = self.battle_armies
+        c.messages = []
+        report = conclude(c, b, attacker, defender)
+        self.battle_hud.destroy()
+        self.battle_scene.destroy()
+        self.in_battle = False
+        self.battle = None
+        for node in (self.world.root, self.towns.root, self.labels.root, self.realm_labels.root, self.ribbon.root):
+            node.show()
+        for figure in self.figures.values():
+            figure.root.show()
+        self.topbar.frame.show()
+        self.camera_ctl.activate()
+        self.chronicle.add(str(c.date), c.messages)
+        self.chronicle.show()
+        self.sync_figures()
+        self.redraw_overlay()
+        self.refresh()
+        self.battle_dialog(report)
+
+    def battle_pick(self, add=False):
+        p = self.mouse_ground(self.battle_scene.height)
+        if p is None:
+            return
+        scene, b = self.battle_scene, self.battle
+        u = scene.unit_at(p.x, p.y)
+        if u is not None and u.side == self.battle_side:
+            if add or self.mouseWatcherNode.isButtonDown("shift"):
+                scene.selected.add(u.id)
+            else:
+                scene.selected = {u.id}
+            return
+        if not b.started and scene.selected:
+            for uid in list(scene.selected)[:1]:
+                b.place_unit(b.units[uid], p.x / 0.1, p.y / 0.1)
+            return
+        scene.selected.clear()
+
+    def battle_order(self):
+        p = self.mouse_ground(self.battle_scene.height)
+        if p is None or not self.battle.started:
+            return
+        scene, b = self.battle_scene, self.battle
+        target = scene.unit_at(p.x, p.y)
+        chosen = [b.units[uid] for uid in scene.selected if b.units[uid].standing]
+        if target is not None and target.side != self.battle_side:
+            for u in chosen:
+                b.attack(u, target)
+        else:
+            # several regiments keep their places side by side around the spot
+            for k, u in enumerate(chosen):
+                offset = (k - (len(chosen) - 1) / 2) * 140.0
+                b.move(u, p.x / 0.1 + offset, p.y / 0.1)
+
     def next_proposal(self):
         c = self.campaign
-        if self.dialog.open:
+        if self.dialog.open or self.in_battle:
+            return
+        if c.pending_battles and self.next_battle():
             return
         if c.pending:
             return self.next_event()
@@ -559,12 +766,7 @@ class MapApp(_showbase()):
             self.figures[army.id].march(self._strides(walked) + [self.figure_spot(army)])
         enemy = c.hostile_near(army)
         if enemy is not None and (target is None or enemy is target):
-            c.messages = []
-            report = c.battle(army, enemy)
-            self.chronicle.add(str(c.date), c.messages)
-            self.chronicle.show()
-            self.sync_figures()
-            self.battle_dialog(report)
+            self.ask_battle(army, enemy)
         return True
 
     def battle_dialog(self, report):
@@ -612,6 +814,7 @@ class MapApp(_showbase()):
         self.campaign = Campaign.from_dict(data, self.provmap, self.realms, self.relations)
         self.campaign.nav, self.campaign.naval_nav = self.nav, self.naval_nav
         self.campaign.attach_ai(self.nav, self.naval_nav)
+        self.campaign.interactive_battles = True
         for figure in self.figures.values():
             figure.root.removeNode()
         self.figures = {}
@@ -636,8 +839,9 @@ class MapApp(_showbase()):
     def map_to_world(self, x, y):
         return x, self.geo.HEIGHT - y
 
-    def mouse_ground(self):
+    def mouse_ground(self, height_at=None):
         """The world point under the mouse, or None."""
+        height_at = height_at or self.world.height_at
         if not self.mouseWatcherNode.hasMouse():
             return None
         from panda3d.core import Point3
@@ -653,7 +857,7 @@ class MapApp(_showbase()):
                 return None
             t = (z - near.z) / d.z
             p = near + d * t
-            z = self.world.height_at(p.x, p.y)
+            z = height_at(p.x, p.y)
         return p
 
     def over_gui(self):
@@ -662,6 +866,9 @@ class MapApp(_showbase()):
     # --- input ----------------------------------------------------------------------------------
 
     def escape(self):
+        if self.in_battle:
+            self.battle_paused = not self.battle_paused
+            return
         if self.dialog.open:
             self.dialog.close()
         elif self.panel.subject is not None:
@@ -682,6 +889,12 @@ class MapApp(_showbase()):
 
     def _right_up(self):
         self._drag(None)
+        if self.in_battle:
+            if self.right_from is not None and self.mouseWatcherNode.hasMouse() and not self.over_gui():
+                m = self.mouseWatcherNode.getMouse()
+                if math.hypot(m.x - self.right_from[0], m.y - self.right_from[1]) <= 0.02:
+                    self.battle_order()
+            return
         army = self.chosen
         if army is None or army.owner != self.campaign.player or self.right_from is None or self.dialog.open:
             return
@@ -698,6 +911,8 @@ class MapApp(_showbase()):
     def pick(self):
         if self.over_gui() or self.dialog.open:
             return
+        if self.in_battle:
+            return self.battle_pick()
         p = self.mouse_ground()
         if p is None:
             return
@@ -732,25 +947,29 @@ class MapApp(_showbase()):
     def tick(self, task):
         dt = min(globalClock.getDt(), 0.1)  # noqa: F821 - Panda's builtin clock
         k = self.keys
+        cam = self.active_cam
         speed = 600 * dt
         dx = (k.get("d") or k.get("arrow_right") or 0) - (k.get("a") or k.get("arrow_left") or 0)
         dy = (k.get("w") or k.get("arrow_up") or 0) - (k.get("s") or k.get("arrow_down") or 0)
         if dx or dy:
-            self.camera_ctl.pan(dx * speed, dy * speed)
+            cam.pan(dx * speed, dy * speed)
         turn = (k.get("e") or 0) - (k.get("q") or 0)
         if turn:
-            self.camera_ctl.turn(turn * 70 * dt)
+            cam.turn(turn * 70 * dt)
         if self.dragging and self.mouseWatcherNode.hasMouse():
             m = self.mouseWatcherNode.getMouse()
             if self.last_mouse is not None:
                 mx, my = m.x - self.last_mouse[0], m.y - self.last_mouse[1]
                 if self.dragging == "pan":
-                    self.camera_ctl.pan(-mx * 900, -my * 600)
+                    cam.pan(-mx * 900, -my * 600)
                 else:
-                    self.camera_ctl.turn(mx * 120)
+                    cam.turn(mx * 120)
             self.last_mouse = (m.x, m.y)
-        self.world.update(self.camera_ctl.position, task.time)
         self.audio.update(dt)
+        if self.in_battle:
+            self.battle_tick(dt)
+            return task.cont
+        self.world.update(self.camera_ctl.position, task.time)
         for figure in self.figures.values():
             figure.update(dt, task.time)
         self.ribbon.update(self.camera_ctl.distance, task.time)
@@ -873,8 +1092,11 @@ class MapApp(_showbase()):
             self.dialog.close()
             c.pending = []
             c.provinces["arges"].unrest = 0
+        if any(want(n) for n in ("battle_deploy", "battle_fight", "battle_close", "battle_end")):
+            self._battle_shots(folder, want)
         # a war, a few months on
-        c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
+        if not c.at_war("wallachia", "ott_rum"):
+            c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
         army.order(c.nav_for(army), *c.static("nikopol").town)
         army.walk()
         for _ in range(4):
@@ -895,6 +1117,67 @@ class MapApp(_showbase()):
             self.choose(None)
             self._view(27.0, 42.5, 1700, 0)
             self._shoot(folder, "years")
+
+    def _battle_shots(self, folder, want):
+        """A tactical battle near Teleorman: the deployment, the fight, a close look, the end."""
+        from .game.armies import Regiment
+        c = self.campaign
+        x, y = c.static("teleorman").town
+        ours = c.new_army("wallachia", x, y, [Regiment(u, n, 0.3) for u, n in
+                                               [("boyars", 300)] * 2 + [("calarasi", 400)] * 3 +
+                                               [("vlach_archers", 500)] * 2 + [("great_host", 1000)] * 3])
+        theirs = c.new_army("ott_rum", x + 2, y, [Regiment(u, n, 0.3) for u, n in
+                                                  [("sipahis", 400)] * 3 + [("akinjis", 500)] * 2 +
+                                                  [("azaps", 600)] * 3 + [("janissaries", 300)]])
+        c.appoint_commanders()
+        if not c.at_war("wallachia", "ott_rum"):
+            c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
+        self.enter_battle(ours, theirs)
+
+        def render(name):
+            self.battle_scene.update(0.05, self.battle.time)
+            self.battle_hud.update(self.battle_speed, self.battle_paused, self.battle_scene.selected)
+            for _ in range(2):
+                self.graphicsEngine.renderFrame()
+            self.win.saveScreenshot(str(folder / f"{name}.png"))
+            print("saved", name)
+        b = self.battle
+        self.battle_scene.selected = {b.side_units(0)[0].id}
+        if want("battle_deploy"):
+            self.battle_cam.look_at(120, 24, 140)
+            render("battle_deploy")
+        b.begin()
+        contact = None
+        for t in range(3000):         # until the lines have been at it for half a minute
+            if t % 10 == 0:
+                b.ai(0)
+                b.ai(1)
+            b.step(0.5)
+            if t % 4 == 0:
+                self.battle_scene.update(0.05, b.time)
+            if contact is None and any(u.state == "fighting" for u in b.units):
+                contact = b.time
+            if contact is not None and b.time > contact + 30 or b.winner is not None:
+                break
+        self.battle_scene.selected = {u.id for u in b.side_units(0)[:3]}
+        if want("battle_fight"):
+            fighting = [u for u in b.units if u.state == "fighting"] or b.side_units(0)
+            self.battle_cam.heading = 20
+            self.battle_cam.look_at(sum(u.x for u in fighting) / len(fighting) * 0.1,
+                                    sum(u.y for u in fighting) / len(fighting) * 0.1 - 6, 110)
+            render("battle_fight")
+        if want("battle_close"):
+            fighting = [u for u in b.units if u.state == "fighting"] or b.units
+            u = fighting[0]
+            self.battle_cam.heading = 300
+            self.battle_cam.look_at(u.x * 0.1, u.y * 0.1, 40)
+            render("battle_close")
+        b.run(dt=1.0)
+        self.battle_tick(0.05)      # the battle is won: back to the campaign
+        if want("battle_end"):
+            self._view(25.3, 44.3, 300, 0)
+            self._shoot(folder, "battle_end")
+        self.dialog.close()
 
     def _settle(self):
         """Let the miniatures finish their marches (for the pictures)."""

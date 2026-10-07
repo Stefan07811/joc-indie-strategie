@@ -330,7 +330,10 @@ class Warfare:
                 if a not in self.armies or b not in self.armies:
                     continue
                 if math.hypot(a.x - b.x, a.y - b.y) * 1.5 <= ENGAGE_KM:
-                    self.battle(a, b)
+                    if getattr(self, "interactive_battles", False) and self.player in (a.owner, b.owner):
+                        self.pending_battles.append((a.id, b.id))   # the player will choose how to fight
+                    else:
+                        self.battle(a, b)
                     fought.update((id(a), id(b)))
 
     def strength(self, army, terrain, defending):

@@ -120,6 +120,8 @@ class SidePanel:
             self._text(line, scale=0.03)
         if v["siege"]:
             self._text(v["siege"], color=RUBRIC, scale=0.032)
+        if v.get("trade"):
+            self._text(v["trade"], scale=0.027, color=FADED)
         self._rule()
         self._text("Buildings: " + (", ".join(v["buildings"]) if v["buildings"] else "none yet") +
                    f"  ({v['slots']})", scale=0.03)

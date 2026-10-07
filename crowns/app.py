@@ -307,7 +307,38 @@ class MapApp(BattleControls, MenuControls, _showbase()):
             self.chosen = None
         self.show_orders()
         self.refresh()
+        why = c.chronicle_closes()
+        if why:
+            return self.show_ending(why)
         self.next_proposal()
+
+    def show_ending(self, why):
+        """The chronicle closes: in 1500, or when the player's realm is no more."""
+        c = self.campaign
+        ranks = c.reckoning()
+        lines = []
+        for k, (score, tag) in enumerate(ranks[:8], start=1):
+            mark = "  ← you" if tag == c.player else ""
+            lines.append(f"{k}. {c.name(tag)}: {score}{mark}")
+        mine = next((k for k, (_, tag) in enumerate(ranks, start=1) if tag == c.player), None)
+        if why == "time":
+            title = "The Chronicle Closes"
+            text = (f"It is the year 1500. A century has passed since Ankara. {c.name(c.player)} stands "
+                    f"{mine}{'st' if mine == 1 else 'nd' if mine == 2 else 'rd' if mine == 3 else 'th'} "
+                    f"among the {len(ranks)} realms that remain.")
+            answers = [("Play on", None), ("To the title page", self.to_title)]
+        else:
+            title = f"{c.info[c.player]['name']} Is No More"
+            text = "Your realm has fallen, and its lands belong to others now. The chronicle goes on without it."
+
+            def another():
+                c.player = None
+                c.ended = False
+                self.refresh()
+                self.dialog.show("Another crown", "Choose a realm on the map to rule from here.", [("To the map", None)])
+            answers = [("Take up another realm", another), ("To the title page", self.to_title)]
+        self.audio.play("victory" if why == "time" and mine and mine <= 3 else "event", 0.8)
+        self.dialog.show(title, text + "\n\n" + "\n".join(lines), answers)
 
     @property
     def active_cam(self):

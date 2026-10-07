@@ -86,6 +86,12 @@ def province_view(c, pid):
     if p.siege:
         view["siege"] = (f"Besieged by {c.name(p.siege['by'])}: {min(99, p.siege['progress'] * 100):.0f}% "
                          f"after {p.siege['months']} month{'s' * (p.siege['months'] != 1)}")
+    view["trade"] = None
+    routes = c.routes_through(pid)
+    if routes:
+        cut = [r for r in routes if c.route_state(r)[0] < 1.0]
+        view["trade"] = (f"On {' and '.join(routes)}: {c.trade_income(pid):,.0f} ducats a month from trade"
+                         + (f" ({' and '.join(cut)} cut by war)" if cut else ""))
     for kind, level in p.buildings.items():
         view["buildings"].append(f"{c.building_name(pid, kind, level)} ({level}/{BUILDINGS[kind].levels})")
     view["slots"] = f"{len(p.buildings)} of {rules.slots(info.city)} building places used"

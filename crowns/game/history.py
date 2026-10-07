@@ -500,6 +500,16 @@ EVENTS = [
           chance=0.1, condition=lambda c, t: _restless(c, t), once=False,
           choices=[Choice("Send in the soldiers", _crush_revolt, 0.6, "The province is laid waste; order returns."),
                    Choice("Grant their demands", _grant_demands, 0.4, "Costs eight months of its income.")]),
+    # the crusade: fired by the Pope's call (crusades.py), never by itself
+    Event("crusade_call", "The Pope Calls a Crusade",
+          lambda c, t: (f"The Holy Father has preached a crusade against {c.name(c.crusade['target'])}, and "
+                        f"{c.name(c.crusade['leader'])} has taken the cross. Christendom looks to {c.name(t)}: "
+                        "will you march with them?") if c.crusade else "",
+          realms=("*",), condition=lambda c, t: False, once=False,
+          choices=[Choice("Take the cross", lambda c, t: c.join_crusade(t), 1.0,
+                          "War with the Turk beside the crusaders; prestige and the Church's tithe."),
+                   Choice("Stay at home", lambda c, t: c.refuse_crusade(t), 1.0,
+                          "A little prestige lost, and the Pope's displeasure.")]),
     # the great men of the realm
     Event("faction_demands", "The Great Men Grumble",
           lambda c, t: (f"{c.faction(t).name[0].upper() + c.faction(t).name[1:]} are restless: they complain of "

@@ -17,7 +17,9 @@ from .calendar import START, Date
 from .navigation import Route
 from .rules import BUILDINGS, UNITS
 from .diplomacy import Diplomacy
+from .crusades import Crusades
 from .factions import Factions
+from .trade import Trade
 from .history import Chronicles
 from .people import Court
 from .war import Warfare, war_from_dict, war_to_dict
@@ -107,7 +109,7 @@ class Budget:
         return self.income - self.expenses
 
 
-class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
+class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions, Trade, Crusades):
     def __init__(self, provmap, realms, relations=(), player="wallachia", date=START, seed=1402, armies=True):
         self.provmap = provmap
         self.info = copy.deepcopy(realms)  # the realms' history (crowns/data/realms.json), as it changes
@@ -139,6 +141,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
         self._init_history(BEYOND_THE_MAP)
         self._init_people()
         self._init_factions()
+        self._init_crusades()
         for tag, realm in self.realms.items():
             realm.manpower = 0.6 * self.levy_pool(tag)
             realm.treasury = round(max(300.0, 2 * self.budget(tag).income), -1)
@@ -238,20 +241,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
                    for p in self.provinces_of(tag) if p.controller == tag)
 
     def budget(self, tag):
-        b = Budget()
-        for p in self.provinces.values():
-            if p.controller != tag and p.owner != tag:
-                continue
-            tax, production, commerce = self.income(p.id)
-            share = 1.0 if p.controller == p.owner else (rules.OCCUPIED_INCOME if p.controller == tag else 0.0)
-            b.tax += tax * share
-            b.production += production * share
-            b.commerce += commerce * share
-            if p.owner == tag:   # the old castles are kept by the lords' men; the new walls cost wages
-                b.forts += self.effect(p.id, "fort") * rules.FORT_UPKEEP
-        b.beyond = self.beyond_the_map.get(tag, 0.0)
-        k = DIFFICULTY[self.difficulty]["player" if tag == self.player else "ai"]
-        b.tax, b.production, b.commerce = b.tax * k, b.production * k, b.commerce * k
+        b = self._revenue(tag)
         gross = b.tax + b.production + b.commerce + b.beyond
         b.court = min(rules.COURT_UPKEEP[self.info[tag]["rank"]], 0.25 * gross) + gross * rules.COURT_SHARE
         b.armies = sum(a.upkeep for a in self.armies_of(tag))
@@ -267,12 +257,27 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
                 b.tribute_in += vb * TRIBUTE[held[1]]
         return b
 
-    def _gross(self, tag):
-        total = 0.0
+    def _revenue(self, tag):
+        """Taxes, production and commerce (trade included) of the land a realm holds, and the forts' wages."""
+        b = Budget()
         for p in self.provinces.values():
-            if p.owner == tag and p.controller == tag:
-                total += sum(self.income(p.id))
-        return total
+            if p.controller != tag and p.owner != tag:
+                continue
+            tax, production, commerce = self.income(p.id)
+            share = 1.0 if p.controller == p.owner else (rules.OCCUPIED_INCOME if p.controller == tag else 0.0)
+            b.tax += tax * share
+            b.production += production * share
+            b.commerce += (commerce + self.trade_income(p.id)) * share
+            if p.owner == tag:   # the old castles are kept by the lords' men; the new walls cost wages
+                b.forts += self.effect(p.id, "fort") * rules.FORT_UPKEEP
+        b.beyond = self.beyond_the_map.get(tag, 0.0)
+        k = DIFFICULTY[self.difficulty]["player" if tag == self.player else "ai"]
+        b.tax, b.production, b.commerce = b.tax * k, b.production * k, b.commerce * k
+        return b
+
+    def _gross(self, tag):
+        b = self._revenue(tag)
+        return b.tax + b.production + b.commerce + b.beyond
 
     # --- building ----------------------------------------------------------------------------------
 
@@ -457,6 +462,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
             army.new_month()
             army.walk()
         self.war_month()
+        self.crusade_month()
         self.history_month()
         self.diplomacy_month()
         self.date = self.date.next()
@@ -531,6 +537,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
             "proposals": self.proposals, "start": [self.start_date.year, self.start_date.month],
             "history": self.history, "marriages": self.marriages, "court": self.people_to_dict(),
             "chronicle": self.history_to_dict(), "factions": self.factions_to_dict(),
+            "crusades": self.crusades_to_dict(),
             "armies": [{"id": a.id, "owner": a.owner, "name": a.name, "x": a.x, "y": a.y, "march": a.march,
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments], "commander": a.commander,
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
@@ -556,6 +563,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles, Factions):
         c.people_from_dict(data["court"])
         c.history_from_dict(data["chronicle"])
         c.factions_from_dict(data.get("factions"))
+        c.crusades_from_dict(data.get("crusades"))
         c.borders_changed()
         c.armies = []
         for a in data["armies"]:

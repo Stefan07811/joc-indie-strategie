@@ -171,6 +171,26 @@ class Ground:
         rgb = (self.colors() * 255).astype(np.uint8)
         return self.draw_waters(rgb)
 
+    def coast_distance(self, reach=48):
+        """Map pixels to the nearest coast: positive at sea, negative on land, clamped to +-reach.
+        (Engraved maps draw lines along the shore at growing distances: 'waterlining'.)"""
+        land = self.land | self.lakes  # lakes count as land here: only the sea gets waterlines
+        out = np.full(land.shape, float(reach), np.float32)
+        for side, mask in ((1.0, ~land), (-1.0, land)):
+            dist = np.where(mask, np.inf, 0.0).astype(np.float32)
+            for _ in range(reach):
+                grown = dist.copy()
+                for dr, dc, step in ((1, 0, 1), (-1, 0, 1), (0, 1, 1), (0, -1, 1),
+                                     (1, 1, 1.414), (1, -1, 1.414), (-1, 1, 1.414), (-1, -1, 1.414)):
+                    grown = np.minimum(grown, np.roll(np.roll(dist, dr, 0), dc, 1) + step)
+                if np.array_equal(grown, dist):
+                    break
+                dist = grown
+            out = np.where(mask, side * np.minimum(dist, reach), out)
+        # the chamfer distance draws octagons; a light blur rounds the waterlines like a pen would
+        smooth = blur(out, 2, passes=2)
+        return np.where(np.sign(smooth) == np.sign(out), smooth, out * 0.5)
+
     # --- light ----------------------------------------------------------------------------------
 
     def normal_map(self, exaggeration):

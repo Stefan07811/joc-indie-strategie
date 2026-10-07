@@ -36,11 +36,12 @@ def main(argv=None):
     parser.add_argument("--shots", help="render views to this folder and quit")
     parser.add_argument("--size", default=None, help="window size, e.g. 1920x1080")
     parser.add_argument("--fullscreen", action="store_true")
+    parser.add_argument("--style", default="codex", help="the map's look: codex (the game's) or real (for checks)")
     args = parser.parse_args(argv)
     size = tuple(int(v) for v in args.size.split("x")) if args.size else None
     configure(offscreen=bool(args.shots), size=size or ((1600, 900) if args.shots else None),
               fullscreen=args.fullscreen)
-    app = MapApp()
+    app = MapApp(style=args.style)
     if args.shots:
         app.shots(Path(args.shots))
     else:
@@ -54,7 +55,7 @@ def _showbase():
 
 
 class MapApp(_showbase()):
-    def __init__(self):
+    def __init__(self, style="codex"):
         super().__init__()
         from direct.gui.OnscreenText import OnscreenText
         from panda3d.core import TextNode, Vec3, WindowProperties
@@ -77,11 +78,11 @@ class MapApp(_showbase()):
         self.disableMouse()
         self.setBackgroundColor(*HAZE)
         started = time.time()
-        self.world = MapWorld()
+        self.world = MapWorld(style=style)
         self.world.root.reparentTo(self.render)
         self.provmap = ProvinceMap()
         self.overlay = Overlay(self.provmap)
-        self.world.set_provinces(self.overlay.index_texture())
+        self.world.set_provinces(self.overlay.index_texture(), self.overlay.distance_texture())
         self.colors = REALM_COLORS
         self.owner_of = {p.id: p.owner for p in self.provmap.provinces.values()}
         self.selected = None
@@ -99,6 +100,7 @@ class MapApp(_showbase()):
         self.info = OnscreenText(text="", pos=(-1.7, 0.9), scale=0.05, align=TextNode.ALeft, fg=(1, 0.95, 0.85, 1),
                                  shadow=(0, 0, 0, 0.8), font=self.font, mayChange=True, parent=self.aspect2d)
         self.redraw_overlay()
+        self.armies = self.demo_armies()
         print(f"map ready in {time.time() - started:.1f} s")
         self.keys = {}
         for key in ("w", "a", "s", "d", "arrow_up", "arrow_down", "arrow_left", "arrow_right", "q", "e"):
@@ -118,6 +120,36 @@ class MapApp(_showbase()):
         self.last_mouse = None
         self.Vec3 = Vec3
         self.taskMgr.add(self.tick, "tick")
+
+    def demo_armies(self):
+        """A few armies marching between towns, until the campaign (B3) moves them for real."""
+        from .render.figures import ArmyFigure
+        from .render.world import SUN
+        towns = {p.id: (p.town[0], self.geo.HEIGHT - p.town[1]) for p in self.provmap.provinces.values()}
+        routes = [  # realm, accent, eastern dress, the towns it marches through
+            ("wallachia", (0.20, 0.30, 0.62), False, ["targoviste", "vlasia", "giurgiu"]),
+            ("ott_rum", (0.94, 0.92, 0.86), True, ["edirne", "philippopolis", "sofia"]),
+            ("hungary", (0.94, 0.92, 0.86), False, ["buda", "kalocsa", "szeged"]),
+            ("serbia", (0.85, 0.75, 0.40), False, ["krusevac", "novo_brdo"]),
+            ("moldavia", (0.85, 0.72, 0.30), False, ["suceava", "iasi", "roman"]),
+        ]
+        armies = []
+        for realm, accent, eastern, stops in routes:
+            color = tuple(c / 255 for c in self.colors[realm])
+            army = ArmyFigure(self.render, self.world.height_at, color, accent, SUN, eastern=eastern)
+            army.place(*towns[stops[0]])
+            army.route = [towns[s] for s in stops]
+            army.leg = 0
+            armies.append(army)
+        return armies
+
+    def _march_on(self, army):
+        """Send a demo army on to the next town of its route, and back again at the end."""
+        army.leg = (army.leg + 1) % (2 * len(army.route) - 2 or 1)
+        i = army.leg if army.leg < len(army.route) else 2 * len(army.route) - 2 - army.leg
+        (x0, y0), (x1, y1) = (army.pos.x, army.pos.y), army.route[i]
+        steps = max(2, int(math.hypot(x1 - x0, y1 - y0) / 6))
+        army.march([(x0 + (x1 - x0) * k / steps, y0 + (y1 - y0) * k / steps) for k in range(1, steps + 1)])
 
     # --- coordinates ----------------------------------------------------------------------------
 
@@ -194,6 +226,10 @@ class MapApp(_showbase()):
                     self.camera_ctl.turn(mx * 120)
             self.last_mouse = (m.x, m.y)
         self.world.update(self.camera_ctl.position, task.time)
+        for army in self.armies:
+            if not army.marching:
+                self._march_on(army)
+            army.update(dt, task.time)
         self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
         self.realm_labels.update(self.camera_ctl.distance)
         p = self.mouse_ground()
@@ -214,7 +250,13 @@ class MapApp(_showbase()):
             "wallachia": (25.5, 44.6, 380, 0, "political"),
             "carpathians_terrain": (25.0, 45.6, 330, 20, "terrain"),
             "constantinople": (28.9, 41.0, 160, 330, "political"),
+            "armies": (25.6, 44.4, 140, 20, "political"),
+            "armies_close": (26.0, 44.45, 95, 330, "political"),
         }
+        for army in self.armies:  # half way along their first march
+            self._march_on(army)
+            for _ in range(40):
+                army.update(0.05, 1.0)
         for name, (lon, lat, dist, heading, mode) in views.items():
             self.mode = mode
             if name == "wallachia":

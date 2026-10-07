@@ -10,7 +10,7 @@ from panda3d.core import Vec3
 
 from .. import geo
 
-MIN_DIST, MAX_DIST = 60.0, 1900.0
+MIN_DIST, MAX_DIST = 90.0, 1900.0
 NEAR_PITCH, FAR_PITCH = 38.0, 72.0  # degrees below the horizon
 
 

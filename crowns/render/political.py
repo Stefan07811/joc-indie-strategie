@@ -27,6 +27,26 @@ def _spread(labels, passes=6):
     return labels
 
 
+def _border_distance(labels, reach=8):
+    """Texels from every land texel to the nearest border between two provinces (not the coast),
+    smoothed, so the shader can draw borders as clean curves at any zoom."""
+    a = labels.astype(np.int32)
+    edge = np.zeros(a.shape, bool)
+    for axis in (0, 1):
+        for shift in (1, -1):
+            other = np.roll(a, shift, axis=axis)
+            edge |= (other != a) & (other > 0) & (a > 0)
+    dist = np.where(edge, 0.5, np.float32(reach)).astype(np.float32)
+    for _ in range(reach):
+        grown = dist
+        for dr, dc, step in ((1, 0, 1.0), (-1, 0, 1.0), (0, 1, 1.0), (0, -1, 1.0),
+                             (1, 1, 1.414), (1, -1, 1.414), (-1, 1, 1.414), (-1, -1, 1.414)):
+            grown = np.minimum(grown, np.roll(np.roll(dist, dr, 0), dc, 1) + step)
+        dist = grown
+    from ..mapdata import blur
+    return blur(dist, 1, passes=2)
+
+
 def _rounded(labels, passes=3):
     """Labels with their stair-steps rounded off: every texel takes the most common label around it."""
     labels = labels.astype(np.int16)
@@ -57,6 +77,8 @@ class Overlay:
         self.fine = cache.cached("province-index", [DATA / "provinces.png", Path(__file__)],
                                  lambda: _spread(_rounded(_upscale(provmap.labels, scale))).astype(np.uint16))
         self.size = max(provmap.by_index) + 1
+        self.border_distance = cache.cached("province-border-distance", [DATA / "provinces.png", Path(__file__)],
+                                            lambda: _border_distance(self.fine))
 
     def index_texture(self):
         from panda3d.core import SamplerState, Texture
@@ -66,6 +88,18 @@ class Overlay:
         tex.setRamImage(np.ascontiguousarray(np.flipud(self.fine)).tobytes())
         for setter in (tex.setMinfilter, tex.setMagfilter):
             setter(SamplerState.FT_nearest)
+        tex.setWrapU(SamplerState.WM_clamp)
+        tex.setWrapV(SamplerState.WM_clamp)
+        return tex
+
+    def distance_texture(self):
+        from panda3d.core import SamplerState, Texture
+        h, w = self.border_distance.shape
+        tex = Texture("border-distance")
+        tex.setup2dTexture(w, h, Texture.T_float, Texture.F_r32)
+        tex.setRamImage(np.ascontiguousarray(np.flipud(self.border_distance)).astype(np.float32).tobytes())
+        for setter in (tex.setMinfilter, tex.setMagfilter):
+            setter(SamplerState.FT_linear)
         tex.setWrapU(SamplerState.WM_clamp)
         tex.setWrapV(SamplerState.WM_clamp)
         return tex

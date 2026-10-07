@@ -20,6 +20,20 @@ STEP = 2          # map pixels per mesh vertex
 CHUNK = 64        # mesh cells per chunk side (each chunk is culled on its own)
 HAZE = (0.66, 0.72, 0.78)
 SUN = Vec3(-0.55, 0.35, 0.76).normalized()
+# The map's looks: (land shader, sea shader, GLSL defines, name shown to the player)
+STYLES = {
+    "codex": ("terrain_codex.frag", "water_codex.frag", [], "Codex: an engraved portolan chart"),
+    "real": ("terrain.frag", "water.frag", [], "Realistic relief (for checking the map)"),
+}
+
+
+def load_shader(vert, frag, defines=()):
+    """A GLSL shader from shaders/, with #defines inserted after the #version line."""
+    def source(name):
+        text = (SHADERS / name).read_text(encoding="utf-8")
+        head, _, rest = text.partition("\n")
+        return head + "\n" + "".join(f"#define {d}\n" for d in defines) + rest
+    return Shader.make(Shader.SL_GLSL, source(vert), source(frag))
 
 
 def units(metres):
@@ -82,13 +96,15 @@ def _mesh(name, xs, ys, zs, us, vs, cols, rows):
 class MapWorld:
     """The terrain and the sea, ready to attach to a scene graph."""
 
-    def __init__(self, ground=None):
+    def __init__(self, ground=None, style="codex"):
         self.ground = ground or Ground()
+        self.style = style
         self.root = NodePath("map")
         self.size = Vec2(geo.WIDTH, geo.HEIGHT)
         self._build_textures()
         self._build_terrain()
         self._build_water()
+        self.set_style(style)
 
     def _build_textures(self):
         from .. import cache, mapdata
@@ -99,6 +115,7 @@ class MapWorld:
         self.normal_tex = texture(cache.cached(f"normals-{EXAGGERATION}", sources,
                                                lambda: g.normal_map(EXAGGERATION)), "normals")
         self.height_tex = float_texture(g.height, "heights")
+        self.coast_tex = float_texture(cache.cached("coast", sources, g.coast_distance), "coast")
         blank = np.zeros((1, 2, 4), np.uint8)
         self.palette_tex = self._palette_texture(blank)
         self.province_tex = texture(np.zeros((2, 2, 4), np.uint8), "provinces", mipmap=False)
@@ -109,6 +126,13 @@ class MapWorld:
         col = int(np.clip(x, 0, h.shape[1] - 1))
         row = int(np.clip(geo.HEIGHT - y, 0, h.shape[0] - 1))
         return max(0.0, units(float(h[row, col])))
+
+    def set_style(self, style):
+        """Change the map's look (one of STYLES) on the fly."""
+        self.style = style
+        land, sea, defines, _ = STYLES[style]
+        self.terrain.setShader(load_shader("terrain.vert", land, defines))
+        self.water.setShader(load_shader("water.vert", sea, defines))
 
     def _build_terrain(self):
         h = self.ground.height
@@ -134,10 +158,9 @@ class MapWorld:
                 node = _mesh(f"chunk{r0}_{c0}", xs.ravel(), ys.ravel(), zz.ravel(), us.ravel(), vs.ravel(),
                              len(c), len(r))
                 self.terrain.attachNewNode(node)
-        self.terrain.setShader(Shader.load(Shader.SL_GLSL, str(SHADERS / "terrain.vert"),
-                                           str(SHADERS / "terrain.frag")))
         self.terrain.setShaderInputs(colormap=self.color_tex, normalmap=self.normal_tex, provinces=self.province_tex,
                                      palette=self.palette_tex, index_size=Vec2(2, 2), palette_size=2.0,
+                                     coast=self.coast_tex, time=0.0, borderdist=self.coast_tex,
                                      selected=-1, hovered=-1, sun_dir=SUN, cam_pos=Vec3(0, 0, 1000),
                                      haze=Vec3(*HAZE), map_size=self.size, overlay_mix=0.0)
 
@@ -148,15 +171,15 @@ class MapWorld:
         node = _mesh("water", xs, ys, np.zeros(4, np.float32), np.array([0, 1, 0, 1], np.float32),
                      np.array([1, 1, 0, 0], np.float32), 2, 2)
         self.water = self.root.attachNewNode(node)
-        self.water.setShader(Shader.load(Shader.SL_GLSL, str(SHADERS / "water.vert"), str(SHADERS / "water.frag")))
-        self.water.setShaderInputs(heightmap=self.height_tex, sun_dir=SUN, cam_pos=Vec3(0, 0, 1000),
-                                   haze=Vec3(*HAZE), map_size=self.size, time=0.0)
+        self.water.setShaderInputs(heightmap=self.height_tex, coast=self.coast_tex, sun_dir=SUN,
+                                   cam_pos=Vec3(0, 0, 1000), haze=Vec3(*HAZE), map_size=self.size, time=0.0)
         self.water.setTransparency(TransparencyAttrib.M_alpha)
         self.water.setBin("transparent", 10)
         self.water.setDepthWrite(False)
 
     def update(self, cam_pos, time):
         self.terrain.setShaderInput("cam_pos", cam_pos)
+        self.terrain.setShaderInput("time", time)
         self.water.setShaderInput("cam_pos", cam_pos)
         self.water.setShaderInput("time", time)
 
@@ -167,10 +190,10 @@ class MapWorld:
         tex.setMagfilter(SamplerState.FT_nearest)
         return tex
 
-    def set_provinces(self, index_texture):
-        """The province index of every texel (from render.political.Overlay)."""
+    def set_provinces(self, index_texture, distance_texture):
+        """The province index of every texel, and every texel's distance to a province border."""
         self.province_tex = index_texture
-        self.terrain.setShaderInputs(provinces=index_texture,
+        self.terrain.setShaderInputs(provinces=index_texture, borderdist=distance_texture,
                                      index_size=Vec2(index_texture.getXSize(), index_texture.getYSize()))
 
     def set_palette(self, rgba, mix):

@@ -89,35 +89,42 @@ class Builder:
                 if top > 0:
                     self.tri(ct, hi[k], hi[n], color)
 
+    def arrays(self):
+        """(vertices (n, 3, 3), colours (n, 4)) of the triangles."""
+        verts = np.array([v for v, _ in self.tris], np.float64).reshape(-1, 3, 3)
+        colors = np.array([(*c, 1.0) for _, c in self.tris], np.float64).reshape(-1, 4)
+        return verts, colors
+
     def node(self, name, smooth=False):
         """The triangles as a GeomNode: flat-shaded, or with normals averaged at shared corners
         (smooth=True, for the ink outline, which must swell without tearing apart)."""
-        verts = np.array([v for v, _ in self.tris], np.float64)                  # (n, 3, 3)
-        colors = np.array([(*c, 1.0) for _, c in self.tris], np.float64)         # (n, 4)
-        n = np.cross(verts[:, 1] - verts[:, 0], verts[:, 2] - verts[:, 0])
-        length = np.linalg.norm(n, axis=1, keepdims=True)
-        n = np.where(length > 1e-9, n / np.maximum(length, 1e-9), np.array([0.0, 0.0, 1.0]))
-        count = len(self.tris)
-        data = np.concatenate([verts.reshape(-1, 3), np.repeat(n, 3, axis=0), np.repeat(colors, 3, axis=0)],
-                              axis=1).astype(np.float32)
-        assert data.shape == (count * 3, 10)
-        if smooth:
-            keys = np.round(data[:, :3] * 200).astype(np.int64)
-            _, inverse = np.unique(keys, axis=0, return_inverse=True)
-            sums = np.zeros((inverse.max() + 1, 3), np.float64)
-            np.add.at(sums, inverse.ravel(), data[:, 3:6])
-            norms = sums / np.maximum(np.linalg.norm(sums, axis=1, keepdims=True), 1e-9)
-            data[:, 3:6] = norms[inverse.ravel()]
-        vdata = GeomVertexData(name, _format(), Geom.UH_static)
-        vdata.uncleanSetNumRows(len(data))
-        vdata.modifyArrayHandle(0).copyDataFrom(data.tobytes())
-        tris = GeomTriangles(Geom.UH_static)
-        tris.addConsecutiveVertices(0, len(data))
-        geom = Geom(vdata)
-        geom.addPrimitive(tris)
-        node = GeomNode(name)
-        node.addGeom(geom)
-        return node
+        return geom_node(name, *self.arrays(), smooth=smooth)
+
+
+def geom_node(name, verts, colors, smooth=False):
+    """A GeomNode from triangles (n, 3, 3) and their colours (n, 4)."""
+    n = np.cross(verts[:, 1] - verts[:, 0], verts[:, 2] - verts[:, 0])
+    length = np.linalg.norm(n, axis=1, keepdims=True)
+    n = np.where(length > 1e-9, n / np.maximum(length, 1e-9), np.array([0.0, 0.0, 1.0]))
+    data = np.concatenate([verts.reshape(-1, 3), np.repeat(n, 3, axis=0), np.repeat(colors, 3, axis=0)],
+                          axis=1).astype(np.float32)
+    if smooth:
+        keys = np.round(data[:, :3] * 200).astype(np.int64)
+        _, inverse = np.unique(keys, axis=0, return_inverse=True)
+        sums = np.zeros((inverse.max() + 1, 3), np.float64)
+        np.add.at(sums, inverse.ravel(), data[:, 3:6])
+        norms = sums / np.maximum(np.linalg.norm(sums, axis=1, keepdims=True), 1e-9)
+        data[:, 3:6] = norms[inverse.ravel()]
+    vdata = GeomVertexData(name, _format(), Geom.UH_static)
+    vdata.uncleanSetNumRows(len(data))
+    vdata.modifyArrayHandle(0).copyDataFrom(data.tobytes())
+    tris = GeomTriangles(Geom.UH_static)
+    tris.addConsecutiveVertices(0, len(data))
+    geom = Geom(vdata)
+    geom.addPrimitive(tris)
+    node = GeomNode(name)
+    node.addGeom(geom)
+    return node
 
 
 # --- the miniatures -------------------------------------------------------------------------

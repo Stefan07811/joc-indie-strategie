@@ -135,6 +135,9 @@ class MapApp(_showbase()):
         self.chronicle = Chronicle(self.theme, self.aspect2d, aspect)
         self.dialog = Dialog(self.theme, self.aspect2d)
         self.redraw_overlay()
+        from .render.towns import Towns
+        from .render.world import SUN
+        self.towns = Towns(self.render, self.campaign, self.world.height_at, SUN)
         self.sync_figures()
         self.refresh()
         if realm:
@@ -217,6 +220,7 @@ class MapApp(_showbase()):
         self.chronicle.add(before, c.messages)
         self.chronicle.show()
         self.sync_figures(animate=True)
+        self.towns.rebuild()
         if self.owners() != owners:
             self.realm_labels.rebuild(self.owners())
         self.redraw_overlay()
@@ -381,6 +385,20 @@ class MapApp(_showbase()):
 
     # --- armies ----------------------------------------------------------------------------------
 
+    def figure_spot(self, army, x=None, y=None):
+        """Where an army's miniature stands, in world units: at a town it camps outside the walls, the
+        armies there side by side."""
+        x = army.x if x is None else x
+        y = army.y if y is None else y
+        prov = self.provmap.at(x, y)
+        if prov is not None and math.hypot(prov.town[0] - x, prov.town[1] - y) < 4:
+            here = [a for a in self.campaign.armies
+                    if math.hypot(a.x - prov.town[0], a.y - prov.town[1]) < 4]
+            k = here.index(army) if army in here else 0
+            angle = math.radians(-35 + 70 * k)
+            x, y = prov.town[0] + 10 * math.sin(angle), prov.town[1] + 10 * math.cos(angle)
+        return self.map_to_world(x, y)
+
     def army_by_id(self, army_id):
         return next((a for a in self.campaign.armies if a.id == army_id), None)
 
@@ -400,11 +418,11 @@ class MapApp(_showbase()):
                 color = tuple(v / 255 for v in self.colors[army.owner])
                 figure = ArmyFigure(self.render, self.world.height_at, color, ACCENT[tradition], SUN,
                                     eastern=tradition in EASTERN)
-                figure.place(*self.map_to_world(army.x, army.y))
+                figure.place(*self.figure_spot(army))
                 self.figures[army.id] = figure
                 continue
             walk = army.last_walk if animate else []
-            end = self.map_to_world(army.x, army.y)
+            end = self.figure_spot(army)
             if len(walk) > 1:
                 figure.march(self._strides(walk) + [end])
             elif math.hypot(figure.pos.x - end[0], figure.pos.y - end[1]) > 0.5:
@@ -462,7 +480,7 @@ class MapApp(_showbase()):
         self.audio.play("march", 0.5)
         walked = army.walk()
         if len(walked) > 1:
-            self.figures[army.id].march(self._strides(walked))
+            self.figures[army.id].march(self._strides(walked) + [self.figure_spot(army)])
         enemy = c.hostile_near(army)
         if enemy is not None and (target is None or enemy is target):
             c.messages = []
@@ -524,6 +542,8 @@ class MapApp(_showbase()):
         self.chosen = None
         self.panel.close()
         self.sync_figures()
+        self.towns.campaign = self.campaign
+        self.towns.rebuild(force=True)
         self.realm_labels.rebuild(self.owners())
         self.redraw_overlay()
         self.show_orders()
@@ -658,6 +678,7 @@ class MapApp(_showbase()):
         for figure in self.figures.values():
             figure.update(dt, task.time)
         self.ribbon.update(self.camera_ctl.distance, task.time)
+        self.towns.update(self.camera_ctl.distance)
         self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
         self.realm_labels.update(self.camera_ctl.distance)
         p = None if self.over_gui() else self.mouse_ground()
@@ -678,6 +699,7 @@ class MapApp(_showbase()):
 
     def _shoot(self, folder, name):
         self.world.update(self.camera_ctl.position, 2.0)
+        self.towns.update(self.camera_ctl.distance)
         self.ribbon.update(self.camera_ctl.distance, 2.0)
         self.labels.update(self.camera_ctl.distance, self.camera_ctl.heading)
         self.realm_labels.update(self.camera_ctl.distance)
@@ -688,7 +710,8 @@ class MapApp(_showbase()):
 
     def shots(self, folder, only=None):
         folder.mkdir(parents=True, exist_ok=True)
-        want = (lambda name: not only or name in only)
+        want = (lambda name: not only or name in only or (name == "towns" and any(o.startswith("towns")
+                                                                                   for o in only)))
         c = self.campaign
         # choosing a realm
         if want("choose"):
@@ -703,6 +726,13 @@ class MapApp(_showbase()):
             self._view(25.5, 44.6, 520, 0)
             self._shoot(folder, "welcome")
         self.dialog.close()
+        if want("towns"):
+            self.panel.close()
+            for lon, lat, dist, heading, label in ((25.45, 44.93, 120, 20, "towns"),
+                                                   (28.95, 41.02, 110, 330, "towns_city"),
+                                                   (26.55, 41.68, 100, 0, "towns_edirne")):
+                self._view(lon, lat, dist, heading)
+                self._shoot(folder, label)
         if want("province"):
             self._view(25.5, 44.6, 420, 0)
             self.selected = self.provmap.provinces["targoviste"].index

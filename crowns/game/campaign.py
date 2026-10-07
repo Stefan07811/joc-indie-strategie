@@ -45,6 +45,10 @@ ARMY_SHARE = 0.45     # of its income a realm spends on the army it starts with
 # Realms with fleets to carry their armies over the sea (any realm with a harbour gets them too).
 NAVAL_REALMS = {"venice", "genoa", "knights", "cyprus", "naxos", "lesbos", "byzantium", "ott_rum", "ott_isa",
                 "ott_meh", "mamluks", "naples", "sicily", "ragusa", "tocco", "trebizond", "aydin", "mentese"}
+# how hard the world is: the player's revenue, the other realms' revenue, how readily they go to war
+DIFFICULTY = {"easy": {"player": 1.15, "ai": 0.9, "war": 0.75},
+              "normal": {"player": 1.0, "ai": 1.0, "war": 1.0},
+              "hard": {"player": 0.95, "ai": 1.12, "war": 1.3}}
 HOARD_MONTHS = 12     # a treasury above this many months of income is spent on the court's splendour
 LARGESSE = 0.08       # of the hoard above that, each month
 # Armies in the field in September 1402 that do not stand at their realm's capital.
@@ -113,6 +117,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         self.ai = None
         self.proposals = []                # offers to the player waiting for an answer
         self.interactive_battles = False   # the player's battles wait for the player (in the game itself)
+        self.difficulty = "normal"
         self.pending_battles = []          # (army id, army id) met this month, for the player to fight
         self.rng = random.Random(seed)
         self.provinces = {p.id: ProvinceState(p.id, p.owner, p.owner, p.population)
@@ -243,6 +248,8 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
             if p.owner == tag:   # the old castles are kept by the lords' men; the new walls cost wages
                 b.forts += self.effect(p.id, "fort") * rules.FORT_UPKEEP
         b.beyond = self.beyond_the_map.get(tag, 0.0)
+        k = DIFFICULTY[self.difficulty]["player" if tag == self.player else "ai"]
+        b.tax, b.production, b.commerce = b.tax * k, b.production * k, b.commerce * k
         gross = b.tax + b.production + b.commerce + b.beyond
         b.court = min(rules.COURT_UPKEEP[self.info[tag]["rank"]], 0.25 * gross) + gross * rules.COURT_SHARE
         b.armies = sum(a.upkeep for a in self.armies_of(tag))
@@ -525,13 +532,14 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments], "commander": a.commander,
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
                        for a in self.armies],
-            "rng": self.rng.getstate(),
+            "rng": self.rng.getstate(), "difficulty": self.difficulty,
         }
 
     @classmethod
     def from_dict(cls, data, provmap, realms, relations=()):
         c = cls(provmap, realms, relations, player=data["player"], date=Date(*data["date"]), armies=False)
         c._next_army = data["next_army"]
+        c.difficulty = data.get("difficulty", "normal")
         c.provinces = {p["id"]: ProvinceState(**p) for p in data["provinces"]}
         c.realms = {r["tag"]: RealmState(**r) for r in data["realms"]}
         c.overlord = {tag: tuple(v) if v else None for tag, v in data["overlord"].items()}

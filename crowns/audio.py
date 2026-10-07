@@ -42,6 +42,7 @@ class Audio:
         self.index = 0
         self.muted = False
         self.loops = {}           # name -> sound, for the din of a battle
+        self.sfx_volume = 0.8     # the sounds' share, against their own loudness
 
     def _music(self, name):
         if name not in self.tracks:
@@ -102,7 +103,7 @@ class Audio:
             self.sfx[name] = self.base.loader.loadSfx(str(path)) if path.exists() else None
         sound = self.sfx[name]
         if sound is not None:
-            sound.setVolume(volume)
+            sound.setVolume(volume * self.sfx_volume / 0.8)
             sound.play()
 
     def loop(self, name, volume):
@@ -116,7 +117,7 @@ class Audio:
                 return
             sound = self.loops[name] = self.base.loader.loadSfx(str(path))
             sound.setLoop(True)
-        volume = 0.0 if self.muted else volume
+        volume = 0.0 if self.muted else volume * self.sfx_volume / 0.8
         if volume <= 0.01:
             if sound.status() == sound.PLAYING:
                 sound.stop()

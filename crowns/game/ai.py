@@ -125,7 +125,9 @@ class AI:
 
     def go_to_war(self, tag):
         c = self.c
-        if c.wars_of(tag) or c.rng.random() > WAR_CHANCE * AGGRESSION.get(tag, 1.0) * c.aggression(tag):
+        from .campaign import DIFFICULTY
+        war = DIFFICULTY[c.difficulty]["war"]
+        if c.wars_of(tag) or c.rng.random() > WAR_CHANCE * AGGRESSION.get(tag, 1.0) * c.aggression(tag) * war:
             return
         if c.date.months_since(c.start_date) < 3:
             return   # the first months belong to the player

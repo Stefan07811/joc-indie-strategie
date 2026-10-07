@@ -11,9 +11,7 @@ between the terrain and the political map. F5 saves, F9 loads. M turns the music
 """
 
 import argparse
-import json
 import math
-import os
 import sys
 import time
 from pathlib import Path
@@ -24,10 +22,6 @@ ACCENT = {"latin": (0.94, 0.92, 0.86), "vlach": (0.20, 0.30, 0.62), "balkan": (0
           "greek": (0.55, 0.20, 0.45), "ottoman": (0.94, 0.92, 0.86), "steppe": (0.55, 0.12, 0.10),
           "levant": (0.90, 0.78, 0.30)}
 EASTERN = {"ottoman", "steppe", "levant"}
-
-
-def saves_dir():
-    return Path(os.environ.get("CROWNS_HOME", Path.home() / ".crowns")) / "saves"
 
 
 def configure(offscreen=False, size=None, fullscreen=False):
@@ -51,16 +45,22 @@ def main(argv=None):
     parser.add_argument("--size", default=None, help="window size, e.g. 1920x1080")
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--style", default="codex", help="the map's look: codex (the game's) or real (for checks)")
-    parser.add_argument("--quality", default="high", choices=("low", "high"),
+    parser.add_argument("--quality", default=None, choices=("low", "high"),
                         help="low: no last pass over the picture and smaller shadows, for weak graphics cards")
     parser.add_argument("--selftest", metavar="REPORT", help="check the game works, without a window, and quit")
     args = parser.parse_args(argv)
     if args.selftest:
         return selftest(Path(args.selftest))
+    from .settings import Settings
+    settings = Settings.load()
     size = tuple(int(v) for v in args.size.split("x")) if args.size else None
-    configure(offscreen=bool(args.shots), size=size or ((1600, 900) if args.shots else None),
-              fullscreen=args.fullscreen)
-    app = MapApp(style=args.style, realm=args.realm, quality=args.quality)
+    if args.shots:
+        size, fullscreen = size or (1600, 900), False
+    else:
+        size, fullscreen = size or settings.size, args.fullscreen or settings.fullscreen
+    configure(offscreen=bool(args.shots), size=size, fullscreen=fullscreen)
+    app = MapApp(style=args.style, realm=args.realm, quality=args.quality or settings.quality, settings=settings,
+                 title=not (args.realm or args.shots))
     if args.shots:
         app.shots(Path(args.shots), args.only)
     else:
@@ -105,6 +105,7 @@ def selftest(report):
 
 # Imported after configure(): Panda reads its settings when ShowBase starts.
 from .battle_controls import BattleControls  # noqa: E402
+from .menu_controls import MenuControls  # noqa: E402
 
 
 def _showbase():
@@ -112,8 +113,8 @@ def _showbase():
     return ShowBase
 
 
-class MapApp(BattleControls, _showbase()):
-    def __init__(self, style="codex", realm=None, quality="high"):
+class MapApp(BattleControls, MenuControls, _showbase()):
+    def __init__(self, style="codex", realm=None, quality="high", settings=None, title=False):
         super().__init__()
         from panda3d.core import WindowProperties
 
@@ -142,6 +143,8 @@ class MapApp(BattleControls, _showbase()):
         from panda3d.core import AntialiasAttrib
         self.render.setAntialias(AntialiasAttrib.MMultisample)
         self.quality = quality
+        from .settings import Settings
+        self.settings = settings or Settings()
         self.post = None
         if quality == "high":
             try:
@@ -236,6 +239,9 @@ class MapApp(BattleControls, _showbase()):
         self.battle = None
         self.storm_pid = None
         self.init_battle_controls()
+        self.init_menus()
+        if title:
+            self.show_title()
         self.taskMgr.add(self.tick, "tick")
 
     # --- the campaign ----------------------------------------------------------------------------
@@ -289,6 +295,7 @@ class MapApp(BattleControls, _showbase()):
         owners = self.owners()
         self.audio.play("month", 0.5)
         c.end_month()
+        self.autosave()
         self.chronicle.add(before, c.messages)
         self.chronicle.show()
         self.sync_figures(animate=True)
@@ -925,26 +932,29 @@ class MapApp(BattleControls, _showbase()):
 
     # --- saving -----------------------------------------------------------------------------------
 
-    def save_game(self, name="quick"):
-        if self.campaign.player is None:
-            return
-        folder = saves_dir()
-        folder.mkdir(parents=True, exist_ok=True)
-        path = folder / f"{name}.json"
-        path.write_text(json.dumps(self.campaign.to_dict()), encoding="utf-8")
-        self.chronicle.add(str(self.campaign.date), [f"Saved ({path.name})."])
-        self.chronicle.show()
-
     def load_game(self, name="quick"):
         from .game.campaign import Campaign
-        path = saves_dir() / f"{name}.json"
-        if not path.exists():
+        data = self.read_save(name)
+        if data is None:
             return
-        data = json.loads(path.read_text(encoding="utf-8"))
         self.campaign = Campaign.from_dict(data, self.provmap, self.realms, self.relations)
-        self.campaign.nav, self.campaign.naval_nav = self.nav, self.naval_nav
         self.campaign.attach_ai(self.nav, self.naval_nav)
         self.campaign.interactive_battles = True
+        self._campaign_changed()
+        self.chronicle.add(str(self.campaign.date), ["Loaded."])
+        self.chronicle.show()
+
+    def restart_campaign(self):
+        """The world of September 1402 again, no realm chosen."""
+        from .game.campaign import Campaign
+        self.campaign = Campaign(self.provmap, self.realms, self.relations, player=None)
+        self.campaign.difficulty = self.settings.difficulty
+        self._campaign_changed()
+        self.camera_ctl.look_at(*self.world_xy(25.5, 44.0), 1100)
+
+    def _campaign_changed(self):
+        self.campaign.nav, self.campaign.naval_nav = self.nav, self.naval_nav
+        self.dialog.close()
         for figure in self.figures.values():
             figure.root.removeNode()
         self.figures = {}
@@ -957,8 +967,6 @@ class MapApp(BattleControls, _showbase()):
         self.redraw_overlay()
         self.show_orders()
         self.refresh()
-        self.chronicle.add(str(self.campaign.date), ["Loaded."])
-        self.chronicle.show()
 
     # --- coordinates ----------------------------------------------------------------------------
 
@@ -999,13 +1007,15 @@ class MapApp(BattleControls, _showbase()):
         if self.in_battle:
             self.battle_paused = not self.battle_paused
             return
-        if self.dialog.open:
+        if self.menus.open:
+            self.toggle_pause()
+        elif self.dialog.open:
             self.dialog.close()
         elif self.panel.subject is not None:
             self.close_panel()
             self.choose(None)
         else:
-            sys.exit()
+            self.toggle_pause()
 
     def _drag(self, kind):
         self.dragging = kind
@@ -1232,6 +1242,16 @@ class MapApp(BattleControls, _showbase()):
             c.provinces["arges"].unrest = 0
         if any(want(n) for n in ("battle_deploy", "battle_low", "battle_fight", "battle_close", "battle_end")):
             self._battle_shots(folder, want)
+        if want("title") or want("settings"):
+            self.restart_campaign() if self.campaign.player is not None else None
+            self.show_title()
+            if want("title"):
+                self._shoot(folder, "title")
+            self.show_settings()
+            if want("settings"):
+                self._shoot(folder, "settings")
+            self.menus.close()
+            self.play_as("wallachia", welcome=False)
         if any(want(n) for n in ("storm_walls", "storm_fight", "storm_end")):
             self._storm_shots(folder, want)
         # a war, a few months on

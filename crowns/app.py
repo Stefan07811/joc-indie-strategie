@@ -7,7 +7,7 @@
 Controls: WASD or the arrows move, the mouse wheel zooms, right-drag or Q/E turns, middle-drag moves.
 Left click picks a province, an army or a realm; right click orders the chosen army to march there
 (onto an enemy army: give battle; to an enemy town: besiege it). Space ends the month. 1 / 2 switch
-between the terrain and the political map. F5 saves, F9 loads.
+between the terrain and the political map. F5 saves, F9 loads. M turns the music off and on.
 """
 
 import argparse
@@ -32,10 +32,10 @@ def saves_dir():
 
 def configure(offscreen=False, size=None, fullscreen=False):
     lines = ["window-title Crowns of the Balkans", "framebuffer-multisample 1", "multisamples 4",
-             "textures-power-2 none", "audio-library-name null", "sync-video 1", "show-frame-rate-meter 0",
-             "notify-level-display error", "notify-level-device error"]
+             "textures-power-2 none", "sync-video 1", "show-frame-rate-meter 0",
+             "notify-level-display error", "notify-level-device error", "notify-level-audio error"]
     if offscreen:
-        lines += ["window-type offscreen", "sync-video 0"]
+        lines += ["window-type offscreen", "sync-video 0", "audio-library-name null"]
     if size:
         lines.append(f"win-size {size[0]} {size[1]}")
     if fullscreen:
@@ -83,6 +83,7 @@ class MapApp(_showbase()):
         from .render.political import Labels, Overlay, RealmLabels
         from .render.world import HAZE, MapWorld
         from .ui.panels import Chronicle, Dialog, SidePanel, TopBar
+        from .audio import Audio
         from .ui.theme import Theme
 
         self.geo = geo
@@ -109,6 +110,11 @@ class MapApp(_showbase()):
         self.hovered = None
         self.mode = "political"
         self.theme = Theme(self.loader)
+        self.audio = Audio(self)
+        if self.audio.enabled:
+            from .audio import SOUNDS
+            self.theme.click = self.loader.loadSfx(str(SOUNDS / "click.ogg"))
+            self.theme.click.setVolume(0.5)
         self.labels = Labels(self.provmap, self.world.height_at, self.theme.title, self.render)
         self.realm_labels = RealmLabels(self.provmap, self.owners(), {t: r["short"] for t, r in self.realms.items()},
                                         self.world.height_at, self.theme.title, self.render,
@@ -150,6 +156,7 @@ class MapApp(_showbase()):
         self.accept("2", self.set_mode, ["political"])
         self.accept("f5", self.save_game)
         self.accept("f9", self.load_game)
+        self.accept("m", self.audio.toggle)
         self.accept("escape", self.escape)
         self.dragging = None
         self.last_mouse = None
@@ -178,7 +185,9 @@ class MapApp(_showbase()):
                              [("Begin", None)])
 
     def refresh(self):
-        """Bring the bar and the open panel up to date."""
+        """Bring the bar and the open panel up to date (and the music to the mood of the realm)."""
+        from .audio import mood_of
+        self.audio.set_mood(mood_of(self.campaign))
         self.topbar.update(self.campaign)
         self.topbar.show_end(self.campaign.player is not None)
         subject = self.panel.subject
@@ -202,6 +211,7 @@ class MapApp(_showbase()):
             return
         before = str(c.date)
         owners = self.owners()
+        self.audio.play("month", 0.5)
         c.end_month()
         self.chronicle.add(before, c.messages)
         self.chronicle.show()
@@ -259,6 +269,7 @@ class MapApp(_showbase()):
             self.sync_figures()
             self.refresh()
             self.next_proposal()
+        self.audio.play("event", 0.6)
         answers = [(ch.label, (lambda i=i: pick(i))) for i, ch in enumerate(event.choices)]
         self.dialog.show(event.title, item["text"], answers, notes=[ch.about for ch in event.choices])
 
@@ -282,10 +293,12 @@ class MapApp(_showbase()):
 
     def build(self, pid, kind):
         if self.campaign.build(pid, kind):
+            self.audio.play("build", 0.6)
             self.refresh()
 
     def recruit(self, pid, unit):
         if self.campaign.recruit(pid, unit):
+            self.audio.play("march", 0.5)
             self.refresh()
 
     def halt(self, army_id):
@@ -445,6 +458,7 @@ class MapApp(_showbase()):
                 x, y = other.x, other.y
         if not army.order(self.nav, x, y):
             return False
+        self.audio.play("march", 0.5)
         walked = army.walk()
         if len(walked) > 1:
             self.figures[army.id].march(self._strides(walked))
@@ -461,6 +475,7 @@ class MapApp(_showbase()):
     def battle_dialog(self, report):
         c = self.campaign
         won = report["winner"] == c.player
+        self.audio.play("victory" if won else "defeat", 0.8)
         title = f"Victory at {report['place']}" if won else f"Defeat at {report['place']}"
         winner, loser = report["armies"]
         text = (f"On the {report['terrain']} of {report['place']}, the {winner} broke the {loser}. "
@@ -638,6 +653,7 @@ class MapApp(_showbase()):
                     self.camera_ctl.turn(mx * 120)
             self.last_mouse = (m.x, m.y)
         self.world.update(self.camera_ctl.position, task.time)
+        self.audio.update(dt)
         for figure in self.figures.values():
             figure.update(dt, task.time)
         self.ribbon.update(self.camera_ctl.distance, task.time)

@@ -147,6 +147,24 @@ frământă. Fiecare armată are un căpitan: priceperea lui contează în băt�
 - **Decizii**: Ordinul Dragonului, sprijinul pentru Musa Celebi, proclamarea Sultanatului, Hexamilionul,
   Unirea Bisericilor, proclamarea unui regat, Belgradul capitală, căutarea unui protector.
 
+## Muzica și sunetele (etapa B6)
+
+Cinci piese originale în stilul sfârșitului de Ev Mediu, cântate cu instrumente reale eșantionate
+(SoundFont-ul GeneralUser GS, de S. Christian Collins, liber de folosit) și cu ecoul unei săli de piatră:
+
+| Piesa | Ce este | Instrumente |
+|---|---|---|
+| *The Danube* | estampie în modul doric, pentru țările creștine | flaut drept, fidel, lăută, harpă, tobă cu ramă |
+| *The Crescent* | maqam Hijaz, cu taqsim și ritmul maqsum, pentru lumea otomană | ney, oud, kanun, darbuka |
+| *The Court* | piesă lentă pentru vremuri de pace | harpă, flaut drept, violoncel |
+| *War Banners* | marș de război în modul mixolidian | șalmei, cimpoi, trompetă, tobe |
+| *Doina* | doină și horă, pentru Țara Românească și Moldova | nai, fidel, cobză, tobă |
+
+Muzica urmează starea țării tale: doina și Dunărea pentru români, *The Crescent* pentru otomani și
+tătari, marșul când ești în război. Mai sunt sunete pentru butoane, sfârșitul lunii, marș, victorie,
+înfrângere, evenimente și construcții. Tasta M oprește sau pornește muzica. Piesele se refac cu
+`python tools/music.py` (are nevoie de `pip install --no-deps tinysoundfont` și de ffmpeg).
+
 ## Etapele
 
 | Etapă | Ce aduce |
@@ -156,6 +174,6 @@ frământă. Fiecare armată are un căpitan: priceperea lui contează în băt�
 | **B3 — Campania** (jucabilă; urmează echilibrul) | ture lunare, economie, clădiri, armate pe hartă, asedii, războaie și păci, diplomație, AI |
 | **B4 — Oameni** (gata) | conducători și moștenitori care îmbătrânesc și mor, dinastii, căsătorii, nobili |
 | **B5 — Istoria** (gata, se va tot îmbogăți) | misiuni pentru fiecare țară, evenimente istorice (Interregnul, Varna, Constantinopol), decizii |
-| **B6 — Interfața și sunetul** | ferestre în stil medieval, sfaturi, muzică cu instrumente reale |
+| **B6 — Interfața și sunetul** (muzica e gata) | ferestre în stil medieval, sfaturi, muzică cu instrumente reale |
 | **B7 — Bătălii tactice 3D** | după ce campania e gata |
 | **B8 — Lansarea** | executabil pentru Windows, echilibru |

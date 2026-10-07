@@ -27,6 +27,7 @@ class Theme:
         self.button_up = _parchment(256, 64, seed=2, tone=0.93)
         self.button_hover = _parchment(256, 64, seed=2, tone=1.0)
         self.button_down = _parchment(256, 64, seed=2, tone=0.82)
+        self.click = None          # a sound for the buttons, if the game has sound
 
     # --- pieces ---------------------------------------------------------------------------------
 
@@ -71,7 +72,7 @@ class Theme:
                          frameTexture=(self.button_up, self.button_down, self.button_hover, self.button_up),
                          frameColor=(1, 1, 1, 1) if enabled else (1, 1, 1, 0.55), relief=DGG.FLAT,
                          command=command, extraArgs=list(args), pressEffect=0,
-                         state=DGG.NORMAL if enabled else DGG.DISABLED)
+                         state=DGG.NORMAL if enabled else DGG.DISABLED, clickSound=self.click, rolloverSound=None)
         b.setTransparency(TransparencyAttrib.M_alpha)
         if enabled:
             self.rule(b, -half, half, -h * 0.55, 0.06)

@@ -55,6 +55,7 @@ class SidePanel:
         self.frame = None
         self.subject = None
         self.tab = "build"
+        self.realm_tab = "treasury"
 
     @property
     def left(self):
@@ -80,8 +81,11 @@ class SidePanel:
     def _text(self, text, scale=0.034, color=INK, font=None, wrap=0.9, gap=None):
         lab = self.theme.label(self.frame, text, self.left + 0.05, self.y, scale=scale, color=color, font=font,
                                wrap=wrap / scale)
-        lines = max(1, text.count("\n") + 1, int(len(text) * scale * 0.48 / wrap) + 1)
-        self.y -= gap if gap is not None else scale * 1.25 * lines + 0.006
+        try:
+            lines = max(1, lab.component("text0").textNode.getNumRows())
+        except Exception:   # noqa: BLE001 - an estimate will do
+            lines = max(1, text.count("\n") + 1, int(len(text) * scale * 0.48 / wrap) + 1)
+        self.y -= max(gap or 0.0, scale * 1.2 * lines + 0.008)
         return lab
 
     def _heading(self, text, scale=0.05):
@@ -93,10 +97,14 @@ class SidePanel:
         self.y -= 0.02
 
     def _button(self, text, command, args=(), ok=True, why=None, scale=0.03):
-        label = text if ok or not why else f"{text}  ·  {why}"
-        self.theme.button(self.frame, label, self.left + 0.05, self.y, command, args, width=0.9, scale=scale,
+        """A full-width button; when it cannot be pressed, the reason is written small beneath it."""
+        self.theme.button(self.frame, text, self.left + 0.05, self.y, command, args, width=0.9, scale=scale,
                           enabled=ok, align="left")
         self.y -= 0.05
+        if not ok and why:
+            self.theme.label(self.frame, why, (self.left + self.right) / 2, self.y + 0.012, scale=0.022,
+                             color=FADED, align=TextNode.ACenter)
+            self.y -= 0.022
 
     # --- a province ------------------------------------------------------------------------------
 
@@ -189,8 +197,31 @@ class SidePanel:
             self._button(f"Play as {info['short']}", self.actions["play"], [tag], scale=0.036)
             return
         if tag == c.player:
-            lines, balance = model.budget_lines(c, tag)
             self._rule()
+            for i, (key, name) in enumerate((("treasury", "Treasury"), ("missions", "Missions"),
+                                             ("decisions", "Decisions"))):
+                self.theme.button(self.frame, name, self.left + 0.05 + i * 0.305, self.y, self.actions["realm_tab"],
+                                  [key], width=0.285, scale=0.03, enabled=self.realm_tab != key, align="left")
+            self.y -= 0.065
+            if self.realm_tab == "missions":
+                for m in c.missions_view(tag):
+                    mark = {"done": "Done: ", "open": "", "locked": "Later: "}[m["state"]]
+                    color = GOLD if m["state"] == "done" else (FADED if m["state"] == "locked" else INK)
+                    self._text(f"{mark}{m['title']}", scale=0.031, color=color, gap=0.04)
+                    if m["state"] != "done" and self.y > -0.8:
+                        self._text(m["text"], scale=0.025, color=FADED, font=self.theme.italic)
+                        self._text(f"Reward: {m['reward']}", scale=0.025, color=GOLD, gap=0.04)
+                    if self.y < -0.9:
+                        break
+                return
+            if self.realm_tab == "decisions":
+                for d, ok, why in c.decisions_for(tag):
+                    if self.y < -0.85:
+                        break
+                    self._text(d.text, scale=0.025, color=FADED, font=self.theme.italic)
+                    self._button(d.title, self.actions["decide"], [d.id], ok, why, scale=0.028)
+                return
+            lines, balance = model.budget_lines(c, tag)
             for name, amount in lines:
                 self._text(f"{name}: {model.signed(amount)}", scale=0.028, gap=0.034)
             self._text(f"Each month: {model.signed(balance)} ducats", scale=0.032, color=GOLD)
@@ -263,12 +294,25 @@ class Dialog:
         self.theme, self.parent = theme, parent
         self.frame = None
 
-    def show(self, title, text, answers):
-        """answers: [(label, callback)]."""
+    def show(self, title, text, answers, notes=None):
+        """answers: [(label, callback)]; with notes (one per answer), the answers are stacked, each with
+        a line saying what it will bring."""
         self.close()
-        self.frame = self.theme.panel(self.parent, -0.75, 0.75, -0.4, 0.4)
+        stacked = notes is not None
+        bottom = -0.4 - (0.1 * len(answers) if stacked else 0)
+        self.frame = self.theme.panel(self.parent, -0.75, 0.75, bottom, 0.4)
         self.theme.heading(self.frame, title, 0, 0.3, scale=0.05, align=TextNode.ACenter)
         self.theme.label(self.frame, text, -0.66, 0.2, scale=0.034, wrap=1.32 / 0.034, font=self.theme.italic)
+        if stacked:
+            y = -0.22
+            for (label, callback), note in zip(answers, notes):
+                self.theme.button(self.frame, label, -0.66, y, self._answer, [callback], width=1.32, scale=0.036,
+                                  align="left")
+                if note:
+                    self.theme.label(self.frame, note, 0, y - 0.055, scale=0.027, color=FADED,
+                                     align=TextNode.ACenter)
+                y -= 0.13
+            return
         x = -0.66
         width = (1.32 - 0.04 * (len(answers) - 1)) / max(1, len(answers))
         for label, callback in answers:

@@ -138,6 +138,9 @@ class AI:
         for other in c.neighbours.get(tag, ()):
             if not c.realms[other].alive or (lord and other == lord[0]):
                 continue
+            held = c.overlord.get(other)
+            if held and held[0] == tag and c.opinion(tag, other) > -40:
+                continue   # our own vassals pay us; we do not burn their villages
             if c.opinion(tag, other) > 10 or c.truce_with(tag, other) or sorted((tag, other)) in c.alliances:
                 continue
             ratio = me / max(1.0, c.coalition_power(other, tag))

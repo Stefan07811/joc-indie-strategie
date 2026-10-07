@@ -110,6 +110,43 @@ Fiecare tură e o lună. Joci un stat și toate celelalte sunt conduse de AI.
   fața armatelor mai mari și face pace când scorul o cere. Îți poate oferi pace: primești o întrebare.
 - **Salvare:** F5 salvează, F9 încarcă.
 
+## Oamenii (etapa B4)
+
+Fiecare conducător din 1402 e o persoană: are casă (dinastie), vârstă și trăsături luate din cronici
+(Mircea e viteaz, strateg și ambițios; Sigismund e ambițios și viclean; Ștefan Lazarević e învățat și
+evlavios). Are și priceperi la război, diplomație și administrare. Oamenii îmbătrânesc și mor, cei
+căsătoriți au copii, iar casele domnitoare își mărită copiii între ele, ceea ce apropie țările. Poți
+propune căsătorii din foaia altui stat.
+
+La moartea conducătorului urmează moștenitorul: cel desemnat, apoi fiul, fratele, nepotul, fiica unde
+femeile pot domni, iar la tătari cel mai vârstnic din neam. Cine moștenește o a doua țară o unește cu prima
+(Sigismund moștenește Boemia). Republicile își aleg conducătorul, papii își iau nume papale numerotate.
+Când neamul se stinge, preia tronul un văr sau, dacă nu se găsește niciunul, o casă nouă, iar țara se
+frământă. Fiecare armată are un căpitan: priceperea lui contează în bătălie și poate muri în luptă.
+
+## Istoria (etapa B5)
+
+![Misiunile Țării Românești](docs/crowns/missions.png)
+
+- **Evenimente istorice**, cu alegeri pentru jucător:
+  - Timur ia Smirna, apoi pleacă din Anatolia și moare în 1405;
+  - Baiazid moare prizonier, Tratatul de la Gallipoli, bătălia pentru Bursa, Süleyman trece în Anatolia;
+  - Ladislau încoronat la Zara, Grunwald, Conciliul de la Constanța, arderea lui Hus și husiții;
+  - Iancu de Hunedoara, Skanderbeg, cruciada de la Varna;
+  - căderea Constantinopolului, dacă se ajunge acolo.
+- **Întâmplări**: ciuma (pornește dintr-un port mare și se întinde), foametea, recoltele bogate și
+  răscoalele țărănești acolo unde nemulțumirea e mare.
+- **Misiuni** proprii fiecărei țări, după ce urmărea în 1402. Exemple:
+  - Țara Românească: Dobrogea, vadurile Dunării, „să faci și să desfaci sultani”;
+  - Moldova: porturile Mării Negre și ieșirea de sub Polonia;
+  - Ungaria: Belgradul și omagiul voievodului;
+  - fiii lui Baiazid: reunirea casei lui Osman;
+  - Bizanțul: Tesalonicul și zidurile.
+
+  Statele fără misiuni proprii primesc unele potrivite locului lor.
+- **Decizii**: Ordinul Dragonului, sprijinul pentru Musa Celebi, proclamarea Sultanatului, Hexamilionul,
+  Unirea Bisericilor, proclamarea unui regat, Belgradul capitală, căutarea unui protector.
+
 ## Etapele
 
 | Etapă | Ce aduce |
@@ -117,8 +154,8 @@ Fiecare tură e o lună. Joci un stat și toate celelalte sunt conduse de AI.
 | **B1 — Harta 3D** (gata) | relief, ape, provincii, granițe, nume, cameră, selecție |
 | **B2 — Lumea în 1402** (gata) | toate statele cu conducătorii, dinastiile, vasalii și tributul lor; dezvoltarea provinciilor |
 | **B3 — Campania** (jucabilă; urmează echilibrul) | ture lunare, economie, clădiri, armate pe hartă, asedii, războaie și păci, diplomație, AI |
-| **B4 — Oameni** | conducători și moștenitori care îmbătrânesc și mor, dinastii, căsătorii, nobili |
-| **B5 — Istoria** | misiuni pentru fiecare țară, evenimente istorice (Interregnul, Varna, Constantinopol), decizii |
+| **B4 — Oameni** (gata) | conducători și moștenitori care îmbătrânesc și mor, dinastii, căsătorii, nobili |
+| **B5 — Istoria** (gata, se va tot îmbogăți) | misiuni pentru fiecare țară, evenimente istorice (Interregnul, Varna, Constantinopol), decizii |
 | **B6 — Interfața și sunetul** | ferestre în stil medieval, sfaturi, muzică cu instrumente reale |
 | **B7 — Bătălii tactice 3D** | după ce campania e gata |
 | **B8 — Lansarea** | executabil pentru Windows, echilibru |

@@ -5,6 +5,7 @@ the AI. A turn is a month: taxes come in, troops are paid, works go on, people a
 armies march.
 """
 
+import copy
 import math
 import random
 from dataclasses import asdict, dataclass, field
@@ -16,6 +17,7 @@ from .calendar import START, Date
 from .navigation import Route
 from .rules import BUILDINGS, UNITS
 from .diplomacy import Diplomacy
+from .history import Chronicles
 from .people import Court
 from .war import Warfare, war_from_dict, war_to_dict
 
@@ -97,10 +99,10 @@ class Budget:
         return self.income - self.expenses
 
 
-class Campaign(Warfare, Diplomacy, Court):
+class Campaign(Warfare, Diplomacy, Court, Chronicles):
     def __init__(self, provmap, realms, relations=(), player="wallachia", date=START, seed=1402, armies=True):
         self.provmap = provmap
-        self.info = realms                 # the realms' history (crowns/data/realms.json)
+        self.info = copy.deepcopy(realms)  # the realms' history (crowns/data/realms.json), as it changes
         self.relations = list(relations)
         self.player = player
         self.date = date
@@ -123,6 +125,7 @@ class Campaign(Warfare, Diplomacy, Court):
         self._next_war = 1
         self.history = []                  # [date, text] of the great events: deaths, successions
         self.marriages = []                # pairs of realms whose houses have married
+        self._init_history(BEYOND_THE_MAP)
         self._init_people()
         for tag, realm in self.realms.items():
             realm.manpower = 0.6 * self.levy_pool(tag)
@@ -221,7 +224,7 @@ class Campaign(Warfare, Diplomacy, Court):
             b.commerce += commerce * share
             if p.owner == tag:   # the old castles are kept by the lords' men; the new walls cost wages
                 b.forts += self.effect(p.id, "fort") * rules.FORT_UPKEEP
-        b.beyond = BEYOND_THE_MAP.get(tag, 0.0)
+        b.beyond = self.beyond_the_map.get(tag, 0.0)
         gross = b.tax + b.production + b.commerce + b.beyond
         b.court = min(rules.COURT_UPKEEP[self.info[tag]["rank"]], 0.25 * gross) + gross * rules.COURT_SHARE
         b.armies = sum(a.upkeep for a in self.armies_of(tag))
@@ -402,6 +405,7 @@ class Campaign(Warfare, Diplomacy, Court):
             army.new_month()
             army.walk()
         self.war_month()
+        self.history_month()
         self.diplomacy_month()
         self.date = self.date.next()
         return self.messages
@@ -474,6 +478,7 @@ class Campaign(Warfare, Diplomacy, Court):
             "next_war": self._next_war, "opinions": self.opinions, "grudges": self.grudges,
             "proposals": self.proposals, "start": [self.start_date.year, self.start_date.month],
             "history": self.history, "marriages": self.marriages, "court": self.people_to_dict(),
+            "chronicle": self.history_to_dict(),
             "armies": [{"id": a.id, "owner": a.owner, "name": a.name, "x": a.x, "y": a.y, "march": a.march,
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments], "commander": a.commander,
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
@@ -496,6 +501,7 @@ class Campaign(Warfare, Diplomacy, Court):
         c.start_date = Date(*data["start"])
         c.history, c.marriages = data["history"], data["marriages"]
         c.people_from_dict(data["court"])
+        c.history_from_dict(data["chronicle"])
         c.borders_changed()
         c.armies = []
         for a in data["armies"]:

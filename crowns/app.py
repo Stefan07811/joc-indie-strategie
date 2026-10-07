@@ -123,7 +123,8 @@ class MapApp(_showbase()):
         self.panel = SidePanel(self.theme, self.aspect2d, aspect, {
             "close": self.close_panel, "realm": self.show_realm, "tab": self.set_tab, "build": self.build,
             "recruit": self.recruit, "halt": self.halt, "war": self.ask_war, "diplo": self.diplo,
-            "peace": self.offer_peace, "play": self.play_as, "marry": self.marry})
+            "peace": self.offer_peace, "play": self.play_as, "marry": self.marry,
+            "realm_tab": self.set_realm_tab, "decide": self.decide})
         self.chronicle = Chronicle(self.theme, self.aspect2d, aspect)
         self.dialog = Dialog(self.theme, self.aspect2d)
         self.redraw_overlay()
@@ -216,7 +217,11 @@ class MapApp(_showbase()):
 
     def next_proposal(self):
         c = self.campaign
-        if not c.proposals or self.dialog.open:
+        if self.dialog.open:
+            return
+        if c.pending:
+            return self.next_event()
+        if not c.proposals:
             return
         offer = c.proposals[0]
         war = next((w for w in c.wars if w.id == offer["war"]), None)
@@ -236,6 +241,26 @@ class MapApp(_showbase()):
             self.next_proposal()
         self.dialog.show("An offer of peace", text, [("Accept", lambda: answer(True)),
                                                      ("Refuse", lambda: answer(False))])
+
+    def next_event(self):
+        """Ask the player about the next event waiting for an answer."""
+        from .game.history import EVENT
+        c = self.campaign
+        item = c.pending[0]
+        event = EVENT[item["event"]]
+
+        def pick(i):
+            choice = c.choose(item, i)
+            c.messages = []
+            self.chronicle.add(str(c.date), [f"{event.title}: {choice.label}."])
+            self.chronicle.show()
+            self.redraw_overlay()
+            self.realm_labels.rebuild(self.owners())
+            self.sync_figures()
+            self.refresh()
+            self.next_proposal()
+        answers = [(ch.label, (lambda i=i: pick(i))) for i, ch in enumerate(event.choices)]
+        self.dialog.show(event.title, item["text"], answers, notes=[ch.about for ch in event.choices])
 
     # --- the panels' actions ---------------------------------------------------------------------
 
@@ -300,6 +325,19 @@ class MapApp(_showbase()):
             why = f"{c.name(tag)} thanks us for the gift." if ok else "We cannot afford it."
         self.chronicle.add(str(c.date), [why])
         self.chronicle.show()
+        self.refresh()
+
+    def set_realm_tab(self, tab):
+        self.panel.realm_tab = tab
+        self.refresh()
+
+    def decide(self, did):
+        c = self.campaign
+        c.messages = []
+        ok, why = c.take_decision(did, c.player)
+        self.chronicle.add(str(c.date), c.messages or [why])
+        self.chronicle.show()
+        self.redraw_overlay()
         self.refresh()
 
     def marry(self, ours, theirs):
@@ -666,6 +704,25 @@ class MapApp(_showbase()):
             self.panel.show_army(c, army)
             self._view(25.0, 44.2, 520, 0)
             self._shoot(folder, "army")
+        if want("missions"):
+            self.choose(None)
+            self.panel.realm_tab = "missions"
+            self.panel.show_realm(c, "wallachia")
+            self._view(25.5, 44.6, 700, 0)
+            self._shoot(folder, "missions")
+            self.panel.realm_tab = "decisions"
+            self.panel.show_realm(c, "wallachia")
+            self._shoot(folder, "decisions")
+            self.panel.realm_tab = "treasury"
+        if want("event"):
+            from .game.history import EVENT
+            c.provinces["arges"].unrest = 9
+            c.fire(EVENT["revolt"], "wallachia")
+            self.next_proposal()
+            self._shoot(folder, "event")
+            self.dialog.close()
+            c.pending = []
+            c.provinces["arges"].unrest = 0
         # a war, a few months on
         c.declare_war("wallachia", "ott_rum", {"kind": "conquest", "province": "nikopol"})
         army.order(self.nav, *c.static("nikopol").town)

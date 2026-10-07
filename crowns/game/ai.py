@@ -13,7 +13,7 @@ from .rules import BUILDINGS
 AGGRESSION = {"ott_rum": 2.0, "ott_isa": 2.0, "ott_meh": 2.0, "timurids": 1.5, "karaman": 1.8, "horde": 1.5,
               "hungary": 1.2, "venice": 0.8, "genoa": 0.4, "ragusa": 0.1, "papal": 0.3, "knights": 0.3,
               "aquileia": 0.2, "salzburg": 0.2, "byzantium": 0.4, "theodoro": 0.3}
-WAR_CHANCE = 0.02
+WAR_CHANCE = 0.035
 MIN_RATIO = 1.6           # how much stronger than the defence a realm wants to be before it attacks
 ROUTES_PER_MONTH = 40     # the AI's marching orders are expensive to work out: this many a month at most
 
@@ -35,7 +35,8 @@ class AI:
             self.make_peace(tag)
         for tag in tags:
             self.build(tag)
-            self.recruit(tag)
+            for _ in range(3 if c.wars_of(tag) else 2):   # a rich realm raises more than a regiment a month
+                self.recruit(tag)
             self.go_to_war(tag)
         for tag in tags:
             self.merge(tag)
@@ -101,7 +102,7 @@ class AI:
         realm = c.realms[tag]
         b = self.budgets[tag]
         at_war = bool(c.wars_of(tag))
-        target = b.income * (0.6 if at_war else 0.35)
+        target = b.income * (0.85 if at_war else 0.5)
         if b.armies >= target or realm.treasury < self.reserve(tag) * (0.5 if at_war else 1.0):
             return
         places = [c.capital(tag)] + [p.id for p in c.provinces_of(tag) if p.buildings.get("castle")]
@@ -184,6 +185,9 @@ class AI:
             score = c.score(war) if tag == war.leader else -c.score(war)
             if score >= 15:
                 terms = self.demands(war, tag, other, score)
+                if terms and not terms.get("provinces") and war.goal["kind"] == "conquest" and \
+                        c.date.months_since(war.start) < 24 and c.exhaustion(war, tag) < 25:
+                    continue      # we came for land, not for silver: keep at the sieges
             elif score <= -25 or c.exhaustion(war, tag) > 30:
                 terms = self.concessions(war, tag, other, -score)
             else:

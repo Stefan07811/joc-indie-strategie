@@ -49,8 +49,8 @@ NAVAL_REALMS = {"venice", "genoa", "knights", "cyprus", "naxos", "lesbos", "byza
 DIFFICULTY = {"easy": {"player": 1.15, "ai": 0.9, "war": 0.75},
               "normal": {"player": 1.0, "ai": 1.0, "war": 1.0},
               "hard": {"player": 0.95, "ai": 1.12, "war": 1.3}}
-HOARD_MONTHS = 12     # a treasury above this many months of income is spent on the court's splendour
-LARGESSE = 0.08       # of the hoard above that, each month
+HOARD_MONTHS = 6     # a treasury above this many months of income is spent on the court's splendour
+LARGESSE = 0.15       # of the hoard above that, each month
 # Armies in the field in September 1402 that do not stand at their realm's capital.
 FIELD_ARMIES = {
     # Timur's host wintered in western Anatolia after Ankara and the sack of Bursa
@@ -253,7 +253,7 @@ class Campaign(Warfare, Diplomacy, Court, Chronicles):
         gross = b.tax + b.production + b.commerce + b.beyond
         b.court = min(rules.COURT_UPKEEP[self.info[tag]["rank"]], 0.25 * gross) + gross * rules.COURT_SHARE
         b.armies = sum(a.upkeep for a in self.armies_of(tag))
-        hoard = self.realms[tag].treasury - HOARD_MONTHS * gross
+        hoard = self.realms[tag].treasury - max(1000.0, HOARD_MONTHS * gross)   # a small purse is no hoard
         if hoard > 0:   # palaces, feasts, gifts to the church: a full treasury does not stay full
             b.court += hoard * LARGESSE
         lord = self.overlord.get(tag)

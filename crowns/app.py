@@ -143,7 +143,7 @@ class MapApp(_showbase()):
 
     def first_armies(self):
         """The armies in the field in August 1402 (until the campaign raises them for real)."""
-        from .game.armies import HORSE_MARCH_KM, Army
+        from .game.armies import HORSE_MARCH_KM, Army, Regiment
         from .render.figures import ArmyFigure
         from .render.world import SUN
         hosts = [  # realm, town, men, light horse, accent, eastern dress
@@ -156,9 +156,8 @@ class MapApp(_showbase()):
         armies, figures = [], {}
         for realm, town, men, horse, accent, eastern in hosts:
             x, y = self.provmap.provinces[town].town
-            army = Army(f"{realm}-1", realm, f"Army of {self.realm_names[realm]}", x, y, men)
-            if horse:
-                army.march_km = army.moves = HORSE_MARCH_KM
+            army = Army(f"{realm}-1", realm, f"Army of {self.realm_names[realm]}", x, y,
+                        [Regiment("great_host", men)], march=HORSE_MARCH_KM if horse else None)
             color = tuple(c / 255 for c in self.colors[realm])
             figure = ArmyFigure(self.render, self.world.height_at, color, accent, SUN, eastern=eastern)
             figure.place(x, self.geo.HEIGHT - y)
@@ -216,7 +215,7 @@ class MapApp(_showbase()):
         return True
 
     def walk(self, army):
-        walked = army.march()
+        walked = army.walk()
         if len(walked) > 1:
             self.figures[army.id].march(self._strides(walked))
 
@@ -379,7 +378,7 @@ class MapApp(_showbase()):
         wallachia = next(a for a in self.armies if a.owner == "wallachia")
         for name, (lon, lat, dist, heading, mode) in views.items():
             if name == "march":   # the plan, before the first step
-                wallachia.march_km = wallachia.moves = 220.0
+                wallachia.march = wallachia.moves = 220.0
                 wallachia.order(self.nav, *self.provmap.provinces["sofia"].town)
                 self.choose(wallachia)
             if name == "march_next":

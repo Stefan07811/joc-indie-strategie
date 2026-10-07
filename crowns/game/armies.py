@@ -1,13 +1,29 @@
 """Armies on the campaign map: where they stand, how far they may still march this month, and their
 orders. They march Total War style, anywhere over the land, spending a monthly budget of movement."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from .navigation import Route
+from .rules import UNITS
 
 FOOT_MARCH_KM = 220.0    # a month of marching for an army on foot, with its carts and baggage
 HORSE_MARCH_KM = 330.0   # light horsemen living off the land: akinjis, Tatars, the Moldavian host
+
+
+@dataclass
+class Regiment:
+    unit: str                # a key of rules.UNITS
+    men: int
+    experience: float = 0.0  # 0 .. 1
+
+    @property
+    def type(self):
+        return UNITS[self.unit]
+
+    @property
+    def upkeep(self):
+        return self.type.upkeep * self.men / self.type.men
 
 
 @dataclass
@@ -17,14 +33,28 @@ class Army:
     name: str
     x: float                 # map pixels
     y: float
-    men: int
-    march_km: float = FOOT_MARCH_KM
+    regiments: list = field(default_factory=list)
+    march: Optional[float] = None      # km a month; by default the pace of its slowest troops
     moves: Optional[float] = None      # km of movement left this month
     route: Optional[Route] = None      # standing orders: the march still ahead
 
     def __post_init__(self):
+        if self.march is None:
+            self.march = min((r.type.march for r in self.regiments), default=FOOT_MARCH_KM)
         if self.moves is None:
-            self.moves = self.march_km
+            self.moves = self.march
+
+    @property
+    def march_km(self):
+        return self.march
+
+    @property
+    def men(self):
+        return sum(r.men for r in self.regiments)
+
+    @property
+    def upkeep(self):
+        return sum(r.upkeep for r in self.regiments)
 
     @property
     def pos(self):
@@ -44,7 +74,7 @@ class Army:
     def halt(self):
         self.route = None
 
-    def march(self):
+    def walk(self):
         """Walk the orders as far as this month's movement allows: the points walked (none if the army
         stays where it is)."""
         if self.route is None or self.moves <= 0:
@@ -55,4 +85,4 @@ class Army:
         return walked
 
     def new_month(self):
-        self.moves = self.march_km
+        self.moves = self.march

@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from crowns.game.armies import FOOT_MARCH_KM, Army
+from crowns.game.armies import Army, Regiment
 from crowns.game.calendar import START, Date
 from crowns.game.navigation import Navigation
 from crowns.mapdata import Ground
@@ -29,24 +29,24 @@ def test_the_calendar_turns_by_months():
 
 
 def test_an_army_marches_as_far_as_its_month_allows(nav):
-    army = Army("w1", "wallachia", "Army of Wallachia", *town(nav, "targoviste"), men=9000)
-    assert army.moves == FOOT_MARCH_KM
+    army = Army("w1", "wallachia", "Army of Wallachia", *town(nav, "targoviste"), [Regiment("great_host", 9000)])
+    assert army.moves == army.march == 200          # the pace of the peasant host
     assert army.order(nav, *town(nav, "sofia"))
     total = army.route.cost
-    walked = army.march()
+    walked = army.walk()
     assert walked[0] == town(nav, "targoviste") and army.pos == walked[-1]
     assert army.moves == pytest.approx(0) and army.route is not None
-    assert army.march() == []                     # nothing left this month
+    assert army.walk() == []                     # nothing left this month
     army.new_month()
-    walked = army.march()
+    walked = army.walk()
     assert army.route is None and army.pos == town(nav, "sofia")
-    assert army.moves == pytest.approx(2 * FOOT_MARCH_KM - total, abs=1e-3)
+    assert army.moves == pytest.approx(2 * army.march - total, abs=1e-3)
 
 
 def test_no_march_over_the_sea(nav):
-    army = Army("w1", "wallachia", "Army of Wallachia", *town(nav, "targoviste"), men=9000)
+    army = Army("w1", "wallachia", "Army of Wallachia", *town(nav, "targoviste"), [Regiment("great_host", 9000)])
     assert not army.order(nav, 1300, 700)         # the middle of the Black Sea
-    assert army.route is None and army.march() == []
+    assert army.route is None and army.walk() == []
 
 
 def test_the_route_is_drawn_month_by_month(nav):

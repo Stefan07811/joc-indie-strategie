@@ -1,0 +1,8229 @@
+[
+ {
+  "id": "buda",
+  "index": 1,
+  "name": "Buda",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   385.2,
+   302.2
+  ],
+  "label": [
+   405,
+   287
+  ],
+  "area": 5749,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "eger",
+   "esztergom",
+   "fehervar",
+   "kalocsa",
+   "szolnok"
+  ]
+ },
+ {
+  "id": "esztergom",
+  "index": 2,
+  "name": "Esztergom",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   368.8,
+   280.8
+  ],
+  "label": [
+   376,
+   261
+  ],
+  "area": 5524,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "buda",
+   "eger",
+   "fehervar",
+   "gyor",
+   "nyitra",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "gyor",
+  "index": 3,
+  "name": "Győr",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   308.1,
+   288.2
+  ],
+  "label": [
+   302,
+   274
+  ],
+  "area": 6878,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "esztergom",
+   "fehervar",
+   "nyitra",
+   "pozsony",
+   "sopron",
+   "vas",
+   "veszprem"
+  ]
+ },
+ {
+  "id": "pozsony",
+  "index": 4,
+  "name": "Pozsony",
+  "owner": "hungary",
+  "culture": "slovak",
+  "religion": "catholic",
+  "town": [
+   279.6,
+   254.3
+  ],
+  "label": [
+   282,
+   251
+  ],
+  "area": 1748,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "gyor",
+   "nyitra",
+   "sopron",
+   "vienna"
+  ]
+ },
+ {
+  "id": "nyitra",
+  "index": 5,
+  "name": "Nyitra",
+  "owner": "hungary",
+  "culture": "slovak",
+  "religion": "catholic",
+  "town": [
+   332.7,
+   242.5
+  ],
+  "label": [
+   334,
+   232
+  ],
+  "area": 7240,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "esztergom",
+   "gyor",
+   "pozsony",
+   "trencsen",
+   "vienna",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "trencsen",
+  "index": 6,
+  "name": "Trencsén",
+  "owner": "hungary",
+  "culture": "slovak",
+  "religion": "catholic",
+  "town": [
+   330.5,
+   199.8
+  ],
+  "label": [
+   340,
+   174
+  ],
+  "area": 9360,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "brno",
+   "nyitra",
+   "olomouc",
+   "opava",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "zolyom",
+  "index": 7,
+  "name": "Zólyom",
+  "owner": "hungary",
+  "culture": "slovak",
+  "religion": "catholic",
+  "town": [
+   391.2,
+   211.6
+  ],
+  "label": [
+   400,
+   180
+  ],
+  "area": 10294,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "eger",
+   "esztergom",
+   "krakow",
+   "nyitra",
+   "opava",
+   "szepes",
+   "trencsen"
+  ]
+ },
+ {
+  "id": "szepes",
+  "index": 8,
+  "name": "Szepes",
+  "owner": "hungary",
+  "culture": "slovak",
+  "religion": "catholic",
+  "town": [
+   468.4,
+   191.7
+  ],
+  "label": [
+   481,
+   154
+  ],
+  "area": 11610,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "eger",
+   "kassa",
+   "krakow",
+   "sandomierz",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "kassa",
+  "index": 9,
+  "name": "Kassa",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   506.7,
+   212.3
+  ],
+  "label": [
+   514,
+   167
+  ],
+  "area": 15448,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "debrecen",
+   "eger",
+   "przemysl",
+   "sandomierz",
+   "szatmar",
+   "szepes"
+  ]
+ },
+ {
+  "id": "eger",
+  "index": 10,
+  "name": "Eger",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   458.5,
+   272.7
+  ],
+  "label": [
+   442,
+   236
+  ],
+  "area": 11601,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "buda",
+   "debrecen",
+   "esztergom",
+   "kassa",
+   "szepes",
+   "szolnok",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "debrecen",
+  "index": 11,
+  "name": "Debrecen",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   526.9,
+   300.0
+  ],
+  "label": [
+   531,
+   260
+  ],
+  "area": 10618,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "eger",
+   "kassa",
+   "szatmar",
+   "szolnok",
+   "varad"
+  ]
+ },
+ {
+  "id": "szatmar",
+  "index": 12,
+  "name": "Szatmár",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   595.3,
+   280.8
+  ],
+  "label": [
+   589,
+   218
+  ],
+  "area": 19516,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "debrecen",
+   "halicz",
+   "kassa",
+   "kolozsvar",
+   "maramaros",
+   "przemysl",
+   "varad"
+  ]
+ },
+ {
+  "id": "varad",
+  "index": 13,
+  "name": "Várad",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   542.8,
+   334.7
+  ],
+  "label": [
+   555,
+   326
+  ],
+  "area": 10624,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "arad",
+   "debrecen",
+   "hunyad",
+   "kolozsvar",
+   "szatmar",
+   "szolnok"
+  ]
+ },
+ {
+  "id": "szolnok",
+  "index": 14,
+  "name": "Szolnok",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   448.7,
+   326.6
+  ],
+  "label": [
+   430,
+   310
+  ],
+  "area": 10852,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "arad",
+   "buda",
+   "debrecen",
+   "eger",
+   "kalocsa",
+   "szeged",
+   "varad"
+  ]
+ },
+ {
+  "id": "szeged",
+  "index": 15,
+  "name": "Szeged",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   445.9,
+   394.4
+  ],
+  "label": [
+   432,
+   360
+  ],
+  "area": 9176,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "arad",
+   "bacs",
+   "kalocsa",
+   "szerem",
+   "szolnok",
+   "temes"
+  ]
+ },
+ {
+  "id": "kalocsa",
+  "index": 16,
+  "name": "Kalocsa",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   381.9,
+   373.7
+  ],
+  "label": [
+   394,
+   349
+  ],
+  "area": 7412,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bacs",
+   "buda",
+   "fehervar",
+   "pecs",
+   "somogy",
+   "szeged",
+   "szolnok"
+  ]
+ },
+ {
+  "id": "pecs",
+  "index": 17,
+  "name": "Pécs",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   340.9,
+   407.6
+  ],
+  "label": [
+   347,
+   404
+  ],
+  "area": 5571,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bacs",
+   "kalocsa",
+   "pozsega",
+   "somogy",
+   "valko"
+  ]
+ },
+ {
+  "id": "fehervar",
+  "index": 18,
+  "name": "Székesfehérvár",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   350.7,
+   325.1
+  ],
+  "label": [
+   348,
+   314
+  ],
+  "area": 5085,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "buda",
+   "esztergom",
+   "gyor",
+   "kalocsa",
+   "somogy",
+   "veszprem"
+  ]
+ },
+ {
+  "id": "veszprem",
+  "index": 19,
+  "name": "Veszprém",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   323.4,
+   332.4
+  ],
+  "label": [
+   309,
+   332
+  ],
+  "area": 2788,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "fehervar",
+   "gyor",
+   "vas",
+   "zala"
+  ]
+ },
+ {
+  "id": "sopron",
+  "index": 20,
+  "name": "Sopron",
+  "owner": "hungary",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   251.1,
+   289.0
+  ],
+  "label": [
+   263,
+   281
+  ],
+  "area": 5335,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "graz",
+   "gyor",
+   "pozsony",
+   "vas",
+   "vienna"
+  ]
+ },
+ {
+  "id": "vas",
+  "index": 21,
+  "name": "Vas",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   252.8,
+   322.1
+  ],
+  "label": [
+   259,
+   316
+  ],
+  "area": 5355,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "graz",
+   "gyor",
+   "sopron",
+   "veszprem",
+   "zala"
+  ]
+ },
+ {
+  "id": "zala",
+  "index": 22,
+  "name": "Zala",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   265.4,
+   350.9
+  ],
+  "label": [
+   273,
+   349
+  ],
+  "area": 5170,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "graz",
+   "somogy",
+   "varasd",
+   "vas",
+   "veszprem"
+  ]
+ },
+ {
+  "id": "somogy",
+  "index": 23,
+  "name": "Somogy",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   317.4,
+   383.3
+  ],
+  "label": [
+   319,
+   367
+  ],
+  "area": 8352,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "fehervar",
+   "kalocsa",
+   "pecs",
+   "pozsega",
+   "varasd",
+   "zala"
+  ]
+ },
+ {
+  "id": "temes",
+  "index": 24,
+  "name": "Temesvár",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   505.0,
+   431.2
+  ],
+  "label": [
+   487,
+   426
+  ],
+  "area": 9909,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "arad",
+   "belgrade",
+   "karansebes",
+   "smederevo",
+   "szeged",
+   "szerem"
+  ]
+ },
+ {
+  "id": "arad",
+  "index": 25,
+  "name": "Arad",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   509.4,
+   399.5
+  ],
+  "label": [
+   498,
+   370
+  ],
+  "area": 9889,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "hunyad",
+   "karansebes",
+   "szeged",
+   "szolnok",
+   "temes",
+   "varad"
+  ]
+ },
+ {
+  "id": "bacs",
+  "index": 26,
+  "name": "Bács",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   402.2,
+   416.5
+  ],
+  "label": [
+   405,
+   406
+  ],
+  "area": 6950,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "kalocsa",
+   "pecs",
+   "szeged",
+   "szerem",
+   "valko"
+  ]
+ },
+ {
+  "id": "szerem",
+  "index": 27,
+  "name": "Szerém",
+  "owner": "hungary",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   415.8,
+   482.8
+  ],
+  "label": [
+   422,
+   464
+  ],
+  "area": 8492,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bacs",
+   "belgrade",
+   "soli",
+   "szeged",
+   "temes",
+   "valjevo",
+   "valko"
+  ]
+ },
+ {
+  "id": "belgrade",
+  "index": 28,
+  "name": "Belgrade",
+  "owner": "hungary",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   462.9,
+   499.8
+  ],
+  "label": [
+   464,
+   482
+  ],
+  "area": 3089,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "smederevo",
+   "szerem",
+   "temes",
+   "valjevo"
+  ]
+ },
+ {
+  "id": "severin",
+  "index": 29,
+  "name": "Severin",
+  "owner": "hungary",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   583.3,
+   513.8
+  ],
+  "label": [
+   575,
+   511
+  ],
+  "area": 3208,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "branicevo",
+   "craiova",
+   "gorj",
+   "karansebes",
+   "timok",
+   "vidin"
+  ]
+ },
+ {
+  "id": "karansebes",
+  "index": 30,
+  "name": "Karánsebes",
+  "owner": "hungary",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   559.2,
+   455.5
+  ],
+  "label": [
+   555,
+   437
+  ],
+  "area": 7360,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "arad",
+   "branicevo",
+   "gorj",
+   "hunyad",
+   "severin",
+   "smederevo",
+   "temes"
+  ]
+ },
+ {
+  "id": "zagreb",
+  "index": 31,
+  "name": "Zagreb",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   217.8,
+   426.8
+  ],
+  "label": [
+   209,
+   423
+  ],
+  "area": 10773,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bihac",
+   "carniola",
+   "celje",
+   "modrus",
+   "pozsega",
+   "varasd",
+   "vrbas"
+  ]
+ },
+ {
+  "id": "varasd",
+  "index": 32,
+  "name": "Varasd",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   237.5,
+   390.7
+  ],
+  "label": [
+   224,
+   372
+  ],
+  "area": 8044,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "celje",
+   "graz",
+   "somogy",
+   "zagreb",
+   "zala"
+  ]
+ },
+ {
+  "id": "pozsega",
+  "index": 33,
+  "name": "Pozsega",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   310.8,
+   462.2
+  ],
+  "label": [
+   288,
+   442
+  ],
+  "area": 6944,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "pecs",
+   "somogy",
+   "usora",
+   "valko",
+   "vrbas",
+   "zagreb"
+  ]
+ },
+ {
+  "id": "valko",
+  "index": 34,
+  "name": "Valkó",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   372.1,
+   457.0
+  ],
+  "label": [
+   365,
+   443
+  ],
+  "area": 7335,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bacs",
+   "pecs",
+   "pozsega",
+   "soli",
+   "szerem",
+   "usora"
+  ]
+ },
+ {
+  "id": "lika",
+  "index": 35,
+  "name": "Lika",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   180.6,
+   516.0
+  ],
+  "label": [
+   179,
+   508
+  ],
+  "area": 4216,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bihac",
+   "knin",
+   "modrus",
+   "zara"
+  ]
+ },
+ {
+  "id": "knin",
+  "index": 36,
+  "name": "Knin",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   229.8,
+   557.3
+  ],
+  "label": [
+   231,
+   542
+  ],
+  "area": 5463,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bihac",
+   "jajce",
+   "lika",
+   "livno",
+   "spalato",
+   "vrbas",
+   "zara"
+  ]
+ },
+ {
+  "id": "zara",
+  "index": 37,
+  "name": "Zara",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   176.7,
+   551.4
+  ],
+  "label": [
+   190,
+   551
+  ],
+  "area": 2999,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "knin",
+   "lika"
+  ]
+ },
+ {
+  "id": "spalato",
+  "index": 38,
+  "name": "Spalato",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   242.9,
+   596.3
+  ],
+  "label": [
+   249,
+   587
+  ],
+  "area": 2862,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "hum",
+   "knin",
+   "livno"
+  ]
+ },
+ {
+  "id": "bihac",
+  "index": 39,
+  "name": "Bihać",
+  "owner": "hungary",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   211.8,
+   500.5
+  ],
+  "label": [
+   204,
+   480
+  ],
+  "area": 6638,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "knin",
+   "lika",
+   "modrus",
+   "vrbas",
+   "zagreb"
+  ]
+ },
+ {
+  "id": "kotor",
+  "index": 40,
+  "name": "Cattaro",
+  "owner": "hungary",
+  "culture": "serbian",
+  "religion": "catholic",
+  "town": [
+   370.4,
+   676.7
+  ],
+  "label": [
+   369,
+   667
+  ],
+  "area": 1656,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "gacko",
+   "ragusa",
+   "zeta"
+  ]
+ },
+ {
+  "id": "modrus",
+  "index": 41,
+  "name": "Modruš",
+  "owner": "frankopan",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   164.1,
+   475.5
+  ],
+  "label": [
+   159,
+   459
+  ],
+  "area": 5434,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bihac",
+   "carniola",
+   "istria",
+   "lika",
+   "trieste",
+   "zagreb"
+  ]
+ },
+ {
+  "id": "kolozsvar",
+  "index": 42,
+  "name": "Kolozsvár",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   634.7,
+   356.0
+  ],
+  "label": [
+   631,
+   331
+  ],
+  "area": 8883,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "beszterce",
+   "gyulafehervar",
+   "hunyad",
+   "maramaros",
+   "maros",
+   "szatmar",
+   "varad"
+  ]
+ },
+ {
+  "id": "gyulafehervar",
+  "index": 43,
+  "name": "Gyulafehérvár",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   633.6,
+   407.6
+  ],
+  "label": [
+   641,
+   394
+  ],
+  "area": 5454,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "gorj",
+   "hunyad",
+   "kolozsvar",
+   "maros",
+   "szeben"
+  ]
+ },
+ {
+  "id": "hunyad",
+  "index": 44,
+  "name": "Hunyad",
+  "owner": "hungary",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   596.4,
+   431.2
+  ],
+  "label": [
+   587,
+   397
+  ],
+  "area": 7994,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "arad",
+   "gorj",
+   "gyulafehervar",
+   "karansebes",
+   "kolozsvar",
+   "varad"
+  ]
+ },
+ {
+  "id": "szeben",
+  "index": 45,
+  "name": "Szeben",
+  "owner": "hungary",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   664.8,
+   428.3
+  ],
+  "label": [
+   669,
+   416
+  ],
+  "area": 4939,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "arges",
+   "fagaras",
+   "gorj",
+   "gyulafehervar",
+   "maros"
+  ]
+ },
+ {
+  "id": "brasso",
+  "index": 46,
+  "name": "Brassó",
+  "owner": "hungary",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   743.6,
+   438.6
+  ],
+  "label": [
+   773,
+   422
+  ],
+  "area": 6973,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "arges",
+   "buzau",
+   "fagaras",
+   "putna",
+   "szekelyfold",
+   "targoviste"
+  ]
+ },
+ {
+  "id": "beszterce",
+  "index": 47,
+  "name": "Beszterce",
+  "owner": "hungary",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   683.9,
+   329.5
+  ],
+  "label": [
+   697,
+   309
+  ],
+  "area": 9092,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kolozsvar",
+   "maramaros",
+   "maros",
+   "suceava",
+   "szekelyfold"
+  ]
+ },
+ {
+  "id": "szekelyfold",
+  "index": 48,
+  "name": "Székely Land",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   744.1,
+   390.7
+  ],
+  "label": [
+   744,
+   362
+  ],
+  "area": 7898,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "beszterce",
+   "brasso",
+   "fagaras",
+   "maros",
+   "putna",
+   "roman",
+   "suceava"
+  ]
+ },
+ {
+  "id": "maros",
+  "index": 49,
+  "name": "Maros",
+  "owner": "hungary",
+  "culture": "hungarian",
+  "religion": "catholic",
+  "town": [
+   687.2,
+   373.0
+  ],
+  "label": [
+   707,
+   360
+  ],
+  "area": 7245,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "beszterce",
+   "fagaras",
+   "gyulafehervar",
+   "kolozsvar",
+   "szeben",
+   "szekelyfold"
+  ]
+ },
+ {
+  "id": "maramaros",
+  "index": 50,
+  "name": "Máramaros",
+  "owner": "hungary",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   656.6,
+   276.4
+  ],
+  "label": [
+   648,
+   240
+  ],
+  "area": 10726,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "beszterce",
+   "halicz",
+   "kolozsvar",
+   "suceava",
+   "szatmar"
+  ]
+ },
+ {
+  "id": "fagaras",
+  "index": 51,
+  "name": "Făgăraș",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   709.7,
+   424.6
+  ],
+  "label": [
+   707,
+   412
+  ],
+  "area": 4619,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "arges",
+   "brasso",
+   "maros",
+   "szeben",
+   "szekelyfold"
+  ]
+ },
+ {
+  "id": "vienna",
+  "index": 52,
+  "name": "Vienna",
+  "owner": "austria",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   239.1,
+   249.9
+  ],
+  "label": [
+   210,
+   224
+  ],
+  "area": 13376,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "brno",
+   "budweis",
+   "graz",
+   "linz",
+   "nyitra",
+   "pozsony",
+   "sopron"
+  ]
+ },
+ {
+  "id": "linz",
+  "index": 53,
+  "name": "Upper Austria",
+  "owner": "austria",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   125.3,
+   242.5
+  ],
+  "label": [
+   112,
+   238
+  ],
+  "area": 11743,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "budweis",
+   "carinthia",
+   "graz",
+   "landshut",
+   "salzburg",
+   "vienna"
+  ]
+ },
+ {
+  "id": "graz",
+  "index": 54,
+  "name": "Styria",
+  "owner": "austria",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   188.2,
+   333.9
+  ],
+  "label": [
+   183,
+   300
+  ],
+  "area": 11572,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "carinthia",
+   "celje",
+   "linz",
+   "sopron",
+   "varasd",
+   "vas",
+   "vienna",
+   "zala"
+  ]
+ },
+ {
+  "id": "carinthia",
+  "index": 55,
+  "name": "Carinthia",
+  "owner": "austria",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   125.8,
+   367.1
+  ],
+  "label": [
+   123,
+   321
+  ],
+  "area": 12985,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "carniola",
+   "celje",
+   "friuli",
+   "graz",
+   "linz",
+   "salzburg"
+  ]
+ },
+ {
+  "id": "carniola",
+  "index": 56,
+  "name": "Carniola",
+  "owner": "austria",
+  "culture": "slovene",
+  "religion": "catholic",
+  "town": [
+   136.8,
+   409.1
+  ],
+  "label": [
+   123,
+   396
+  ],
+  "area": 7528,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "carinthia",
+   "celje",
+   "friuli",
+   "modrus",
+   "trieste",
+   "zagreb"
+  ]
+ },
+ {
+  "id": "trieste",
+  "index": 57,
+  "name": "Trieste",
+  "owner": "austria",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   96.8,
+   438.6
+  ],
+  "label": [
+   109,
+   441
+  ],
+  "area": 3319,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "carniola",
+   "friuli",
+   "istria",
+   "modrus"
+  ]
+ },
+ {
+  "id": "celje",
+  "index": 58,
+  "name": "Celje",
+  "owner": "celje",
+  "culture": "slovene",
+  "religion": "catholic",
+  "town": [
+   178.4,
+   395.8
+  ],
+  "label": [
+   171,
+   385
+  ],
+  "area": 5033,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "carinthia",
+   "carniola",
+   "graz",
+   "varasd",
+   "zagreb"
+  ]
+ },
+ {
+  "id": "friuli",
+  "index": 59,
+  "name": "Friuli",
+  "owner": "aquileia",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   67.3,
+   408.4
+  ],
+  "label": [
+   33,
+   354
+  ],
+  "area": 14013,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "carinthia",
+   "carniola",
+   "salzburg",
+   "trieste",
+   "venice"
+  ]
+ },
+ {
+  "id": "istria",
+  "index": 60,
+  "name": "Istria",
+  "owner": "venice",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   101.2,
+   475.5
+  ],
+  "label": [
+   104,
+   470
+  ],
+  "area": 3013,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "modrus",
+   "trieste"
+  ]
+ },
+ {
+  "id": "salzburg",
+  "index": 61,
+  "name": "Salzburg",
+  "owner": "salzburg",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   56.9,
+   280.1
+  ],
+  "label": [
+   69,
+   262
+  ],
+  "area": 19660,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "carinthia",
+   "friuli",
+   "landshut",
+   "linz"
+  ]
+ },
+ {
+  "id": "landshut",
+  "index": 62,
+  "name": "Lower Bavaria",
+  "owner": "bavaria",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   49.2,
+   221.1
+  ],
+  "label": [
+   0,
+   175
+  ],
+  "area": 16358,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "budweis",
+   "linz",
+   "plzen",
+   "salzburg"
+  ]
+ },
+ {
+  "id": "prague",
+  "index": 63,
+  "name": "Prague",
+  "owner": "bohemia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   132.4,
+   112.0
+  ],
+  "label": [
+   66,
+   0
+  ],
+  "area": 31754,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "breslau",
+   "budweis",
+   "hradec",
+   "plzen"
+  ]
+ },
+ {
+  "id": "plzen",
+  "index": 64,
+  "name": "Plzeň",
+  "owner": "bohemia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   75.5,
+   136.4
+  ],
+  "label": [
+   0,
+   0
+  ],
+  "area": 33599,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "budweis",
+   "landshut",
+   "prague"
+  ]
+ },
+ {
+  "id": "budweis",
+  "index": 65,
+  "name": "Budweis",
+  "owner": "bohemia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   135.1,
+   193.9
+  ],
+  "label": [
+   125,
+   164
+  ],
+  "area": 17831,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "brno",
+   "hradec",
+   "landshut",
+   "linz",
+   "plzen",
+   "prague",
+   "vienna"
+  ]
+ },
+ {
+  "id": "hradec",
+  "index": 66,
+  "name": "Hradec",
+  "owner": "bohemia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   209.6,
+   102.5
+  ],
+  "label": [
+   192,
+   73
+  ],
+  "area": 11914,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "breslau",
+   "brno",
+   "budweis",
+   "olomouc",
+   "prague"
+  ]
+ },
+ {
+  "id": "breslau",
+  "index": 67,
+  "name": "Breslau",
+  "owner": "bohemia",
+  "culture": "german",
+  "religion": "catholic",
+  "town": [
+   275.2,
+   36.1
+  ],
+  "label": [
+   171,
+   0
+  ],
+  "area": 34488,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "hradec",
+   "krakow",
+   "olomouc",
+   "opava",
+   "prague"
+  ]
+ },
+ {
+  "id": "opava",
+  "index": 68,
+  "name": "Opava",
+  "owner": "bohemia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   322.8,
+   122.4
+  ],
+  "label": [
+   373,
+   61
+  ],
+  "area": 20840,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "breslau",
+   "krakow",
+   "olomouc",
+   "trencsen",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "brno",
+  "index": 69,
+  "name": "Brno",
+  "owner": "moravia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   252.2,
+   176.9
+  ],
+  "label": [
+   233,
+   150
+  ],
+  "area": 13838,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "budweis",
+   "hradec",
+   "olomouc",
+   "trencsen",
+   "vienna"
+  ]
+ },
+ {
+  "id": "olomouc",
+  "index": 70,
+  "name": "Olomouc",
+  "owner": "moravia",
+  "culture": "czech",
+  "religion": "catholic",
+  "town": [
+   287.3,
+   148.2
+  ],
+  "label": [
+   266,
+   113
+  ],
+  "area": 9274,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "breslau",
+   "brno",
+   "hradec",
+   "opava",
+   "trencsen"
+  ]
+ },
+ {
+  "id": "krakow",
+  "index": 71,
+  "name": "Kraków",
+  "owner": "poland",
+  "culture": "polish",
+  "religion": "catholic",
+  "town": [
+   434.4,
+   113.5
+  ],
+  "label": [
+   416,
+   20
+  ],
+  "area": 25441,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "breslau",
+   "opava",
+   "sandomierz",
+   "szepes",
+   "zolyom"
+  ]
+ },
+ {
+  "id": "sandomierz",
+  "index": 72,
+  "name": "Sandomierz",
+  "owner": "poland",
+  "culture": "polish",
+  "religion": "catholic",
+  "town": [
+   533.5,
+   67.8
+  ],
+  "label": [
+   445,
+   0
+  ],
+  "area": 28501,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "kassa",
+   "krakow",
+   "lublin",
+   "przemysl",
+   "szepes"
+  ]
+ },
+ {
+  "id": "lublin",
+  "index": 73,
+  "name": "Lublin",
+  "owner": "poland",
+  "culture": "polish",
+  "religion": "catholic",
+  "town": [
+   578.3,
+   25.8
+  ],
+  "label": [
+   540,
+   0
+  ],
+  "area": 9032,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "chelm",
+   "przemysl",
+   "sandomierz"
+  ]
+ },
+ {
+  "id": "chelm",
+  "index": 74,
+  "name": "Chełm",
+  "owner": "poland",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   627.6,
+   34.6
+  ],
+  "label": [
+   622,
+   0
+  ],
+  "area": 8768,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "belz",
+   "lublin",
+   "przemysl",
+   "volodymyr"
+  ]
+ },
+ {
+  "id": "lwow",
+  "index": 75,
+  "name": "Lwów",
+  "owner": "poland",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   658.2,
+   129.7
+  ],
+  "label": [
+   689,
+   121
+  ],
+  "area": 10192,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "belz",
+   "halicz",
+   "kremenets",
+   "przemysl"
+  ]
+ },
+ {
+  "id": "przemysl",
+  "index": 76,
+  "name": "Przemyśl",
+  "owner": "poland",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   589.3,
+   134.2
+  ],
+  "label": [
+   590,
+   98
+  ],
+  "area": 20156,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "belz",
+   "chelm",
+   "halicz",
+   "kassa",
+   "lublin",
+   "lwow",
+   "sandomierz",
+   "szatmar"
+  ]
+ },
+ {
+  "id": "halicz",
+  "index": 77,
+  "name": "Halicz",
+  "owner": "poland",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   696.0,
+   182.8
+  ],
+  "label": [
+   704,
+   156
+  ],
+  "area": 21298,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "hotin",
+   "kamieniec",
+   "kremenets",
+   "lwow",
+   "maramaros",
+   "przemysl",
+   "suceava",
+   "szatmar"
+  ]
+ },
+ {
+  "id": "belz",
+  "index": 78,
+  "name": "Bełz",
+  "owner": "poland",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   656.6,
+   89.9
+  ],
+  "label": [
+   644,
+   78
+  ],
+  "area": 7423,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "chelm",
+   "kremenets",
+   "lutsk",
+   "lwow",
+   "przemysl",
+   "volodymyr"
+  ]
+ },
+ {
+  "id": "kamieniec",
+  "index": 79,
+  "name": "Kamieniec",
+  "owner": "poland",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   797.8,
+   215.2
+  ],
+  "label": [
+   818,
+   161
+  ],
+  "area": 14159,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bratslav",
+   "halicz",
+   "hotin",
+   "kremenets",
+   "soroca"
+  ]
+ },
+ {
+  "id": "lutsk",
+  "index": 80,
+  "name": "Lutsk",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   729.4,
+   62.7
+  ],
+  "label": [
+   724,
+   0
+  ],
+  "area": 21956,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "belz",
+   "kremenets",
+   "volodymyr",
+   "zhytomyr"
+  ]
+ },
+ {
+  "id": "volodymyr",
+  "index": 81,
+  "name": "Volodymyr",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   674.6,
+   55.3
+  ],
+  "label": [
+   682,
+   0
+  ],
+  "area": 8613,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "belz",
+   "chelm",
+   "lutsk"
+  ]
+ },
+ {
+  "id": "kremenets",
+  "index": 82,
+  "name": "Kremenets",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   750.7,
+   110.6
+  ],
+  "label": [
+   807,
+   78
+  ],
+  "area": 20968,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "belz",
+   "bratslav",
+   "halicz",
+   "kamieniec",
+   "lutsk",
+   "lwow",
+   "zhytomyr"
+  ]
+ },
+ {
+  "id": "kyiv",
+  "index": 83,
+  "name": "Kyiv",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   1013.3,
+   84.8
+  ],
+  "label": [
+   950,
+   0
+  ],
+  "area": 21481,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "bratslav",
+   "chernihiv",
+   "pereiaslav",
+   "zhytomyr"
+  ]
+ },
+ {
+  "id": "zhytomyr",
+  "index": 84,
+  "name": "Zhytomyr",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   911.6,
+   99.5
+  ],
+  "label": [
+   846,
+   0
+  ],
+  "area": 40655,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bratslav",
+   "kremenets",
+   "kyiv",
+   "lutsk"
+  ]
+ },
+ {
+  "id": "bratslav",
+  "index": 85,
+  "name": "Bratslav",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   901.2,
+   174.7
+  ],
+  "label": [
+   845,
+   142
+  ],
+  "area": 27958,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "cherkasy",
+   "kamieniec",
+   "kirovohrad",
+   "kremenets",
+   "kyiv",
+   "orhei",
+   "pereiaslav",
+   "soroca",
+   "zhytomyr"
+  ]
+ },
+ {
+  "id": "chernihiv",
+  "index": 86,
+  "name": "Chernihiv",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   1055.5,
+   8.1
+  ],
+  "label": [
+   988,
+   0
+  ],
+  "area": 23710,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "kyiv",
+   "pereiaslav",
+   "poltava"
+  ]
+ },
+ {
+  "id": "pereiaslav",
+  "index": 87,
+  "name": "Pereiaslav",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   1064.2,
+   113.5
+  ],
+  "label": [
+   1135,
+   52
+  ],
+  "area": 23672,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "bratslav",
+   "cherkasy",
+   "chernihiv",
+   "kyiv",
+   "poltava"
+  ]
+ },
+ {
+  "id": "cherkasy",
+  "index": 88,
+  "name": "Cherkasy",
+  "owner": "lithuania",
+  "culture": "ruthenian",
+  "religion": "orthodox",
+  "town": [
+   1097.6,
+   159.2
+  ],
+  "label": [
+   1148,
+   142
+  ],
+  "area": 15750,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "bratslav",
+   "kirovohrad",
+   "pereiaslav",
+   "poltava"
+  ]
+ },
+ {
+  "id": "khadjibey",
+  "index": 89,
+  "name": "Khadjibey",
+  "owner": "lithuania",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1024.8,
+   377.4
+  ],
+  "label": [
+   1005,
+   324
+  ],
+  "area": 9956,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "cetatea_alba",
+   "orhei",
+   "yedisan"
+  ]
+ },
+ {
+  "id": "suceava",
+  "index": 90,
+  "name": "Suceava",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   779.7,
+   291.2
+  ],
+  "label": [
+   732,
+   261
+  ],
+  "area": 16366,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "beszterce",
+   "halicz",
+   "hotin",
+   "iasi",
+   "maramaros",
+   "roman",
+   "szekelyfold"
+  ]
+ },
+ {
+  "id": "hotin",
+  "index": 91,
+  "name": "Hotin",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   793.4,
+   230.0
+  ],
+  "label": [
+   752,
+   228
+  ],
+  "area": 9666,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "halicz",
+   "iasi",
+   "kamieniec",
+   "soroca",
+   "suceava"
+  ]
+ },
+ {
+  "id": "soroca",
+  "index": 92,
+  "name": "Soroca",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   891.9,
+   253.6
+  ],
+  "label": [
+   864,
+   225
+  ],
+  "area": 17089,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bratslav",
+   "hotin",
+   "iasi",
+   "kamieniec",
+   "orhei"
+  ]
+ },
+ {
+  "id": "iasi",
+  "index": 93,
+  "name": "Iași",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   853.0,
+   327.3
+  ],
+  "label": [
+   840,
+   292
+  ],
+  "area": 8642,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "barlad",
+   "hotin",
+   "lapusna",
+   "orhei",
+   "roman",
+   "soroca",
+   "suceava"
+  ]
+ },
+ {
+  "id": "roman",
+  "index": 94,
+  "name": "Roman",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   816.4,
+   342.8
+  ],
+  "label": [
+   812,
+   326
+  ],
+  "area": 10840,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "barlad",
+   "iasi",
+   "putna",
+   "suceava",
+   "szekelyfold"
+  ]
+ },
+ {
+  "id": "orhei",
+  "index": 95,
+  "name": "Orhei",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   920.3,
+   311.1
+  ],
+  "label": [
+   989,
+   256
+  ],
+  "area": 19478,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "bratslav",
+   "cetatea_alba",
+   "iasi",
+   "khadjibey",
+   "kirovohrad",
+   "lapusna",
+   "soroca",
+   "yedisan"
+  ]
+ },
+ {
+  "id": "lapusna",
+  "index": 96,
+  "name": "Lăpușna",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   897.3,
+   347.9
+  ],
+  "label": [
+   893,
+   339
+  ],
+  "area": 10066,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "barlad",
+   "cetatea_alba",
+   "chilia",
+   "iasi",
+   "orhei"
+  ]
+ },
+ {
+  "id": "barlad",
+  "index": 97,
+  "name": "Bârlad",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   857.4,
+   395.8
+  ],
+  "label": [
+   855,
+   378
+  ],
+  "area": 8960,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "braila",
+   "chilia",
+   "iasi",
+   "lapusna",
+   "putna",
+   "roman"
+  ]
+ },
+ {
+  "id": "putna",
+  "index": 98,
+  "name": "Putna",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   830.6,
+   434.9
+  ],
+  "label": [
+   804,
+   410
+  ],
+  "area": 7792,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "barlad",
+   "braila",
+   "brasso",
+   "buzau",
+   "roman",
+   "szekelyfold"
+  ]
+ },
+ {
+  "id": "cetatea_alba",
+  "index": 99,
+  "name": "Cetatea Albă",
+  "owner": "moldavia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   1004.0,
+   398.8
+  ],
+  "label": [
+   962,
+   381
+  ],
+  "area": 7402,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "chilia",
+   "khadjibey",
+   "lapusna",
+   "orhei"
+  ]
+ },
+ {
+  "id": "chilia",
+  "index": 100,
+  "name": "Chilia",
+  "owner": "genoa",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   943.8,
+   454.8
+  ],
+  "label": [
+   928,
+   420
+  ],
+  "area": 5584,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "barlad",
+   "braila",
+   "cetatea_alba",
+   "lapusna"
+  ]
+ },
+ {
+  "id": "arges",
+  "index": 101,
+  "name": "Argeș",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   693.8,
+   475.5
+  ],
+  "label": [
+   693,
+   460
+  ],
+  "area": 7531,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "brasso",
+   "caracal",
+   "craiova",
+   "fagaras",
+   "gorj",
+   "szeben",
+   "targoviste",
+   "teleorman"
+  ]
+ },
+ {
+  "id": "targoviste",
+  "index": 102,
+  "name": "Târgoviște",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   735.9,
+   491.7
+  ],
+  "label": [
+   745,
+   472
+  ],
+  "area": 6664,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "arges",
+   "brasso",
+   "buzau",
+   "teleorman",
+   "vlasia"
+  ]
+ },
+ {
+  "id": "craiova",
+  "index": 103,
+  "name": "Craiova",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   645.6,
+   536.6
+  ],
+  "label": [
+   655,
+   515
+  ],
+  "area": 7976,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "arges",
+   "caracal",
+   "gorj",
+   "severin",
+   "vidin",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "gorj",
+  "index": 104,
+  "name": "Jiu",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   616.6,
+   483.6
+  ],
+  "label": [
+   632,
+   466
+  ],
+  "area": 8608,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "arges",
+   "craiova",
+   "gyulafehervar",
+   "hunyad",
+   "karansebes",
+   "severin",
+   "szeben"
+  ]
+ },
+ {
+  "id": "caracal",
+  "index": 105,
+  "name": "Romanați",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   675.7,
+   552.1
+  ],
+  "label": [
+   682,
+   531
+  ],
+  "area": 6813,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "arges",
+   "craiova",
+   "nikopol",
+   "teleorman",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "teleorman",
+  "index": 106,
+  "name": "Teleorman",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   727.7,
+   549.2
+  ],
+  "label": [
+   712,
+   530
+  ],
+  "area": 5672,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "arges",
+   "caracal",
+   "giurgiu",
+   "nikopol",
+   "targoviste",
+   "vlasia"
+  ]
+ },
+ {
+  "id": "giurgiu",
+  "index": 107,
+  "name": "Giurgiu",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   764.4,
+   563.9
+  ],
+  "label": [
+   762,
+   556
+  ],
+  "area": 4516,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "nikopol",
+   "ruse",
+   "shumen",
+   "silistra",
+   "teleorman",
+   "vlasia"
+  ]
+ },
+ {
+  "id": "vlasia",
+  "index": 108,
+  "name": "Vlăsia",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   771.5,
+   523.4
+  ],
+  "label": [
+   772,
+   508
+  ],
+  "area": 6946,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "buzau",
+   "giurgiu",
+   "ialomita",
+   "silistra",
+   "targoviste",
+   "teleorman"
+  ]
+ },
+ {
+  "id": "buzau",
+  "index": 109,
+  "name": "Buzău",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   810.9,
+   475.5
+  ],
+  "label": [
+   792,
+   460
+  ],
+  "area": 7166,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "braila",
+   "brasso",
+   "ialomita",
+   "putna",
+   "targoviste",
+   "vlasia"
+  ]
+ },
+ {
+  "id": "braila",
+  "index": 110,
+  "name": "Brăila",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   873.3,
+   466.6
+  ],
+  "label": [
+   895,
+   437
+  ],
+  "area": 10062,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "barlad",
+   "buzau",
+   "chilia",
+   "dobruja",
+   "ialomita",
+   "putna"
+  ]
+ },
+ {
+  "id": "ialomita",
+  "index": 111,
+  "name": "Ialomița",
+  "owner": "wallachia",
+  "culture": "romanian",
+  "religion": "orthodox",
+  "town": [
+   842.6,
+   516.0
+  ],
+  "label": [
+   844,
+   502
+  ],
+  "area": 7006,
+  "terrain": "marsh",
+  "coastal": true,
+  "neighbors": [
+   "braila",
+   "buzau",
+   "dobruja",
+   "silistra",
+   "vlasia"
+  ]
+ },
+ {
+  "id": "vidin",
+  "index": 112,
+  "name": "Vidin",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   595.3,
+   561.0
+  ],
+  "label": [
+   599,
+   558
+  ],
+  "area": 3177,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "craiova",
+   "severin",
+   "timok",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "nikopol",
+  "index": 113,
+  "name": "Nikopol",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   705.8,
+   582.3
+  ],
+  "label": [
+   705,
+   583
+  ],
+  "area": 4412,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "caracal",
+   "giurgiu",
+   "lovech",
+   "ruse",
+   "tarnovo",
+   "teleorman",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "tarnovo",
+  "index": 114,
+  "name": "Tarnovo",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   745.8,
+   628.0
+  ],
+  "label": [
+   736,
+   618
+  ],
+  "area": 5942,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "lovech",
+   "nikopol",
+   "ruse",
+   "shumen",
+   "yambol",
+   "zagora"
+  ]
+ },
+ {
+  "id": "lovech",
+  "index": 115,
+  "name": "Lovech",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   696.0,
+   624.4
+  ],
+  "label": [
+   676,
+   615
+  ],
+  "area": 6851,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "nikopol",
+   "philippopolis",
+   "sofia",
+   "tarnovo",
+   "vratsa",
+   "zagora"
+  ]
+ },
+ {
+  "id": "sofia",
+  "index": 116,
+  "name": "Sofia",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   619.4,
+   656.0
+  ],
+  "label": [
+   593,
+   636
+  ],
+  "area": 9394,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kyustendil",
+   "lovech",
+   "nis",
+   "philippopolis",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "vratsa",
+  "index": 117,
+  "name": "Vratsa",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   632.0,
+   619.2
+  ],
+  "label": [
+   627,
+   594
+  ],
+  "area": 7389,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "caracal",
+   "craiova",
+   "lovech",
+   "nikopol",
+   "nis",
+   "sofia",
+   "timok",
+   "vidin"
+  ]
+ },
+ {
+  "id": "silistra",
+  "index": 118,
+  "name": "Silistra",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   835.0,
+   551.4
+  ],
+  "label": [
+   837,
+   564
+  ],
+  "area": 3627,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "dobruja",
+   "giurgiu",
+   "ialomita",
+   "shumen",
+   "varna",
+   "vlasia"
+  ]
+ },
+ {
+  "id": "ruse",
+  "index": 119,
+  "name": "Ruse",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   766.0,
+   589.7
+  ],
+  "label": [
+   771,
+   588
+  ],
+  "area": 4993,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "giurgiu",
+   "nikopol",
+   "shumen",
+   "tarnovo"
+  ]
+ },
+ {
+  "id": "shumen",
+  "index": 120,
+  "name": "Shumen",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   816.4,
+   614.0
+  ],
+  "label": [
+   819,
+   591
+  ],
+  "area": 7628,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "anchialos",
+   "giurgiu",
+   "ruse",
+   "silistra",
+   "tarnovo",
+   "varna",
+   "yambol"
+  ]
+ },
+ {
+  "id": "varna",
+  "index": 121,
+  "name": "Varna",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   870.5,
+   618.5
+  ],
+  "label": [
+   865,
+   590
+  ],
+  "area": 6170,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "anchialos",
+   "dobruja",
+   "shumen",
+   "silistra"
+  ]
+ },
+ {
+  "id": "dobruja",
+  "index": 122,
+  "name": "Dobruja",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   891.9,
+   530.7
+  ],
+  "label": [
+   899,
+   510
+  ],
+  "area": 9317,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "braila",
+   "ialomita",
+   "silistra",
+   "varna"
+  ]
+ },
+ {
+  "id": "philippopolis",
+  "index": 123,
+  "name": "Philippopolis",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   697.6,
+   696.6
+  ],
+  "label": [
+   686,
+   668
+  ],
+  "area": 13772,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "christoupolis",
+   "komotini",
+   "kyustendil",
+   "lovech",
+   "serres",
+   "sofia",
+   "zagora"
+  ]
+ },
+ {
+  "id": "zagora",
+  "index": 124,
+  "name": "Zagora",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   745.8,
+   676.7
+  ],
+  "label": [
+   734,
+   668
+  ],
+  "area": 7016,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "edirne",
+   "komotini",
+   "lovech",
+   "philippopolis",
+   "tarnovo",
+   "yambol"
+  ]
+ },
+ {
+  "id": "yambol",
+  "index": 125,
+  "name": "Yambol",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   793.4,
+   672.3
+  ],
+  "label": [
+   790,
+   654
+  ],
+  "area": 7292,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "anchialos",
+   "edirne",
+   "kirkkilise",
+   "shumen",
+   "tarnovo",
+   "zagora"
+  ]
+ },
+ {
+  "id": "anchialos",
+  "index": 126,
+  "name": "Anchialos",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   849.2,
+   667.1
+  ],
+  "label": [
+   834,
+   656
+  ],
+  "area": 5260,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "kirkkilise",
+   "shumen",
+   "varna",
+   "yambol"
+  ]
+ },
+ {
+  "id": "kyustendil",
+  "index": 127,
+  "name": "Velbazhd",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   584.9,
+   687.0
+  ],
+  "label": [
+   574,
+   672
+  ],
+  "area": 7956,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "nis",
+   "novo_brdo",
+   "philippopolis",
+   "serres",
+   "sofia",
+   "stip"
+  ]
+ },
+ {
+  "id": "nis",
+  "index": 128,
+  "name": "Niš",
+  "owner": "ott_rum",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   541.7,
+   610.3
+  ],
+  "label": [
+   543,
+   606
+  ],
+  "area": 7672,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kosovo",
+   "krusevac",
+   "kyustendil",
+   "novo_brdo",
+   "sofia",
+   "timok",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "edirne",
+  "index": 129,
+  "name": "Edirne",
+  "owner": "ott_rum",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   796.7,
+   731.2
+  ],
+  "label": [
+   797,
+   716
+  ],
+  "area": 8046,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "ainos",
+   "kirkkilise",
+   "komotini",
+   "rodosto",
+   "yambol",
+   "zagora"
+  ]
+ },
+ {
+  "id": "gallipoli",
+  "index": 130,
+  "name": "Gallipoli",
+  "owner": "ott_rum",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   802.7,
+   824.9
+  ],
+  "label": [
+   786,
+   859
+  ],
+  "area": 3933,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "ainos",
+   "biga",
+   "lemnos",
+   "rodosto"
+  ]
+ },
+ {
+  "id": "rodosto",
+  "index": 131,
+  "name": "Rodosto",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   848.1,
+   782.8
+  ],
+  "label": [
+   841,
+   770
+  ],
+  "area": 4547,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "ainos",
+   "edirne",
+   "gallipoli",
+   "kirkkilise",
+   "selymbria"
+  ]
+ },
+ {
+  "id": "kirkkilise",
+  "index": 132,
+  "name": "Kırk Kilise",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   833.3,
+   727.6
+  ],
+  "label": [
+   828,
+   711
+  ],
+  "area": 7153,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "anchialos",
+   "edirne",
+   "rodosto",
+   "selymbria",
+   "yambol"
+  ]
+ },
+ {
+  "id": "komotini",
+  "index": 133,
+  "name": "Gümülcine",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   733.2,
+   772.5
+  ],
+  "label": [
+   735,
+   746
+  ],
+  "area": 7618,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "ainos",
+   "christoupolis",
+   "edirne",
+   "philippopolis",
+   "zagora"
+  ]
+ },
+ {
+  "id": "serres",
+  "index": 134,
+  "name": "Serres",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   632.0,
+   774.7
+  ],
+  "label": [
+   619,
+   738
+  ],
+  "area": 9612,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "chalkidiki",
+   "christoupolis",
+   "kyustendil",
+   "philippopolis",
+   "stip",
+   "thessaloniki"
+  ]
+ },
+ {
+  "id": "christoupolis",
+  "index": 135,
+  "name": "Christoupolis",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   678.5,
+   785.8
+  ],
+  "label": [
+   675,
+   752
+  ],
+  "area": 4975,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "komotini",
+   "philippopolis",
+   "serres"
+  ]
+ },
+ {
+  "id": "thessaloniki",
+  "index": 136,
+  "name": "Thessaloniki",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   598.6,
+   807.9
+  ],
+  "label": [
+   588,
+   788
+  ],
+  "area": 5137,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "chalkidiki",
+   "serres",
+   "stip",
+   "veria"
+  ]
+ },
+ {
+  "id": "chalkidiki",
+  "index": 137,
+  "name": "Chalkidiki",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   634.7,
+   833.0
+  ],
+  "label": [
+   633,
+   820
+  ],
+  "area": 3164,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "serres",
+   "thessaloniki"
+  ]
+ },
+ {
+  "id": "veria",
+  "index": 138,
+  "name": "Veria",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   558.1,
+   816.7
+  ],
+  "label": [
+   558,
+   819
+  ],
+  "area": 5767,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "kastoria",
+   "larissa",
+   "monastir",
+   "stip",
+   "thessaloniki"
+  ]
+ },
+ {
+  "id": "kastoria",
+  "index": 139,
+  "name": "Kastoria",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   507.2,
+   816.7
+  ],
+  "label": [
+   480,
+   817
+  ],
+  "area": 9009,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "berat",
+   "gjirokaster",
+   "ioannina",
+   "larissa",
+   "monastir",
+   "ohrid",
+   "trikala",
+   "veria"
+  ]
+ },
+ {
+  "id": "monastir",
+  "index": 140,
+  "name": "Monastir",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   510.5,
+   779.1
+  ],
+  "label": [
+   510,
+   751
+  ],
+  "area": 6190,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "kastoria",
+   "ohrid",
+   "skopje",
+   "stip",
+   "veria"
+  ]
+ },
+ {
+  "id": "ohrid",
+  "index": 141,
+  "name": "Ohrid",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   481.5,
+   772.5
+  ],
+  "label": [
+   481,
+   755
+  ],
+  "area": 3229,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "berat",
+   "dibra",
+   "kastoria",
+   "monastir",
+   "shpat",
+   "skopje"
+  ]
+ },
+ {
+  "id": "skopje",
+  "index": 142,
+  "name": "Skopje",
+  "owner": "ott_rum",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   516.0,
+   707.6
+  ],
+  "label": [
+   508,
+   704
+  ],
+  "area": 5602,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "dibra",
+   "kosovo",
+   "monastir",
+   "novo_brdo",
+   "ohrid",
+   "prizren",
+   "stip"
+  ]
+ },
+ {
+  "id": "stip",
+  "index": 143,
+  "name": "Štip",
+  "owner": "ott_rum",
+  "culture": "bulgarian",
+  "religion": "orthodox",
+  "town": [
+   558.1,
+   726.8
+  ],
+  "label": [
+   558,
+   712
+  ],
+  "area": 8919,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kyustendil",
+   "monastir",
+   "novo_brdo",
+   "serres",
+   "skopje",
+   "thessaloniki",
+   "veria"
+  ]
+ },
+ {
+  "id": "larissa",
+  "index": 144,
+  "name": "Larissa",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   570.1,
+   881.6
+  ],
+  "label": [
+   560,
+   862
+  ],
+  "area": 7358,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "kastoria",
+   "trikala",
+   "veria",
+   "zitouni"
+  ]
+ },
+ {
+  "id": "trikala",
+  "index": 145,
+  "name": "Trikala",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   534.6,
+   888.2
+  ],
+  "label": [
+   529,
+   868
+  ],
+  "area": 6453,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "aetolia",
+   "arta",
+   "ioannina",
+   "kastoria",
+   "larissa",
+   "zitouni"
+  ]
+ },
+ {
+  "id": "zitouni",
+  "index": 146,
+  "name": "Zitouni",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   570.7,
+   936.2
+  ],
+  "label": [
+   561,
+   933
+  ],
+  "area": 4777,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "aetolia",
+   "larissa",
+   "negroponte",
+   "salona",
+   "thebes",
+   "trikala"
+  ]
+ },
+ {
+  "id": "salona",
+  "index": 147,
+  "name": "Salona",
+  "owner": "ott_rum",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   568.0,
+   963.4
+  ],
+  "label": [
+   560,
+   965
+  ],
+  "area": 1629,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "aetolia",
+   "thebes",
+   "zitouni"
+  ]
+ },
+ {
+  "id": "constantinople",
+  "index": 148,
+  "name": "Constantinople",
+  "owner": "byzantium",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   928.5,
+   780.6
+  ],
+  "label": [
+   920,
+   771
+  ],
+  "area": 1312,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "izmit",
+   "selymbria"
+  ]
+ },
+ {
+  "id": "selymbria",
+  "index": 149,
+  "name": "Selymbria",
+  "owner": "byzantium",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   889.1,
+   776.2
+  ],
+  "label": [
+   880,
+   758
+  ],
+  "area": 3722,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "constantinople",
+   "kirkkilise",
+   "rodosto"
+  ]
+ },
+ {
+  "id": "lemnos",
+  "index": 150,
+  "name": "Lemnos",
+  "owner": "byzantium",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   725.0,
+   862.4
+  ],
+  "label": [
+   757,
+   839
+  ],
+  "area": 722,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "gallipoli"
+  ]
+ },
+ {
+  "id": "thasos",
+  "index": 151,
+  "name": "Thasos",
+  "owner": "byzantium",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   694.9,
+   804.9
+  ],
+  "label": [
+   692,
+   804
+  ],
+  "area": 412,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": []
+ },
+ {
+  "id": "mystras",
+  "index": 152,
+  "name": "Mystras",
+  "owner": "morea",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   567.4,
+   1071.1
+  ],
+  "label": [
+   574,
+   1072
+  ],
+  "area": 2590,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "kalamata",
+   "monemvasia"
+  ]
+ },
+ {
+  "id": "monemvasia",
+  "index": 153,
+  "name": "Monemvasia",
+  "owner": "morea",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   604.6,
+   1099.1
+  ],
+  "label": [
+   596,
+   1087
+  ],
+  "area": 1724,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "mystras"
+  ]
+ },
+ {
+  "id": "arcadia",
+  "index": 154,
+  "name": "Arcadia",
+  "owner": "morea",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   567.4,
+   1039.4
+  ],
+  "label": [
+   559,
+   1029
+  ],
+  "area": 3751,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "corinth",
+   "glarentza",
+   "kalamata",
+   "monemvasia",
+   "mystras",
+   "nauplia",
+   "patras"
+  ]
+ },
+ {
+  "id": "corinth",
+  "index": 155,
+  "name": "Corinth",
+  "owner": "knights",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   598.0,
+   1009.9
+  ],
+  "label": [
+   578,
+   1004
+  ],
+  "area": 1858,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "athens",
+   "nauplia",
+   "patras",
+   "thebes"
+  ]
+ },
+ {
+  "id": "patras",
+  "index": 156,
+  "name": "Patras",
+  "owner": "achaea",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   532.4,
+   984.1
+  ],
+  "label": [
+   544,
+   995
+  ],
+  "area": 2169,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "corinth",
+   "glarentza"
+  ]
+ },
+ {
+  "id": "glarentza",
+  "index": 157,
+  "name": "Glarentza",
+  "owner": "achaea",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   506.1,
+   1011.3
+  ],
+  "label": [
+   531,
+   1020
+  ],
+  "area": 3060,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "kalamata",
+   "patras"
+  ]
+ },
+ {
+  "id": "kalamata",
+  "index": 158,
+  "name": "Kalamata",
+  "owner": "achaea",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   552.6,
+   1073.3
+  ],
+  "label": [
+   542,
+   1061
+  ],
+  "area": 1899,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "glarentza",
+   "modon",
+   "mystras"
+  ]
+ },
+ {
+  "id": "modon",
+  "index": 159,
+  "name": "Modon and Coron",
+  "owner": "venice",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   530.7,
+   1087.3
+  ],
+  "label": [
+   535,
+   1082
+  ],
+  "area": 862,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "kalamata"
+  ]
+ },
+ {
+  "id": "nauplia",
+  "index": 160,
+  "name": "Argos and Nauplia",
+  "owner": "venice",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   590.9,
+   1032.0
+  ],
+  "label": [
+   586,
+   1026
+  ],
+  "area": 2812,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arcadia",
+   "athens",
+   "corinth"
+  ]
+ },
+ {
+  "id": "thebes",
+  "index": 161,
+  "name": "Thebes",
+  "owner": "athens",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   619.4,
+   978.9
+  ],
+  "label": [
+   603,
+   967
+  ],
+  "area": 3575,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "athens",
+   "corinth",
+   "negroponte",
+   "salona",
+   "zitouni"
+  ]
+ },
+ {
+  "id": "athens",
+  "index": 162,
+  "name": "Athens",
+  "owner": "athens",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   641.8,
+   1004.0
+  ],
+  "label": [
+   645,
+   998
+  ],
+  "area": 3395,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "andros",
+   "corinth",
+   "nauplia",
+   "negroponte",
+   "thebes"
+  ]
+ },
+ {
+  "id": "negroponte",
+  "index": 163,
+  "name": "Negroponte",
+  "owner": "venice",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   634.7,
+   968.6
+  ],
+  "label": [
+   648,
+   962
+  ],
+  "area": 3319,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "athens",
+   "thebes",
+   "zitouni"
+  ]
+ },
+ {
+  "id": "ioannina",
+  "index": 164,
+  "name": "Ioannina",
+  "owner": "ioannina",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   484.2,
+   879.4
+  ],
+  "label": [
+   478,
+   864
+  ],
+  "area": 5722,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arta",
+   "corfu",
+   "gjirokaster",
+   "kastoria",
+   "trikala"
+  ]
+ },
+ {
+  "id": "arta",
+  "index": 165,
+  "name": "Arta",
+  "owner": "spata",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   491.9,
+   917.0
+  ],
+  "label": [
+   499,
+   910
+  ],
+  "area": 4100,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "aetolia",
+   "ioannina",
+   "leucas",
+   "trikala"
+  ]
+ },
+ {
+  "id": "aetolia",
+  "index": 166,
+  "name": "Aetolia",
+  "owner": "spata",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   525.3,
+   958.3
+  ],
+  "label": [
+   513,
+   953
+  ],
+  "area": 4694,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "arta",
+   "leucas",
+   "salona",
+   "trikala",
+   "zitouni"
+  ]
+ },
+ {
+  "id": "leucas",
+  "index": 167,
+  "name": "Leucas",
+  "owner": "tocco",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   476.0,
+   943.5
+  ],
+  "label": [
+   468,
+   958
+  ],
+  "area": 1040,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "aetolia",
+   "arta"
+  ]
+ },
+ {
+  "id": "cephalonia",
+  "index": 168,
+  "name": "Cephalonia",
+  "owner": "tocco",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   465.1,
+   987.8
+  ],
+  "label": [
+   468,
+   985
+  ],
+  "area": 945,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": []
+ },
+ {
+  "id": "zakynthos",
+  "index": 169,
+  "name": "Zakynthos",
+  "owner": "tocco",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   487.0,
+   1018.7
+  ],
+  "label": [
+   474,
+   1015
+  ],
+  "area": 400,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": []
+ },
+ {
+  "id": "corfu",
+  "index": 170,
+  "name": "Corfu",
+  "owner": "venice",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   432.3,
+   884.6
+  ],
+  "label": [
+   427,
+   876
+  ],
+  "area": 992,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "gjirokaster",
+   "ioannina"
+  ]
+ },
+ {
+  "id": "lesbos",
+  "index": 171,
+  "name": "Lesbos",
+  "owner": "lesbos",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   779.7,
+   917.7
+  ],
+  "label": [
+   784,
+   919
+  ],
+  "area": 1739,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "biga"
+  ]
+ },
+ {
+  "id": "ainos",
+  "index": 172,
+  "name": "Ainos",
+  "owner": "lesbos",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   770.4,
+   801.3
+  ],
+  "label": [
+   777,
+   778
+  ],
+  "area": 4849,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "edirne",
+   "gallipoli",
+   "komotini",
+   "rodosto"
+  ]
+ },
+ {
+  "id": "chios",
+  "index": 173,
+  "name": "Chios",
+  "owner": "genoa",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   766.0,
+   973.0
+  ],
+  "label": [
+   768,
+   968
+  ],
+  "area": 1141,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "smyrna"
+  ]
+ },
+ {
+  "id": "naxos",
+  "index": 174,
+  "name": "Naxos",
+  "owner": "naxos",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   733.2,
+   1071.1
+  ],
+  "label": [
+   737,
+   1071
+  ],
+  "area": 1539,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": []
+ },
+ {
+  "id": "andros",
+  "index": 175,
+  "name": "Andros",
+  "owner": "naxos",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   705.8,
+   1013.6
+  ],
+  "label": [
+   702,
+   1012
+  ],
+  "area": 886,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "athens"
+  ]
+ },
+ {
+  "id": "santorini",
+  "index": 176,
+  "name": "Santorini",
+  "owner": "naxos",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   734.8,
+   1120.4
+  ],
+  "label": [
+   732,
+   1124
+  ],
+  "area": 110,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": []
+ },
+ {
+  "id": "rhodes",
+  "index": 177,
+  "name": "Rhodes",
+  "owner": "knights",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   875.5,
+   1135.2
+  ],
+  "label": [
+   872,
+   1135
+  ],
+  "area": 1811,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "kos"
+  ]
+ },
+ {
+  "id": "kos",
+  "index": 178,
+  "name": "Kos",
+  "owner": "knights",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   831.7,
+   1087.3
+  ],
+  "label": [
+   827,
+   1088
+  ],
+  "area": 752,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "mugla",
+   "rhodes"
+  ]
+ },
+ {
+  "id": "candia",
+  "index": 179,
+  "name": "Candia",
+  "owner": "venice",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   718.4,
+   1201.5
+  ],
+  "label": [
+   710,
+   1211
+  ],
+  "area": 4990,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "canea"
+  ]
+ },
+ {
+  "id": "canea",
+  "index": 180,
+  "name": "Canea",
+  "owner": "venice",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   656.6,
+   1194.2
+  ],
+  "label": [
+   655,
+   1196
+  ],
+  "area": 2758,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "candia"
+  ]
+ },
+ {
+  "id": "nicosia",
+  "index": 181,
+  "name": "Nicosia",
+  "owner": "cyprus",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1168.7,
+   1211.1
+  ],
+  "label": [
+   1157,
+   1211
+  ],
+  "area": 3627,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "famagusta",
+   "limassol"
+  ]
+ },
+ {
+  "id": "limassol",
+  "index": 182,
+  "name": "Limassol",
+  "owner": "cyprus",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1143.6,
+   1242.1
+  ],
+  "label": [
+   1130,
+   1233
+  ],
+  "area": 2932,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "nicosia"
+  ]
+ },
+ {
+  "id": "famagusta",
+  "index": 183,
+  "name": "Famagusta",
+  "owner": "genoa",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1200.5,
+   1214.8
+  ],
+  "label": [
+   1193,
+   1215
+  ],
+  "area": 1888,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "nicosia"
+  ]
+ },
+ {
+  "id": "krusevac",
+  "index": 184,
+  "name": "Kruševac",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   510.5,
+   591.2
+  ],
+  "label": [
+   517,
+   566
+  ],
+  "area": 7713,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "branicevo",
+   "kosovo",
+   "nis",
+   "raska",
+   "rudnik",
+   "smederevo",
+   "timok"
+  ]
+ },
+ {
+  "id": "smederevo",
+  "index": 185,
+  "name": "Smederevo",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   489.7,
+   519.7
+  ],
+  "label": [
+   492,
+   497
+  ],
+  "area": 7790,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "belgrade",
+   "branicevo",
+   "karansebes",
+   "krusevac",
+   "rudnik",
+   "temes",
+   "valjevo"
+  ]
+ },
+ {
+  "id": "rudnik",
+  "index": 186,
+  "name": "Rudnik",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   465.1,
+   550.6
+  ],
+  "label": [
+   464,
+   552
+  ],
+  "area": 3895,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "krusevac",
+   "smederevo",
+   "uzice",
+   "valjevo"
+  ]
+ },
+ {
+  "id": "uzice",
+  "index": 187,
+  "name": "Užice",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   429.0,
+   570.5
+  ],
+  "label": [
+   416,
+   568
+  ],
+  "area": 5157,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "borac",
+   "raska",
+   "rudnik",
+   "valjevo"
+  ]
+ },
+ {
+  "id": "valjevo",
+  "index": 188,
+  "name": "Valjevo",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   431.7,
+   540.3
+  ],
+  "label": [
+   437,
+   526
+  ],
+  "area": 4804,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "belgrade",
+   "borac",
+   "rudnik",
+   "smederevo",
+   "soli",
+   "szerem",
+   "uzice"
+  ]
+ },
+ {
+  "id": "branicevo",
+  "index": 189,
+  "name": "Braničevo",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   533.5,
+   519.7
+  ],
+  "label": [
+   536,
+   500
+  ],
+  "area": 6057,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "karansebes",
+   "krusevac",
+   "severin",
+   "smederevo",
+   "timok"
+  ]
+ },
+ {
+  "id": "timok",
+  "index": 190,
+  "name": "Timok",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   562.5,
+   567.6
+  ],
+  "label": [
+   570,
+   549
+  ],
+  "area": 7389,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "branicevo",
+   "krusevac",
+   "nis",
+   "severin",
+   "vidin",
+   "vratsa"
+  ]
+ },
+ {
+  "id": "novo_brdo",
+  "index": 191,
+  "name": "Novo Brdo",
+  "owner": "serbia",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   522.5,
+   667.1
+  ],
+  "label": [
+   525,
+   659
+  ],
+  "area": 5139,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kosovo",
+   "kyustendil",
+   "nis",
+   "skopje",
+   "stip"
+  ]
+ },
+ {
+  "id": "kosovo",
+  "index": 192,
+  "name": "Kosovo",
+  "owner": "brankovic",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   489.7,
+   656.0
+  ],
+  "label": [
+   483,
+   638
+  ],
+  "area": 5486,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "krusevac",
+   "nis",
+   "novo_brdo",
+   "pec",
+   "prizren",
+   "raska",
+   "skopje"
+  ]
+ },
+ {
+  "id": "pec",
+  "index": 193,
+  "name": "Peć",
+  "owner": "brankovic",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   453.6,
+   659.0
+  ],
+  "label": [
+   455,
+   655
+  ],
+  "area": 3355,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "dukagjin",
+   "kosovo",
+   "prizren",
+   "raska",
+   "zeta"
+  ]
+ },
+ {
+  "id": "prizren",
+  "index": 194,
+  "name": "Prizren",
+  "owner": "brankovic",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   478.2,
+   692.2
+  ],
+  "label": [
+   475,
+   690
+  ],
+  "area": 3008,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "dibra",
+   "dukagjin",
+   "kosovo",
+   "pec",
+   "skopje"
+  ]
+ },
+ {
+  "id": "raska",
+  "index": 195,
+  "name": "Raška",
+  "owner": "brankovic",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   437.7,
+   614.0
+  ],
+  "label": [
+   434,
+   608
+  ],
+  "area": 7562,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "borac",
+   "gacko",
+   "kosovo",
+   "krusevac",
+   "pec",
+   "uzice",
+   "zeta"
+  ]
+ },
+ {
+  "id": "bobovac",
+  "index": 196,
+  "name": "Bobovac",
+  "owner": "bosnia",
+  "culture": "bosnian",
+  "religion": "bosnian_church",
+  "town": [
+   338.1,
+   556.5
+  ],
+  "label": [
+   327,
+   547
+  ],
+  "area": 6019,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "borac",
+   "gacko",
+   "hum",
+   "jajce",
+   "livno",
+   "soli",
+   "usora"
+  ]
+ },
+ {
+  "id": "usora",
+  "index": 197,
+  "name": "Usora",
+  "owner": "bosnia",
+  "culture": "bosnian",
+  "religion": "bosnian_church",
+  "town": [
+   333.8,
+   504.9
+  ],
+  "label": [
+   331,
+   496
+  ],
+  "area": 4882,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "bobovac",
+   "jajce",
+   "pozsega",
+   "soli",
+   "valko",
+   "vrbas"
+  ]
+ },
+ {
+  "id": "soli",
+  "index": 198,
+  "name": "Soli",
+  "owner": "bosnia",
+  "culture": "bosnian",
+  "religion": "bosnian_church",
+  "town": [
+   365.0,
+   520.4
+  ],
+  "label": [
+   367,
+   508
+  ],
+  "area": 5526,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bobovac",
+   "borac",
+   "szerem",
+   "usora",
+   "valjevo",
+   "valko"
+  ]
+ },
+ {
+  "id": "borac",
+  "index": 199,
+  "name": "Borač",
+  "owner": "pavlovic",
+  "culture": "bosnian",
+  "religion": "bosnian_church",
+  "town": [
+   380.3,
+   575.0
+  ],
+  "label": [
+   376,
+   563
+  ],
+  "area": 5926,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bobovac",
+   "gacko",
+   "raska",
+   "soli",
+   "uzice",
+   "valjevo"
+  ]
+ },
+ {
+  "id": "hum",
+  "index": 200,
+  "name": "Hum",
+  "owner": "kosaca",
+  "culture": "bosnian",
+  "religion": "orthodox",
+  "town": [
+   322.8,
+   615.5
+  ],
+  "label": [
+   312,
+   604
+  ],
+  "area": 6316,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bobovac",
+   "gacko",
+   "livno",
+   "ragusa",
+   "spalato"
+  ]
+ },
+ {
+  "id": "gacko",
+  "index": 201,
+  "name": "Gacko",
+  "owner": "kosaca",
+  "culture": "bosnian",
+  "religion": "orthodox",
+  "town": [
+   357.3,
+   621.4
+  ],
+  "label": [
+   352,
+   612
+  ],
+  "area": 4824,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bobovac",
+   "borac",
+   "hum",
+   "kotor",
+   "ragusa",
+   "raska",
+   "zeta"
+  ]
+ },
+ {
+  "id": "jajce",
+  "index": 202,
+  "name": "Jajce",
+  "owner": "hrvoje",
+  "culture": "bosnian",
+  "religion": "catholic",
+  "town": [
+   288.4,
+   535.2
+  ],
+  "label": [
+   285,
+   534
+  ],
+  "area": 4104,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bobovac",
+   "knin",
+   "livno",
+   "usora",
+   "vrbas"
+  ]
+ },
+ {
+  "id": "livno",
+  "index": 203,
+  "name": "Livno",
+  "owner": "hrvoje",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   273.6,
+   572.8
+  ],
+  "label": [
+   273,
+   570
+  ],
+  "area": 5652,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bobovac",
+   "hum",
+   "jajce",
+   "knin",
+   "spalato"
+  ]
+ },
+ {
+  "id": "vrbas",
+  "index": 204,
+  "name": "Vrbas",
+  "owner": "hrvoje",
+  "culture": "bosnian",
+  "religion": "catholic",
+  "town": [
+   284.0,
+   503.5
+  ],
+  "label": [
+   267,
+   482
+  ],
+  "area": 7103,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "bihac",
+   "jajce",
+   "knin",
+   "pozsega",
+   "usora",
+   "zagreb"
+  ]
+ },
+ {
+  "id": "ragusa",
+  "index": 205,
+  "name": "Ragusa",
+  "owner": "ragusa",
+  "culture": "croatian",
+  "religion": "catholic",
+  "town": [
+   333.2,
+   659.7
+  ],
+  "label": [
+   347,
+   655
+  ],
+  "area": 2578,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "gacko",
+   "hum",
+   "kotor"
+  ]
+ },
+ {
+  "id": "zeta",
+  "index": 206,
+  "name": "Zeta",
+  "owner": "zeta",
+  "culture": "serbian",
+  "religion": "orthodox",
+  "town": [
+   397.2,
+   675.2
+  ],
+  "label": [
+   393,
+   652
+  ],
+  "area": 4635,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "antivari",
+   "dukagjin",
+   "gacko",
+   "kotor",
+   "pec",
+   "raska",
+   "scutari"
+  ]
+ },
+ {
+  "id": "antivari",
+  "index": 207,
+  "name": "Antivari",
+  "owner": "zeta",
+  "culture": "serbian",
+  "religion": "catholic",
+  "town": [
+   388.5,
+   701.0
+  ],
+  "label": [
+   390,
+   698
+  ],
+  "area": 432,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "scutari",
+   "zeta"
+  ]
+ },
+ {
+  "id": "scutari",
+  "index": 208,
+  "name": "Scutari",
+  "owner": "venice",
+  "culture": "albanian",
+  "religion": "catholic",
+  "town": [
+   410.9,
+   702.5
+  ],
+  "label": [
+   416,
+   709
+  ],
+  "area": 2254,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "antivari",
+   "dibra",
+   "dukagjin",
+   "kruja",
+   "zeta"
+  ]
+ },
+ {
+  "id": "durazzo",
+  "index": 209,
+  "name": "Durazzo",
+  "owner": "venice",
+  "culture": "albanian",
+  "religion": "catholic",
+  "town": [
+   411.5,
+   757.0
+  ],
+  "label": [
+   419,
+   764
+  ],
+  "area": 1406,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "berat",
+   "kruja",
+   "shpat"
+  ]
+ },
+ {
+  "id": "kruja",
+  "index": 210,
+  "name": "Krujë",
+  "owner": "thopia",
+  "culture": "albanian",
+  "religion": "catholic",
+  "town": [
+   426.8,
+   744.5
+  ],
+  "label": [
+   429,
+   744
+  ],
+  "area": 1226,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "dibra",
+   "durazzo",
+   "scutari",
+   "shpat"
+  ]
+ },
+ {
+  "id": "dibra",
+  "index": 211,
+  "name": "Dibra",
+  "owner": "kastrioti",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   451.4,
+   733.4
+  ],
+  "label": [
+   456,
+   730
+  ],
+  "area": 2819,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "dukagjin",
+   "kruja",
+   "ohrid",
+   "prizren",
+   "scutari",
+   "shpat",
+   "skopje"
+  ]
+ },
+ {
+  "id": "dukagjin",
+  "index": 212,
+  "name": "Dukagjin",
+  "owner": "dukagjini",
+  "culture": "albanian",
+  "religion": "catholic",
+  "town": [
+   432.3,
+   696.6
+  ],
+  "label": [
+   440,
+   700
+  ],
+  "area": 2745,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "dibra",
+   "pec",
+   "prizren",
+   "scutari",
+   "zeta"
+  ]
+ },
+ {
+  "id": "shpat",
+  "index": 213,
+  "name": "Shpat",
+  "owner": "arianiti",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   442.1,
+   773.3
+  ],
+  "label": [
+   447,
+   768
+  ],
+  "area": 2918,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "berat",
+   "dibra",
+   "durazzo",
+   "kruja",
+   "ohrid"
+  ]
+ },
+ {
+  "id": "berat",
+  "index": 214,
+  "name": "Berat",
+  "owner": "muzaka",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   435.0,
+   803.5
+  ],
+  "label": [
+   438,
+   804
+  ],
+  "area": 4203,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "durazzo",
+   "gjirokaster",
+   "kastoria",
+   "ohrid",
+   "shpat",
+   "valona"
+  ]
+ },
+ {
+  "id": "valona",
+  "index": 215,
+  "name": "Valona",
+  "owner": "valona",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   409.8,
+   820.4
+  ],
+  "label": [
+   420,
+   829
+  ],
+  "area": 2146,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "berat",
+   "gjirokaster"
+  ]
+ },
+ {
+  "id": "gjirokaster",
+  "index": 216,
+  "name": "Gjirokastër",
+  "owner": "zenebishi",
+  "culture": "albanian",
+  "religion": "orthodox",
+  "town": [
+   445.4,
+   849.2
+  ],
+  "label": [
+   448,
+   844
+  ],
+  "area": 2972,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "berat",
+   "corfu",
+   "ioannina",
+   "kastoria",
+   "valona"
+  ]
+ },
+ {
+  "id": "bursa",
+  "index": 217,
+  "name": "Bursa",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   933.5,
+   841.8
+  ],
+  "label": [
+   927,
+   841
+  ],
+  "area": 7047,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "biga",
+   "karasi",
+   "kutahya",
+   "nicaea"
+  ]
+ },
+ {
+  "id": "nicaea",
+  "index": 218,
+  "name": "Nicaea",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   969.6,
+   823.4
+  ],
+  "label": [
+   966,
+   823
+  ],
+  "area": 5866,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bursa",
+   "eskisehir",
+   "izmit",
+   "kutahya"
+  ]
+ },
+ {
+  "id": "izmit",
+  "index": 219,
+  "name": "İzmit",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   990.4,
+   799.8
+  ],
+  "label": [
+   957,
+   781
+  ],
+  "area": 10368,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bolu",
+   "constantinople",
+   "eskisehir",
+   "nicaea"
+  ]
+ },
+ {
+  "id": "karasi",
+  "index": 220,
+  "name": "Karası",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   868.9,
+   880.9
+  ],
+  "label": [
+   877,
+   860
+  ],
+  "area": 14015,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alasehir",
+   "biga",
+   "bursa",
+   "kutahya",
+   "manisa",
+   "usak"
+  ]
+ },
+ {
+  "id": "biga",
+  "index": 221,
+  "name": "Biga",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   833.9,
+   838.1
+  ],
+  "label": [
+   826,
+   840
+  ],
+  "area": 7918,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bursa",
+   "gallipoli",
+   "karasi",
+   "lesbos"
+  ]
+ },
+ {
+  "id": "eskisehir",
+  "index": 222,
+  "name": "Eskişehir",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1013.3,
+   871.3
+  ],
+  "label": [
+   1021,
+   846
+  ],
+  "area": 16902,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "ankara",
+   "bolu",
+   "izmit",
+   "karahisar",
+   "konya",
+   "kutahya",
+   "nicaea"
+  ]
+ },
+ {
+  "id": "bolu",
+  "index": 223,
+  "name": "Bolu",
+  "owner": "ott_isa",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1072.4,
+   801.3
+  ],
+  "label": [
+   1071,
+   780
+  ],
+  "area": 12366,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "amasra",
+   "ankara",
+   "cankiri",
+   "eskisehir",
+   "izmit"
+  ]
+ },
+ {
+  "id": "amasya",
+  "index": 224,
+  "name": "Amasya",
+  "owner": "ott_meh",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1303.9,
+   807.2
+  ],
+  "label": [
+   1278,
+   777
+  ],
+  "area": 9065,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "corum",
+   "kayseri",
+   "samsun",
+   "sinop",
+   "tokat"
+  ]
+ },
+ {
+  "id": "tokat",
+  "index": 225,
+  "name": "Tokat",
+  "owner": "ott_meh",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1343.3,
+   832.2
+  ],
+  "label": [
+   1356,
+   812
+  ],
+  "area": 12231,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "amasya",
+   "kayseri",
+   "kerasous",
+   "samsun",
+   "sivas"
+  ]
+ },
+ {
+  "id": "sivas",
+  "index": 226,
+  "name": "Sivas",
+  "owner": "ott_meh",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1369.0,
+   873.5
+  ],
+  "label": [
+   1409,
+   852
+  ],
+  "area": 18585,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "elbistan",
+   "erzincan",
+   "kayseri",
+   "kerasous",
+   "malatya",
+   "tokat"
+  ]
+ },
+ {
+  "id": "corum",
+  "index": 227,
+  "name": "Çorum",
+  "owner": "ott_meh",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1255.7,
+   814.5
+  ],
+  "label": [
+   1245,
+   779
+  ],
+  "area": 12942,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "amasya",
+   "cankiri",
+   "kastamonu",
+   "kirsehir",
+   "sinop"
+  ]
+ },
+ {
+  "id": "ankara",
+  "index": 228,
+  "name": "Ankara",
+  "owner": "ott_meh",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1140.8,
+   860.2
+  ],
+  "label": [
+   1127,
+   826
+  ],
+  "area": 21074,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "aksaray",
+   "bolu",
+   "cankiri",
+   "eskisehir",
+   "kirsehir",
+   "konya"
+  ]
+ },
+ {
+  "id": "samsun",
+  "index": 229,
+  "name": "Samsun",
+  "owner": "ott_meh",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1331.2,
+   760.0
+  ],
+  "label": [
+   1322,
+   773
+  ],
+  "area": 9614,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "amasya",
+   "kerasous",
+   "sinop",
+   "tokat"
+  ]
+ },
+ {
+  "id": "kastamonu",
+  "index": 230,
+  "name": "Kastamonu",
+  "owner": "candar",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1191.7,
+   753.4
+  ],
+  "label": [
+   1174,
+   721
+  ],
+  "area": 13561,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "amasra",
+   "cankiri",
+   "corum",
+   "sinop"
+  ]
+ },
+ {
+  "id": "sinop",
+  "index": 231,
+  "name": "Sinop",
+  "owner": "candar",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1266.7,
+   706.2
+  ],
+  "label": [
+   1248,
+   723
+  ],
+  "area": 5290,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "amasya",
+   "corum",
+   "kastamonu",
+   "samsun"
+  ]
+ },
+ {
+  "id": "cankiri",
+  "index": 232,
+  "name": "Çankırı",
+  "owner": "candar",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1183.0,
+   810.8
+  ],
+  "label": [
+   1153,
+   794
+  ],
+  "area": 12807,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "amasra",
+   "ankara",
+   "bolu",
+   "corum",
+   "kastamonu",
+   "kirsehir"
+  ]
+ },
+ {
+  "id": "amasra",
+  "index": 233,
+  "name": "Amasra",
+  "owner": "genoa",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1115.7,
+   726.1
+  ],
+  "label": [
+   1134,
+   733
+  ],
+  "area": 7826,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bolu",
+   "cankiri",
+   "kastamonu"
+  ]
+ },
+ {
+  "id": "kutahya",
+  "index": 234,
+  "name": "Kütahya",
+  "owner": "germiyan",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   983.8,
+   897.8
+  ],
+  "label": [
+   960,
+   879
+  ],
+  "area": 7909,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bursa",
+   "eskisehir",
+   "karahisar",
+   "karasi",
+   "nicaea",
+   "usak"
+  ]
+ },
+ {
+  "id": "karahisar",
+  "index": 235,
+  "name": "Karahisar",
+  "owner": "germiyan",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1014.4,
+   946.5
+  ],
+  "label": [
+   1018,
+   928
+  ],
+  "area": 14594,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "beysehir",
+   "eskisehir",
+   "isparta",
+   "konya",
+   "kutahya",
+   "usak"
+  ]
+ },
+ {
+  "id": "usak",
+  "index": 236,
+  "name": "Uşak",
+  "owner": "germiyan",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   952.1,
+   952.4
+  ],
+  "label": [
+   929,
+   922
+  ],
+  "area": 14411,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "alasehir",
+   "isparta",
+   "karahisar",
+   "karasi",
+   "kutahya"
+  ]
+ },
+ {
+  "id": "manisa",
+  "index": 237,
+  "name": "Manisa",
+  "owner": "saruhan",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   844.3,
+   957.5
+  ],
+  "label": [
+   836,
+   930
+  ],
+  "area": 8350,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alasehir",
+   "birgi",
+   "karasi",
+   "smyrna"
+  ]
+ },
+ {
+  "id": "alasehir",
+  "index": 238,
+  "name": "Alaşehir",
+  "owner": "saruhan",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   903.9,
+   976.7
+  ],
+  "label": [
+   901,
+   957
+  ],
+  "area": 7816,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "birgi",
+   "isparta",
+   "karasi",
+   "manisa",
+   "mugla",
+   "usak"
+  ]
+ },
+ {
+  "id": "ayasoluk",
+  "index": 239,
+  "name": "Ayasoluk",
+  "owner": "aydin",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   839.9,
+   1006.2
+  ],
+  "label": [
+   848,
+   1015
+  ],
+  "area": 4806,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "birgi",
+   "milas",
+   "smyrna"
+  ]
+ },
+ {
+  "id": "birgi",
+  "index": 240,
+  "name": "Birgi",
+  "owner": "aydin",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   875.5,
+   984.1
+  ],
+  "label": [
+   871,
+   986
+  ],
+  "area": 4396,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "alasehir",
+   "ayasoluk",
+   "manisa",
+   "mugla",
+   "smyrna"
+  ]
+ },
+ {
+  "id": "smyrna",
+  "index": 241,
+  "name": "Smyrna",
+  "owner": "knights",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   828.4,
+   971.5
+  ],
+  "label": [
+   835,
+   977
+  ],
+  "area": 4192,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "ayasoluk",
+   "birgi",
+   "chios",
+   "manisa"
+  ]
+ },
+ {
+  "id": "milas",
+  "index": 242,
+  "name": "Milas",
+  "owner": "mentese",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   863.4,
+   1053.4
+  ],
+  "label": [
+   865,
+   1043
+  ],
+  "area": 4246,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "ayasoluk",
+   "mugla"
+  ]
+ },
+ {
+  "id": "mugla",
+  "index": 243,
+  "name": "Muğla",
+  "owner": "mentese",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   895.2,
+   1060.7
+  ],
+  "label": [
+   904,
+   1036
+  ],
+  "area": 12051,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alasehir",
+   "birgi",
+   "elmali",
+   "isparta",
+   "kos",
+   "milas"
+  ]
+ },
+ {
+  "id": "antalya",
+  "index": 244,
+  "name": "Antalya",
+  "owner": "teke",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1023.7,
+   1083.6
+  ],
+  "label": [
+   1006,
+   1058
+  ],
+  "area": 9558,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alanya",
+   "beysehir",
+   "elmali",
+   "isparta"
+  ]
+ },
+ {
+  "id": "elmali",
+  "index": 245,
+  "name": "Elmalı",
+  "owner": "teke",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   979.4,
+   1098.3
+  ],
+  "label": [
+   966,
+   1075
+  ],
+  "area": 8906,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "antalya",
+   "isparta",
+   "mugla"
+  ]
+ },
+ {
+  "id": "isparta",
+  "index": 246,
+  "name": "Isparta",
+  "owner": "hamid",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1015.0,
+   1020.2
+  ],
+  "label": [
+   1006,
+   1000
+  ],
+  "area": 10372,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alasehir",
+   "antalya",
+   "beysehir",
+   "elmali",
+   "karahisar",
+   "mugla",
+   "usak"
+  ]
+ },
+ {
+  "id": "konya",
+  "index": 247,
+  "name": "Konya",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1121.1,
+   1012.1
+  ],
+  "label": [
+   1108,
+   944
+  ],
+  "area": 14083,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "aksaray",
+   "ankara",
+   "beysehir",
+   "eskisehir",
+   "karahisar",
+   "larende"
+  ]
+ },
+ {
+  "id": "larende",
+  "index": 248,
+  "name": "Larende",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1161.1,
+   1062.9
+  ],
+  "label": [
+   1176,
+   1032
+  ],
+  "area": 11552,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "adana",
+   "aksaray",
+   "alanya",
+   "beysehir",
+   "ermenek",
+   "konya",
+   "nigde",
+   "silifke"
+  ]
+ },
+ {
+  "id": "aksaray",
+  "index": 249,
+  "name": "Aksaray",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1205.4,
+   975.2
+  ],
+  "label": [
+   1202,
+   965
+  ],
+  "area": 12879,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "ankara",
+   "kayseri",
+   "kirsehir",
+   "konya",
+   "larende",
+   "nigde"
+  ]
+ },
+ {
+  "id": "nigde",
+  "index": 250,
+  "name": "Niğde",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1241.0,
+   1004.7
+  ],
+  "label": [
+   1249,
+   991
+  ],
+  "area": 8584,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "adana",
+   "aksaray",
+   "kayseri",
+   "larende",
+   "sis"
+  ]
+ },
+ {
+  "id": "beysehir",
+  "index": 251,
+  "name": "Beyşehir",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1079.0,
+   1026.1
+  ],
+  "label": [
+   1089,
+   1039
+  ],
+  "area": 9187,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alanya",
+   "antalya",
+   "isparta",
+   "karahisar",
+   "konya",
+   "larende"
+  ]
+ },
+ {
+  "id": "ermenek",
+  "index": 252,
+  "name": "Ermenek",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1143.6,
+   1102.8
+  ],
+  "label": [
+   1132,
+   1098
+  ],
+  "area": 4664,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "alanya",
+   "larende",
+   "silifke"
+  ]
+ },
+ {
+  "id": "silifke",
+  "index": 253,
+  "name": "Silifke",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1199.9,
+   1121.9
+  ],
+  "label": [
+   1203,
+   1097
+  ],
+  "area": 6129,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "adana",
+   "ermenek",
+   "larende"
+  ]
+ },
+ {
+  "id": "alanya",
+  "index": 254,
+  "name": "Alanya",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1094.3,
+   1110.1
+  ],
+  "label": [
+   1092,
+   1090
+  ],
+  "area": 4986,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "antalya",
+   "beysehir",
+   "ermenek",
+   "larende"
+  ]
+ },
+ {
+  "id": "kayseri",
+  "index": 255,
+  "name": "Kayseri",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1284.7,
+   948.7
+  ],
+  "label": [
+   1293,
+   902
+  ],
+  "area": 18423,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "aksaray",
+   "amasya",
+   "elbistan",
+   "kirsehir",
+   "nigde",
+   "sis",
+   "sivas",
+   "tokat"
+  ]
+ },
+ {
+  "id": "kirsehir",
+  "index": 256,
+  "name": "Kırşehir",
+  "owner": "karaman",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1212.5,
+   917.7
+  ],
+  "label": [
+   1231,
+   880
+  ],
+  "area": 17242,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "aksaray",
+   "ankara",
+   "cankiri",
+   "corum",
+   "kayseri"
+  ]
+ },
+ {
+  "id": "adana",
+  "index": 257,
+  "name": "Adana",
+  "owner": "ramazan",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1276.0,
+   1076.2
+  ],
+  "label": [
+   1258,
+   1050
+  ],
+  "area": 10188,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "larende",
+   "nigde",
+   "silifke",
+   "sis"
+  ]
+ },
+ {
+  "id": "sis",
+  "index": 258,
+  "name": "Sis",
+  "owner": "ramazan",
+  "culture": "armenian",
+  "religion": "armenian",
+  "town": [
+   1303.3,
+   1043.0
+  ],
+  "label": [
+   1315,
+   1005
+  ],
+  "area": 11743,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "adana",
+   "antioch",
+   "elbistan",
+   "kayseri",
+   "maras",
+   "nigde"
+  ]
+ },
+ {
+  "id": "elbistan",
+  "index": 259,
+  "name": "Elbistan",
+  "owner": "dulkadir",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1378.8,
+   987.8
+  ],
+  "label": [
+   1364,
+   946
+  ],
+  "area": 11671,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kayseri",
+   "malatya",
+   "maras",
+   "sis",
+   "sivas"
+  ]
+ },
+ {
+  "id": "maras",
+  "index": 260,
+  "name": "Maraş",
+  "owner": "dulkadir",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1364.1,
+   1033.5
+  ],
+  "label": [
+   1346,
+   1020
+  ],
+  "area": 7502,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "antioch",
+   "ayntab",
+   "elbistan",
+   "malatya",
+   "sis"
+  ]
+ },
+ {
+  "id": "trebizond",
+  "index": 261,
+  "name": "Trebizond",
+  "owner": "trebizond",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1516.7,
+   781.4
+  ],
+  "label": [
+   1497,
+   792
+  ],
+  "area": 5648,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "erzincan",
+   "kerasous",
+   "lazia"
+  ]
+ },
+ {
+  "id": "kerasous",
+  "index": 262,
+  "name": "Kerasous",
+  "owner": "trebizond",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1444.0,
+   788.0
+  ],
+  "label": [
+   1404,
+   794
+  ],
+  "area": 12348,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "erzincan",
+   "samsun",
+   "sivas",
+   "tokat",
+   "trebizond"
+  ]
+ },
+ {
+  "id": "lazia",
+  "index": 263,
+  "name": "Lazia",
+  "owner": "trebizond",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1560.5,
+   779.9
+  ],
+  "label": [
+   1607,
+   772
+  ],
+  "area": 11540,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "erzincan",
+   "erzurum",
+   "kars",
+   "mingrelia",
+   "trebizond"
+  ]
+ },
+ {
+  "id": "erzincan",
+  "index": 264,
+  "name": "Erzincan",
+  "owner": "timurids",
+  "culture": "armenian",
+  "religion": "armenian",
+  "town": [
+   1504.7,
+   873.5
+  ],
+  "label": [
+   1492,
+   842
+  ],
+  "area": 16346,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "erzurum",
+   "kerasous",
+   "kharput",
+   "lazia",
+   "malatya",
+   "sivas",
+   "trebizond"
+  ]
+ },
+ {
+  "id": "erzurum",
+  "index": 265,
+  "name": "Erzurum",
+  "owner": "timurids",
+  "culture": "armenian",
+  "religion": "armenian",
+  "town": [
+   1601.5,
+   862.4
+  ],
+  "label": [
+   1620,
+   824
+  ],
+  "area": 21254,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bitlis",
+   "diyarbakir",
+   "erzincan",
+   "kars",
+   "kharput",
+   "lazia"
+  ]
+ },
+ {
+  "id": "kars",
+  "index": 266,
+  "name": "Kars",
+  "owner": "timurids",
+  "culture": "armenian",
+  "religion": "armenian",
+  "town": [
+   1701.7,
+   810.8
+  ],
+  "label": [
+   1767,
+   784
+  ],
+  "area": 34006,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bitlis",
+   "erzurum",
+   "kutaisi",
+   "lazia",
+   "mingrelia",
+   "samtskhe",
+   "van"
+  ]
+ },
+ {
+  "id": "van",
+  "index": 267,
+  "name": "Van",
+  "owner": "timurids",
+  "culture": "armenian",
+  "religion": "armenian",
+  "town": [
+   1717.0,
+   965.6
+  ],
+  "label": [
+   1721,
+   908
+  ],
+  "area": 25070,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bitlis",
+   "kars",
+   "mardin"
+  ]
+ },
+ {
+  "id": "bitlis",
+  "index": 268,
+  "name": "Bitlis",
+  "owner": "timurids",
+  "culture": "kurdish",
+  "religion": "sunni",
+  "town": [
+   1646.9,
+   973.0
+  ],
+  "label": [
+   1669,
+   904
+  ],
+  "area": 21013,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "diyarbakir",
+   "erzurum",
+   "kars",
+   "mardin",
+   "van"
+  ]
+ },
+ {
+  "id": "mardin",
+  "index": 269,
+  "name": "Mardin",
+  "owner": "timurids",
+  "culture": "kurdish",
+  "religion": "sunni",
+  "town": [
+   1572.5,
+   1053.4
+  ],
+  "label": [
+   1606,
+   1011
+  ],
+  "area": 108922,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "bitlis",
+   "diyarbakir",
+   "raqqa",
+   "urfa",
+   "van"
+  ]
+ },
+ {
+  "id": "diyarbakir",
+  "index": 270,
+  "name": "Diyarbakır",
+  "owner": "akkoyunlu",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1544.6,
+   1009.1
+  ],
+  "label": [
+   1573,
+   927
+  ],
+  "area": 19413,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "bitlis",
+   "erzurum",
+   "kharput",
+   "malatya",
+   "mardin",
+   "urfa"
+  ]
+ },
+ {
+  "id": "kharput",
+  "index": 271,
+  "name": "Kharput",
+  "owner": "akkoyunlu",
+  "culture": "armenian",
+  "religion": "armenian",
+  "town": [
+   1489.4,
+   953.1
+  ],
+  "label": [
+   1485,
+   917
+  ],
+  "area": 11786,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "diyarbakir",
+   "erzincan",
+   "erzurum",
+   "malatya"
+  ]
+ },
+ {
+  "id": "kutaisi",
+  "index": 272,
+  "name": "Kutaisi",
+  "owner": "georgia",
+  "culture": "georgian",
+  "religion": "orthodox",
+  "town": [
+   1679.8,
+   687.7
+  ],
+  "label": [
+   1688,
+   644
+  ],
+  "area": 21622,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kabarda",
+   "kars",
+   "mingrelia",
+   "samtskhe"
+  ]
+ },
+ {
+  "id": "samtskhe",
+  "index": 273,
+  "name": "Samtskhe",
+  "owner": "georgia",
+  "culture": "georgian",
+  "religion": "orthodox",
+  "town": [
+   1696.2,
+   733.4
+  ],
+  "label": [
+   1719,
+   726
+  ],
+  "area": 13628,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "kars",
+   "kutaisi",
+   "mingrelia"
+  ]
+ },
+ {
+  "id": "mingrelia",
+  "index": 274,
+  "name": "Mingrelia",
+  "owner": "georgia",
+  "culture": "georgian",
+  "religion": "orthodox",
+  "town": [
+   1636.0,
+   670.8
+  ],
+  "label": [
+   1659,
+   631
+  ],
+  "area": 14438,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "abkhazia",
+   "kabarda",
+   "kars",
+   "kutaisi",
+   "lazia",
+   "samtskhe"
+  ]
+ },
+ {
+  "id": "abkhazia",
+  "index": 275,
+  "name": "Abkhazia",
+  "owner": "georgia",
+  "culture": "georgian",
+  "religion": "orthodox",
+  "town": [
+   1586.8,
+   633.9
+  ],
+  "label": [
+   1549,
+   594
+  ],
+  "area": 10946,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "circassia",
+   "kabarda",
+   "kuban",
+   "mingrelia",
+   "stavropol"
+  ]
+ },
+ {
+  "id": "aleppo",
+  "index": 276,
+  "name": "Aleppo",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1376.6,
+   1135.2
+  ],
+  "label": [
+   1364,
+   1110
+  ],
+  "area": 14335,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "antioch",
+   "ayntab",
+   "hama",
+   "raqqa"
+  ]
+ },
+ {
+  "id": "antioch",
+  "index": 277,
+  "name": "Antioch",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1321.9,
+   1135.2
+  ],
+  "label": [
+   1337,
+   1111
+  ],
+  "area": 5940,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "aleppo",
+   "ayntab",
+   "hama",
+   "latakia",
+   "maras",
+   "sis"
+  ]
+ },
+ {
+  "id": "malatya",
+  "index": 278,
+  "name": "Malatya",
+  "owner": "mamluks",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1439.6,
+   976.7
+  ],
+  "label": [
+   1442,
+   908
+  ],
+  "area": 15914,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "ayntab",
+   "diyarbakir",
+   "elbistan",
+   "erzincan",
+   "kharput",
+   "maras",
+   "sivas",
+   "urfa"
+  ]
+ },
+ {
+  "id": "ayntab",
+  "index": 279,
+  "name": "Ayntab",
+  "owner": "mamluks",
+  "culture": "turkish",
+  "religion": "sunni",
+  "town": [
+   1388.7,
+   1071.8
+  ],
+  "label": [
+   1409,
+   1045
+  ],
+  "area": 11007,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "aleppo",
+   "antioch",
+   "malatya",
+   "maras",
+   "urfa"
+  ]
+ },
+ {
+  "id": "urfa",
+  "index": 280,
+  "name": "Urfa",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1465.8,
+   1064.4
+  ],
+  "label": [
+   1489,
+   1026
+  ],
+  "area": 19098,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "ayntab",
+   "diyarbakir",
+   "malatya",
+   "mardin",
+   "raqqa"
+  ]
+ },
+ {
+  "id": "hama",
+  "index": 281,
+  "name": "Hama",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1354.2,
+   1214.1
+  ],
+  "label": [
+   1341,
+   1184
+  ],
+  "area": 36038,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "aleppo",
+   "antioch",
+   "latakia",
+   "raqqa",
+   "tripoli"
+  ]
+ },
+ {
+  "id": "latakia",
+  "index": 282,
+  "name": "Latakia",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1301.7,
+   1185.3
+  ],
+  "label": [
+   1315,
+   1173
+  ],
+  "area": 2974,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "antioch",
+   "hama",
+   "tripoli"
+  ]
+ },
+ {
+  "id": "tripoli",
+  "index": 283,
+  "name": "Tripoli",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1304.4,
+   1264.9
+  ],
+  "label": [
+   1306,
+   1284
+  ],
+  "area": 4518,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "hama",
+   "latakia"
+  ]
+ },
+ {
+  "id": "raqqa",
+  "index": 284,
+  "name": "Raqqa",
+  "owner": "mamluks",
+  "culture": "arab",
+  "religion": "sunni",
+  "town": [
+   1477.3,
+   1153.6
+  ],
+  "label": [
+   1503,
+   1116
+  ],
+  "area": 95504,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "aleppo",
+   "hama",
+   "mardin",
+   "urfa"
+  ]
+ },
+ {
+  "id": "tana",
+  "index": 285,
+  "name": "Tana",
+  "owner": "venice",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   1500.3,
+   331.7
+  ],
+  "label": [
+   1499,
+   291
+  ],
+  "area": 21357,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "donets",
+   "kuban",
+   "lower_don",
+   "mius"
+  ]
+ },
+ {
+  "id": "caffa",
+  "index": 286,
+  "name": "Caffa",
+  "owner": "genoa",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   1279.3,
+   484.3
+  ],
+  "label": [
+   1268,
+   479
+  ],
+  "area": 2925,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "solkhat",
+   "vosporo"
+  ]
+ },
+ {
+  "id": "vosporo",
+  "index": 287,
+  "name": "Vosporo",
+  "owner": "genoa",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1338.9,
+   460.7
+  ],
+  "label": [
+   1322,
+   470
+  ],
+  "area": 2104,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "caffa"
+  ]
+ },
+ {
+  "id": "gothia",
+  "index": 288,
+  "name": "Gothia",
+  "owner": "theodoro",
+  "culture": "greek",
+  "religion": "orthodox",
+  "town": [
+   1198.3,
+   512.3
+  ],
+  "label": [
+   1194,
+   498
+  ],
+  "area": 4588,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "solkhat"
+  ]
+ },
+ {
+  "id": "solkhat",
+  "index": 289,
+  "name": "Solkhat",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1231.1,
+   464.4
+  ],
+  "label": [
+   1228,
+   442
+  ],
+  "area": 10825,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "caffa",
+   "gothia",
+   "perekop"
+  ]
+ },
+ {
+  "id": "perekop",
+  "index": 290,
+  "name": "Perekop",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1192.8,
+   401.7
+  ],
+  "label": [
+   1225,
+   368
+  ],
+  "area": 13846,
+  "terrain": "marsh",
+  "coastal": true,
+  "neighbors": [
+   "lower_dnieper",
+   "solkhat"
+  ]
+ },
+ {
+  "id": "yedisan",
+  "index": 291,
+  "name": "Yedisan",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1077.9,
+   346.5
+  ],
+  "label": [
+   1018,
+   281
+  ],
+  "area": 19915,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "khadjibey",
+   "kirovohrad",
+   "lower_dnieper",
+   "orhei"
+  ]
+ },
+ {
+  "id": "lower_dnieper",
+  "index": 292,
+  "name": "Lower Dnieper",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1176.4,
+   346.5
+  ],
+  "label": [
+   1179,
+   287
+  ],
+  "area": 25803,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "kirovohrad",
+   "mius",
+   "perekop",
+   "yedisan",
+   "zaporozhia"
+  ]
+ },
+ {
+  "id": "kirovohrad",
+  "index": 293,
+  "name": "Wild Fields",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1110.7,
+   228.5
+  ],
+  "label": [
+   1129,
+   202
+  ],
+  "area": 33939,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "bratslav",
+   "cherkasy",
+   "lower_dnieper",
+   "orhei",
+   "poltava",
+   "yedisan",
+   "zaporozhia"
+  ]
+ },
+ {
+  "id": "poltava",
+  "index": 294,
+  "name": "Poltava",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1231.1,
+   147.4
+  ],
+  "label": [
+   1222,
+   0
+  ],
+  "area": 49149,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "cherkasy",
+   "chernihiv",
+   "kharkiv",
+   "kirovohrad",
+   "pereiaslav",
+   "zaporozhia"
+  ]
+ },
+ {
+  "id": "zaporozhia",
+  "index": 295,
+  "name": "Zaporozhia",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1263.9,
+   280.1
+  ],
+  "label": [
+   1303,
+   221
+  ],
+  "area": 33318,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "donets",
+   "kharkiv",
+   "kirovohrad",
+   "lower_dnieper",
+   "mius",
+   "poltava"
+  ]
+ },
+ {
+  "id": "donets",
+  "index": 296,
+  "name": "Donets",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1450.0,
+   228.5
+  ],
+  "label": [
+   1566,
+   0
+  ],
+  "area": 104668,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "kharkiv",
+   "lower_don",
+   "mius",
+   "tana",
+   "zaporozhia"
+  ]
+ },
+ {
+  "id": "kharkiv",
+  "index": 297,
+  "name": "Kharkiv",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1324.1,
+   117.9
+  ],
+  "label": [
+   1253,
+   0
+  ],
+  "area": 86386,
+  "terrain": "plains",
+  "coastal": false,
+  "neighbors": [
+   "donets",
+   "poltava",
+   "zaporozhia"
+  ]
+ },
+ {
+  "id": "mius",
+  "index": 298,
+  "name": "Mius",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1395.3,
+   331.7
+  ],
+  "label": [
+   1355,
+   262
+  ],
+  "area": 26620,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "donets",
+   "lower_dnieper",
+   "tana",
+   "zaporozhia"
+  ]
+ },
+ {
+  "id": "lower_don",
+  "index": 299,
+  "name": "Lower Don",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1564.9,
+   309.6
+  ],
+  "label": [
+   1712,
+   0
+  ],
+  "area": 114664,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "donets",
+   "kalmyk",
+   "kuban",
+   "salsk",
+   "tana"
+  ]
+ },
+ {
+  "id": "kuban",
+  "index": 300,
+  "name": "Kuban",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1559.4,
+   449.7
+  ],
+  "label": [
+   1557,
+   394
+  ],
+  "area": 33507,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "abkhazia",
+   "circassia",
+   "lower_don",
+   "salsk",
+   "stavropol",
+   "tana"
+  ]
+ },
+ {
+  "id": "salsk",
+  "index": 301,
+  "name": "Salsk",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1641.5,
+   375.9
+  ],
+  "label": [
+   1686,
+   301
+  ],
+  "area": 33034,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "kalmyk",
+   "kuban",
+   "lower_don",
+   "stavropol"
+  ]
+ },
+ {
+  "id": "stavropol",
+  "index": 302,
+  "name": "Stavropol",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1641.5,
+   482.8
+  ],
+  "label": [
+   1630,
+   432
+  ],
+  "area": 31320,
+  "terrain": "hills",
+  "coastal": false,
+  "neighbors": [
+   "abkhazia",
+   "kabarda",
+   "kalmyk",
+   "kuban",
+   "salsk"
+  ]
+ },
+ {
+  "id": "kalmyk",
+  "index": 303,
+  "name": "Caspian Steppe",
+  "owner": "horde",
+  "culture": "tatar",
+  "religion": "sunni",
+  "town": [
+   1740.0,
+   405.4
+  ],
+  "label": [
+   1776,
+   160
+  ],
+  "area": 50013,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "kabarda",
+   "lower_don",
+   "salsk",
+   "stavropol"
+  ]
+ },
+ {
+  "id": "circassia",
+  "index": 304,
+  "name": "Circassia",
+  "owner": "circassia",
+  "culture": "circassian",
+  "religion": "orthodox",
+  "town": [
+   1476.2,
+   516.0
+  ],
+  "label": [
+   1464,
+   447
+  ],
+  "area": 33250,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "abkhazia",
+   "kuban"
+  ]
+ },
+ {
+  "id": "kabarda",
+  "index": 305,
+  "name": "Kabarda",
+  "owner": "circassia",
+  "culture": "circassian",
+  "religion": "orthodox",
+  "town": [
+   1707.1,
+   575.0
+  ],
+  "label": [
+   1726,
+   508
+  ],
+  "area": 37456,
+  "terrain": "mountains",
+  "coastal": false,
+  "neighbors": [
+   "abkhazia",
+   "kalmyk",
+   "kutaisi",
+   "mingrelia",
+   "stavropol"
+  ]
+ },
+ {
+  "id": "venice",
+  "index": 306,
+  "name": "Venice",
+  "owner": "venice",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   18.1,
+   454.1
+  ],
+  "label": [
+   0,
+   398
+  ],
+  "area": 3928,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "friuli"
+  ]
+ },
+ {
+  "id": "romagna",
+  "index": 307,
+  "name": "Romagna",
+  "owner": "papal",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   10.9,
+   529.3
+  ],
+  "label": [
+   0,
+   551
+  ],
+  "area": 3290,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "ancona",
+   "perugia"
+  ]
+ },
+ {
+  "id": "ancona",
+  "index": 308,
+  "name": "Ancona",
+  "owner": "papal",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   82.1,
+   589.7
+  ],
+  "label": [
+   66,
+   600
+  ],
+  "area": 7000,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "abruzzo",
+   "perugia",
+   "romagna"
+  ]
+ },
+ {
+  "id": "rome",
+  "index": 309,
+  "name": "Rome",
+  "owner": "papal",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   27.4,
+   715.0
+  ],
+  "label": [
+   15,
+   681
+  ],
+  "area": 13694,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "abruzzo",
+   "naples",
+   "perugia"
+  ]
+ },
+ {
+  "id": "perugia",
+  "index": 310,
+  "name": "Perugia",
+  "owner": "papal",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   21.3,
+   625.8
+  ],
+  "label": [
+   0,
+   594
+  ],
+  "area": 10901,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "abruzzo",
+   "ancona",
+   "romagna",
+   "rome"
+  ]
+ },
+ {
+  "id": "abruzzo",
+  "index": 311,
+  "name": "Abruzzo",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   104.0,
+   681.8
+  ],
+  "label": [
+   87,
+   662
+  ],
+  "area": 10116,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "ancona",
+   "capitanata",
+   "naples",
+   "perugia",
+   "rome"
+  ]
+ },
+ {
+  "id": "naples",
+  "index": 312,
+  "name": "Naples",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   123.1,
+   792.4
+  ],
+  "label": [
+   114,
+   738
+  ],
+  "area": 9950,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "abruzzo",
+   "basilicata",
+   "capitanata",
+   "rome"
+  ]
+ },
+ {
+  "id": "capitanata",
+  "index": 313,
+  "name": "Capitanata",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   194.2,
+   747.5
+  ],
+  "label": [
+   155,
+   723
+  ],
+  "area": 13252,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "abruzzo",
+   "bari",
+   "basilicata",
+   "naples"
+  ]
+ },
+ {
+  "id": "bari",
+  "index": 314,
+  "name": "Bari",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   266.5,
+   772.5
+  ],
+  "label": [
+   248,
+   781
+  ],
+  "area": 7481,
+  "terrain": "hills",
+  "coastal": true,
+  "neighbors": [
+   "basilicata",
+   "capitanata",
+   "otranto"
+  ]
+ },
+ {
+  "id": "otranto",
+  "index": 315,
+  "name": "Otranto",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   337.6,
+   829.3
+  ],
+  "label": [
+   309,
+   817
+  ],
+  "area": 5247,
+  "terrain": "plains",
+  "coastal": true,
+  "neighbors": [
+   "bari"
+  ]
+ },
+ {
+  "id": "basilicata",
+  "index": 316,
+  "name": "Basilicata",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   207.9,
+   807.9
+  ],
+  "label": [
+   211,
+   794
+  ],
+  "area": 12366,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "bari",
+   "calabria",
+   "capitanata",
+   "naples"
+  ]
+ },
+ {
+  "id": "calabria",
+  "index": 317,
+  "name": "Calabria",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   240.7,
+   928.8
+  ],
+  "label": [
+   232,
+   878
+  ],
+  "area": 10458,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "basilicata",
+   "reggio"
+  ]
+ },
+ {
+  "id": "reggio",
+  "index": 318,
+  "name": "Reggio",
+  "owner": "naples",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   207.9,
+   991.4
+  ],
+  "label": [
+   213,
+   994
+  ],
+  "area": 2959,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "calabria"
+  ]
+ },
+ {
+  "id": "palermo",
+  "index": 319,
+  "name": "Palermo",
+  "owner": "sicily",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   74.4,
+   993.7
+  ],
+  "label": [
+   70,
+   1008
+  ],
+  "area": 9047,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "catania"
+  ]
+ },
+ {
+  "id": "catania",
+  "index": 320,
+  "name": "Catania",
+  "owner": "sicily",
+  "culture": "italian",
+  "religion": "catholic",
+  "town": [
+   169.6,
+   1039.4
+  ],
+  "label": [
+   159,
+   1005
+  ],
+  "area": 15332,
+  "terrain": "mountains",
+  "coastal": true,
+  "neighbors": [
+   "palermo"
+  ]
+ }
+]

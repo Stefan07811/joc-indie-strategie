@@ -9,7 +9,8 @@ from panda3d.core import (CullFaceAttrib, Geom, GeomNode, GeomTriangles, GeomVer
                           GeomVertexWriter, LineSegs, Shader, TransparencyAttrib, Vec3)
 
 from ..game.battle import DEPLOY_DEPTH, FIELD_H, FIELD_W, Field
-from .figures import SHADERS, Builder, _rider, _shader, _soldier, geom_node
+from .atmosphere import FOG, HAZE, SHADOW_CASTERS, Sky, Sun
+from .figures import SHADERS, Builder, _rider, _soldier, geom_node
 
 UNIT = 0.1          # world units per metre
 LIFT = 1.5          # relief exaggeration on the field
@@ -28,17 +29,42 @@ def world(x, y):
     return x * UNIT, y * UNIT
 
 
+_shaders = {}
+
+
+def _piece(outline=False):
+    """The shader of the painted pieces on the field (or of their ink outlines)."""
+    key = "piece_outline" if outline else "piece"
+    if key not in _shaders:
+        _shaders[key] = Shader.load(Shader.SL_GLSL, str(SHADERS / f"{key}.vert"), str(SHADERS / "piece.frag"))
+    return _shaders[key]
+
+
+def _flat(node):
+    """Lines drawn over the field: no shader, no light, no shadow."""
+    node.setShaderOff(1)
+    node.setLightOff(1)
+    node.hide(SHADOW_CASTERS)
+    return node
+
+
 class BattleScene:
     """Draws a Battle and keeps the drawing in step with it."""
 
-    def __init__(self, parent, battle, colors, accents, eastern, sun):
-        """colors, accents, eastern: per side (0 = attacker, 1 = defender)."""
+    def __init__(self, parent, battle, colors, accents, eastern, sun, camera=None, shadow_size=4096):
+        """colors, accents, eastern: per side (0 = attacker, 1 = defender). With a camera, the field gets
+        its sky; the sun always throws shadows."""
         self.battle = battle
         self.root = parent.attachNewNode("battle")
         self.sun = sun
         self.colors, self.accents, self.eastern = colors, accents, eastern
         self.field = battle.field
+        self.root.setShaderInputs(sun_dir=sun, outline=0.0, haze=Vec3(*HAZE), fog=FOG)
+        self.light = Sun(parent, sun, size=shadow_size)
+        self.root.setLight(self.light.root)
+        self.sky = Sky(camera, parent, sun) if camera is not None else None
         self._build_ground()
+        self._build_far_country()
         self._build_woods()
         self._build_river()
         self.units = {}
@@ -97,10 +123,24 @@ class BattleScene:
         self.ground = self.root.attachNewNode(node)
         self.ground.setShader(Shader.load(Shader.SL_GLSL, str(SHADERS / "field.vert"), str(SHADERS / "field.frag")))
         dy = DEPLOY_DEPTH * UNIT
-        self.ground.setShaderInputs(sun_dir=self.sun, deploying=1.0, deploy=(0, dy, FIELD_H * UNIT - dy,
-                                                                              FIELD_H * UNIT),
-                                    field_size=(FIELD_W * UNIT, FIELD_H * UNIT),
-                                    our_color=Vec3(*self.colors[0]), their_color=Vec3(*self.colors[1]))
+        # these sit on the battle's root, so that the far country beyond is painted the same way
+        self.root.setShaderInputs(deploying=1.0, deploy=(0, dy, FIELD_H * UNIT - dy, FIELD_H * UNIT),
+                                  field_size=(FIELD_W * UNIT, FIELD_H * UNIT),
+                                  our_color=Vec3(*self.colors[0]), their_color=Vec3(*self.colors[1]))
+
+    def _build_far_country(self):
+        """Flat land from the edge of the drawn country out to the horizon, lost in the haze."""
+        x0, y0 = -COUNTRY * Field.CELL * UNIT, -COUNTRY * Field.CELL * UNIT
+        x1, y1 = FIELD_W * UNIT - x0, FIELD_H * UNIT - y0
+        far = 4000.0
+        z = float(self.field.height.mean()) * UNIT * LIFT - 0.05
+        color = tuple(np.array(GRASS.get(self.field.terrain, GRASS["plains"])) * 0.97)
+        b = Builder()
+        for (ax, ay, bx, by) in ((-far, -far, far, y0), (-far, y1, far, far), (-far, y0, x0, y1), (x1, y0, far, y1)):
+            b.quad((ax, ay, z), (bx, ay, z), (bx, by, z), (ax, by, z), color)
+        far_np = self.root.attachNewNode(b.node("far-country"))
+        far_np.setShader(self.ground.getShader())
+        far_np.hide(SHADOW_CASTERS)
 
     def _build_woods(self):
         f = self.field
@@ -121,12 +161,12 @@ class BattleScene:
             return
         verts, colors = b.arrays()
         trees = self.root.attachNewNode("woods")
-        trees.setShader(_shader("figure"))
-        trees.setShaderInputs(sun_dir=self.sun, outline=0.0)
+        trees.setShader(_piece())
         trees.attachNewNode(geom_node("trees", verts, colors))
         ink = trees.attachNewNode(geom_node("trees-ink", verts, colors, smooth=True))
-        ink.setShader(_shader("figure_outline"), 1)
+        ink.setShader(_piece(outline=True), 1)
         ink.setShaderInput("outline", 0.05)
+        ink.hide(SHADOW_CASTERS)
         ink.setAttrib(CullFaceAttrib.make(CullFaceAttrib.MCullCounterClockwise), 1)
 
     def _build_river(self):
@@ -142,8 +182,8 @@ class BattleScene:
             za, zb = self.height(ax, ay) + 0.15, self.height(bx, by) + 0.15
             b.quad((ax - px, ay - py, za), (bx - px, by - py, zb), (bx + px, by + py, zb), (ax + px, ay + py, za), WATER)
         node = self.root.attachNewNode(b.node("stream"))
-        node.setShader(_shader("figure"))
-        node.setShaderInputs(sun_dir=self.sun, outline=0.0)
+        node.setShader(_piece())
+        node.hide(SHADOW_CASTERS)
 
     # --- the regiments ---------------------------------------------------------------------------------
 
@@ -161,8 +201,7 @@ class BattleScene:
 
     def _build_unit(self, u):
         node = self.root.attachNewNode(f"unit{u.id}")
-        node.setShader(_shader("figure"))
-        node.setShaderInputs(sun_dir=self.sun, outline=0.0)
+        node.setShader(_piece())
         w, d = u.frontage * UNIT, u.depth * UNIT
         tray = Builder()
         tray.box((0, 0, 0.05), (w, d, 0.1), (0.30, 0.31, 0.20))
@@ -182,8 +221,9 @@ class BattleScene:
             fig.setScale(FIGURE * (0.6 if u.kind == "horse" else 1.0))
             fig.attachNewNode(body)
             outline = fig.attachNewNode(ink)
-            outline.setShader(_shader("figure_outline"), 1)
+            outline.setShader(_piece(outline=True), 1)
             outline.setShaderInput("outline", 0.06)
+            outline.hide(SHADOW_CASTERS)
             outline.setAttrib(CullFaceAttrib.make(CullFaceAttrib.MCullCounterClockwise), 1)
             figures.append(fig)
         banner = Builder()
@@ -198,8 +238,7 @@ class BattleScene:
         ring.setColor(0.95, 0.75, 0.2, 1)
         for a, b2 in ((-w / 2, -d / 2), (w / 2, -d / 2), (w / 2, d / 2), (-w / 2, d / 2), (-w / 2, -d / 2)):
             ring.drawTo(a * 1.06, b2 * 1.1, 0.25)
-        sel = node.attachNewNode(ring.create())
-        sel.setShaderOff(1)
+        sel = _flat(node.attachNewNode(ring.create()))
         sel.hide()
         self.units[u.id] = {"node": node, "figures": figures, "tray": tray_np, "flag": flag, "select": sel,
                             "count": count, "bob": 0.0, "last": (u.x, u.y)}
@@ -267,9 +306,8 @@ class BattleScene:
             lines.moveTo(*pts[0])
             for p in pts[1:]:
                 lines.drawTo(*p)
-        node = self.root.attachNewNode(lines.create())
+        node = _flat(self.root.attachNewNode(lines.create()))
         node.setTransparency(TransparencyAttrib.M_alpha)
-        node.setShaderOff(1)
         self.arcs.append([node, 0.9])
 
     def _draw_orders(self):
@@ -296,8 +334,7 @@ class BattleScene:
                 t = k / 12
                 x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
                 (lines.moveTo if k == 0 else lines.drawTo)(x, y, self.height(x, y) + 0.6)
-        node = self.orders.attachNewNode(lines.create())
-        node.setShaderOff(1)
+        _flat(self.orders.attachNewNode(lines.create()))
 
     # --- picking -----------------------------------------------------------------------------------------
 
@@ -313,6 +350,16 @@ class BattleScene:
                 best, dist = u, d
         return best
 
+    def follow(self, x, y, distance, dt=0.0):
+        """Keep the sun's shadows on what the camera looks at, and let the clouds drift."""
+        self.light.follow(x, y, self.height(x, y), min(420.0, max(70.0, distance * 2.6)))
+        if self.sky is not None:
+            self.sky.update(dt)
+
     def destroy(self):
+        self.root.clearLight()
+        self.light.destroy()
+        if self.sky is not None:
+            self.sky.destroy()
         self.root.removeNode()
 

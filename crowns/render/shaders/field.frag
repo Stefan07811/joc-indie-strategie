@@ -7,9 +7,17 @@ uniform float deploying;
 uniform vec3 our_color;
 uniform vec3 their_color;
 uniform vec2 field_size;      // where the regiments may go; the country beyond is drawn faded
+uniform vec3 haze;
+uniform float fog;
+uniform struct p3d_LightSourceParameters {
+    sampler2DShadow shadowMap;
+    mat4 shadowViewMatrix;
+} p3d_LightSource[1];
 in vec3 normal;
 in vec4 color;
 in vec3 wpos;
+in vec4 shadow_coord;
+in vec3 vpos;
 out vec4 frag;
 
 const vec3 INK = vec3(0.22, 0.14, 0.08);
@@ -21,9 +29,20 @@ float noise(vec2 p) {
     return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
 }
 
+float sunlit() {
+    vec3 c = shadow_coord.xyz / shadow_coord.w;
+    if (c.x <= 0.0 || c.x >= 1.0 || c.y <= 0.0 || c.y >= 1.0 || c.z >= 1.0) return 1.0;
+    vec2 texel = 1.0 / vec2(textureSize(p3d_LightSource[0].shadowMap, 0));
+    float lit = 0.0;
+    for (int i = -1; i <= 1; i++)
+        for (int j = -1; j <= 1; j++)
+            lit += texture(p3d_LightSource[0].shadowMap, vec3(c.xy + vec2(i, j) * texel * 1.5, c.z - 0.0004));
+    return lit / 9.0;
+}
+
 void main() {
     vec3 n = normalize(normal);
-    float light = clamp(0.3 + 0.9 * max(dot(n, sun_dir), 0.0), 0.0, 1.0);
+    float light = clamp(0.3 + 0.9 * max(dot(n, sun_dir), 0.0) * (0.35 + 0.65 * sunlit()), 0.0, 1.0);
     float grain = noise(wpos.xy * 0.15) * 0.6 + noise(wpos.xy * 1.1) * 0.4;
     vec3 col = color.rgb * (0.88 + 0.2 * grain);
     // ink hatching in the shadows, as on the map
@@ -43,13 +62,12 @@ void main() {
         if (wpos.y >= deploy.z && wpos.y <= deploy.w) col = mix(col, their_color, 0.12 + 0.08 * stripe);
     }
     if (!inside) {
-        // the country beyond the field: paler, as if washed out at the edge of the sheet
-        float wash = clamp(0.35 + outside / 120.0, 0.0, 0.75);
-        col = mix(col, vec3(0.86, 0.82, 0.70), wash);
+        // the country beyond the field, a little paler
+        col = mix(col, vec3(dot(col, vec3(0.33))), 0.25) * 1.04;
     }
     // the edge of the field, a ruled ink line
     float edge = abs(outside);
     float pen = fwidth(outside) * 1.5 + 0.12;
     col = mix(col, INK, (1.0 - smoothstep(pen * 0.5, pen, edge)) * 0.6);
-    frag = vec4(col, 1.0);
+    frag = vec4(mix(col, haze, 1.0 - exp(-pow(length(vpos) * fog, 2.0))), 1.0);
 }

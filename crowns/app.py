@@ -51,6 +51,8 @@ def main(argv=None):
     parser.add_argument("--size", default=None, help="window size, e.g. 1920x1080")
     parser.add_argument("--fullscreen", action="store_true")
     parser.add_argument("--style", default="codex", help="the map's look: codex (the game's) or real (for checks)")
+    parser.add_argument("--quality", default="high", choices=("low", "high"),
+                        help="low: no last pass over the picture and smaller shadows, for weak graphics cards")
     parser.add_argument("--selftest", metavar="REPORT", help="check the game works, without a window, and quit")
     args = parser.parse_args(argv)
     if args.selftest:
@@ -58,7 +60,7 @@ def main(argv=None):
     size = tuple(int(v) for v in args.size.split("x")) if args.size else None
     configure(offscreen=bool(args.shots), size=size or ((1600, 900) if args.shots else None),
               fullscreen=args.fullscreen)
-    app = MapApp(style=args.style, realm=args.realm)
+    app = MapApp(style=args.style, realm=args.realm, quality=args.quality)
     if args.shots:
         app.shots(Path(args.shots), args.only)
     else:
@@ -108,7 +110,7 @@ def _showbase():
 
 
 class MapApp(_showbase()):
-    def __init__(self, style="codex", realm=None):
+    def __init__(self, style="codex", realm=None, quality="high"):
         super().__init__()
         from panda3d.core import WindowProperties
 
@@ -134,6 +136,16 @@ class MapApp(_showbase()):
                 self.win.requestProperties(props)
         self.disableMouse()
         self.setBackgroundColor(*HAZE)
+        from panda3d.core import AntialiasAttrib
+        self.render.setAntialias(AntialiasAttrib.MMultisample)
+        self.quality = quality
+        self.post = None
+        if quality == "high":
+            try:
+                from .render.post import PostProcess
+                self.post = PostProcess(self)
+            except Exception as error:     # an old card: the picture without the last pass
+                print("no post-processing:", error)
         started = time.time()
         from direct.gui.OnscreenText import OnscreenText
         waiting = OnscreenText(text="Crowns of the Balkans\n\nPreparing the map…\n(the first start takes a minute)",
@@ -336,7 +348,7 @@ class MapApp(_showbase()):
         from .game.battle import FIELD_H, FIELD_W, tactical
         from .render.battlefield import UNIT, BattleScene
         from .render.camera import StrategyCamera
-        from .render.world import SUN
+        from .render.atmosphere import SUN
         from .ui.battle_hud import BattleHUD
         c = self.campaign
         self.battle = tactical(c, attacker, defender)
@@ -355,10 +367,11 @@ class MapApp(_showbase()):
         self.tooltip.hide()
         self.topbar.frame.hide()
         self.topbar.show_end(False)
-        self.battle_scene = BattleScene(self.render, self.battle, colors, accents, eastern, SUN)
+        self.battle_scene = BattleScene(self.render, self.battle, colors, accents, eastern, SUN, camera=self.camera,
+                                        shadow_size=4096 if self.quality == "high" else 2048)
         self.battle_cam = StrategyCamera(self.camera, self.camLens, self.battle_scene.height,
-                                         limits=(25.0, 260.0), bounds=(FIELD_W * UNIT, FIELD_H * UNIT), near=0.5,
-                                         pitches=(22.0, 64.0))
+                                         limits=(22.0, 260.0), bounds=(FIELD_W * UNIT, FIELD_H * UNIT), near=0.5,
+                                         pitches=(9.0, 62.0))
         line_y = 24.0 if self.battle_side == 0 else FIELD_H * UNIT - 24.0      # our deployment line
         self.battle_cam.heading = 0.0 if self.battle_side == 0 else 180.0
         self.battle_cam.look_at(FIELD_W * UNIT / 2, line_y, 140)
@@ -428,6 +441,8 @@ class MapApp(_showbase()):
             self.leave_battle()
             return
         self.battle_scene.update(dt, b.time)
+        cam = self.battle_cam
+        self.battle_scene.follow(*cam.target, cam.distance, dt)
         self.battle_hud.update(self.battle_speed, self.battle_paused, self.battle_scene.selected)
 
     def leave_battle(self):
@@ -1092,7 +1107,7 @@ class MapApp(_showbase()):
             self.dialog.close()
             c.pending = []
             c.provinces["arges"].unrest = 0
-        if any(want(n) for n in ("battle_deploy", "battle_fight", "battle_close", "battle_end")):
+        if any(want(n) for n in ("battle_deploy", "battle_low", "battle_fight", "battle_close", "battle_end")):
             self._battle_shots(folder, want)
         # a war, a few months on
         if not c.at_war("wallachia", "ott_rum"):
@@ -1136,6 +1151,7 @@ class MapApp(_showbase()):
 
         def render(name):
             self.battle_scene.update(0.05, self.battle.time)
+            self.battle_scene.follow(*self.battle_cam.target, self.battle_cam.distance)
             self.battle_hud.update(self.battle_speed, self.battle_paused, self.battle_scene.selected)
             for _ in range(2):
                 self.graphicsEngine.renderFrame()
@@ -1146,6 +1162,11 @@ class MapApp(_showbase()):
         if want("battle_deploy"):
             self.battle_cam.look_at(120, 24, 140)
             render("battle_deploy")
+        if want("battle_low"):
+            self.battle_cam.heading = 25
+            self.battle_cam.look_at(112, 34, 30)
+            render("battle_low")
+            self.battle_cam.heading = 0
         b.begin()
         contact = None
         for t in range(3000):         # until the lines have been at it for half a minute

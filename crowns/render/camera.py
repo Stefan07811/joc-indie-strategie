@@ -77,6 +77,7 @@ class StrategyCamera:
         back = self.distance * math.cos(p)
         pos = Vec3(self.target[0] + back * math.sin(h), self.target[1] - back * math.cos(h),
                    ground + self.distance * math.sin(p))
+        pos.z = max(pos.z, self.height_at(pos.x, pos.y) + self.near * 3)    # never under a hill
         self.camera.setPos(pos)
         self.camera.lookAt(Vec3(self.target[0], self.target[1], ground))
 

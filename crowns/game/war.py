@@ -346,28 +346,43 @@ class Warfare:
             total += r.men / 100.0 * power * (0.5 + u.morale / 20.0) * (1 + 0.5 * r.experience)
         return total * self.leadership(army)
 
-    def battle(self, attacker, defender):
-        """Fight it out. Returns a report: {"winner", "loser", "place", "losses": {army id: men}}."""
+    def battle_site(self, attacker, defender):
+        """(province or None, its terrain, its name) where two armies meet."""
         prov = self.provmap.at((attacker.x + defender.x) / 2, (attacker.y + defender.y) / 2) or \
             self.provmap.at(defender.x, defender.y)
-        terrain = prov.terrain if prov else "plains"
+        return prov, (prov.terrain if prov else "plains"), (prov.name if prov else "the field")
+
+    def battle(self, attacker, defender):
+        """Fight it out, resolved by the captains. Returns a report: {"winner", "loser", "place",
+        "losses": {realm: men}}."""
+        _, terrain, _ = self.battle_site(attacker, defender)
         sa = self.strength(attacker, terrain, False) * self.rng.uniform(0.8, 1.2)
         sd = self.strength(defender, terrain, True) * self.rng.uniform(0.8, 1.2)
-        win, lose = (attacker, defender) if sa >= sd else (defender, attacker)
+        win = attacker if sa >= sd else defender
         ratio = max(sa, sd) / max(1e-6, min(sa, sd))
         lose_share = min(0.6, 0.2 + 0.12 * ratio) * self.rng.uniform(0.85, 1.15)
         win_share = max(0.04, 0.22 / ratio) * self.rng.uniform(0.8, 1.2)
+        after = {}
+        for army in (attacker, defender):
+            share = win_share if army is win else lose_share
+            after[army.id] = [r.men - int(r.men * share) for r in army.regiments]
+        return self.conclude_battle(attacker, defender, win, after)
+
+    def conclude_battle(self, attacker, defender, winner, after):
+        """Apply a battle's outcome, however it was fought: `after` gives, for each army, the men left in
+        each of its regiments."""
+        _, terrain, place = self.battle_site(attacker, defender)
+        win, lose = (winner, defender if winner is attacker else attacker)
         losses = {}
-        for army, share in ((win, win_share), (lose, lose_share)):
+        for army in (win, lose):
             lost = 0
-            for r in army.regiments:
-                dead = int(r.men * share)
-                r.men -= dead
-                lost += dead
+            for r, left in zip(army.regiments, after[army.id]):
+                left = max(0, min(r.men, int(left)))
+                lost += r.men - left
+                r.men = left
                 r.experience = min(1.0, r.experience + (0.15 if army is win else 0.05))
             army.regiments = [r for r in army.regiments if r.men >= 50]
             losses[army.id] = lost
-        place = prov.name if prov else "the field"
         self.after_battle(win, lose)
         report = {"winner": win.owner, "loser": lose.owner, "place": place, "terrain": terrain,
                   "losses": {win.owner: losses[win.id], lose.owner: losses[lose.id]},

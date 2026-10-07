@@ -15,6 +15,7 @@ from .armies import Army, Regiment
 from .calendar import START, Date
 from .navigation import Route
 from .rules import BUILDINGS, UNITS
+from .war import Warfare, war_from_dict, war_to_dict
 
 TRIBUTE = {"tributary": 0.10, "vassal": 0.15, "protectorate": 0.05, "union": 0.0}
 # Some realms fight in another tradition than their culture's.
@@ -55,6 +56,7 @@ class ProvinceState:
     buildings: dict = field(default_factory=dict)       # building id -> level
     works: Optional[dict] = None         # {"kind": building id, "months": left}
     recruits: list = field(default_factory=list)        # unit ids, ready next month
+    siege: Optional[dict] = None         # {"by": realm, "progress": 0 .. 1, "months": n}
 
 
 @dataclass
@@ -91,7 +93,7 @@ class Budget:
         return self.income - self.expenses
 
 
-class Campaign:
+class Campaign(Warfare):
     def __init__(self, provmap, realms, relations=(), player="wallachia", date=START, seed=1402, armies=True):
         self.provmap = provmap
         self.info = realms                 # the realms' history (crowns/data/realms.json)
@@ -107,6 +109,11 @@ class Campaign:
         self.armies = []
         self.messages = []                 # what happened this month, for the player
         self._next_army = 1
+        self.wars = []
+        self.truces = {}                   # "a|b" -> [year, month] the truce lasts until
+        self.alliances = [sorted(r["tags"]) for r in self.relations if r["kind"] == "alliance"]
+        self.battles = []                  # this month's battle reports
+        self._next_war = 1
         for tag, realm in self.realms.items():
             realm.manpower = 0.6 * self.levy_pool(tag)
             realm.treasury = round(max(300.0, 2 * self.budget(tag).income), -1)
@@ -344,6 +351,7 @@ class Campaign:
     def end_month(self):
         """Close the month: money, works, people, troops. Returns the messages for the player."""
         self.messages = []
+        self.battles = []
         budgets = {tag: self.budget(tag) for tag in self.realms if self.realms[tag].alive}
         for tag, b in budgets.items():
             realm = self.realms[tag]
@@ -358,6 +366,7 @@ class Campaign:
         for army in self.armies:
             army.new_month()
             army.walk()
+        self.war_month()
         self.date = self.date.next()
         return self.messages
 
@@ -404,6 +413,8 @@ class Campaign:
             "provinces": [asdict(p) for p in self.provinces.values()],
             "realms": [asdict(r) for r in self.realms.values()],
             "overlord": self.overlord,
+            "wars": [war_to_dict(w) for w in self.wars], "truces": self.truces, "alliances": self.alliances,
+            "next_war": self._next_war,
             "armies": [{"id": a.id, "owner": a.owner, "name": a.name, "x": a.x, "y": a.y, "march": a.march,
                         "moves": a.moves, "regiments": [asdict(r) for r in a.regiments],
                         "route": {"points": a.route.points, "costs": a.route.costs} if a.route else None}
@@ -418,6 +429,10 @@ class Campaign:
         c.provinces = {p["id"]: ProvinceState(**p) for p in data["provinces"]}
         c.realms = {r["tag"]: RealmState(**r) for r in data["realms"]}
         c.overlord = {tag: tuple(v) if v else None for tag, v in data["overlord"].items()}
+        c.wars = [war_from_dict(w) for w in data["wars"]]
+        c.truces = data["truces"]
+        c.alliances = data["alliances"]
+        c._next_war = data["next_war"]
         c.armies = []
         for a in data["armies"]:
             route = Route(a["route"]["points"], a["route"]["costs"]) if a["route"] else None

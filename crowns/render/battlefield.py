@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 from panda3d.core import (CullFaceAttrib, Geom, GeomNode, GeomTriangles, GeomVertexData, GeomVertexFormat,
-                          GeomVertexWriter, LineSegs, Shader, TransparencyAttrib, Vec3)
+                          GeomVertexWriter, LineSegs, SamplerState, Shader, Texture, TransparencyAttrib, Vec3)
 
 from ..game.battle import DEPLOY_DEPTH, FIELD_H, FIELD_W, Field
 from .atmosphere import FOG, HAZE, SHADOW_CASTERS, Sky, Sun
@@ -40,6 +40,33 @@ def _piece(outline=False):
     return _shaders[key]
 
 
+def _cards(items, rng):
+    """A GeomNode of crossed picture cards: items are (x, y, ground z, height, width/height of the picture)."""
+    fmt = GeomVertexFormat.getV3t2()
+    data = GeomVertexData("cards", fmt, Geom.UH_static)
+    data.setNumRows(len(items) * 8)
+    vw, tw = GeomVertexWriter(data, "vertex"), GeomVertexWriter(data, "texcoord")
+    tris = GeomTriangles(Geom.UH_static)
+    k = 0
+    for x, y, z, h, aspect in items:
+        half = h * aspect / 2
+        turn = rng.uniform(0, math.pi)
+        for a in (turn, turn + math.pi / 2):
+            dx, dy = math.cos(a) * half, math.sin(a) * half
+            for (px, py, pz, u, v) in ((x - dx, y - dy, z - 0.1, 0, 0), (x + dx, y + dy, z - 0.1, 1, 0),
+                                       (x + dx, y + dy, z + h, 1, 1), (x - dx, y - dy, z + h, 0, 1)):
+                vw.addData3(px, py, pz)
+                tw.addData2(u, v)
+            tris.addVertices(k, k + 1, k + 2)
+            tris.addVertices(k, k + 2, k + 3)
+            k += 4
+    geom = Geom(data)
+    geom.addPrimitive(tris)
+    node = GeomNode("cards")
+    node.addGeom(geom)
+    return node
+
+
 def _flat(node):
     """Lines drawn over the field: no shader, no light, no shadow."""
     node.setShaderOff(1)
@@ -51,13 +78,15 @@ def _flat(node):
 class BattleScene:
     """Draws a Battle and keeps the drawing in step with it."""
 
-    def __init__(self, parent, battle, colors, accents, eastern, sun, camera=None, shadow_size=4096):
+    def __init__(self, parent, battle, colors, accents, eastern, sun, camera=None, shadow_size=4096, realms=None):
         """colors, accents, eastern: per side (0 = attacker, 1 = defender). With a camera, the field gets
         its sky; the sun always throws shadows."""
         self.battle = battle
         self.root = parent.attachNewNode("battle")
         self.sun = sun
         self.colors, self.accents, self.eastern = colors, accents, eastern
+        from . import art
+        self.arms = [art.arms_of(t) if t else None for t in (realms or (None, None))]
         self.field = battle.field
         self.root.setShaderInputs(sun_dir=sun, outline=0.0, haze=Vec3(*HAZE), fog=FOG)
         self.light = Sun(parent, sun, size=shadow_size)
@@ -105,6 +134,7 @@ class BattleScene:
         tint = base[None, None, :] * (0.92 + 0.16 * rng.random((rows, cols, 1)))
         woods = np.pad(f.woods, COUNTRY, mode="constant", constant_values=False)
         tint = np.where(woods[..., None], np.array(WOOD_FLOOR), tint)
+        open_ground = np.where(woods, 0.0, 1.0)              # the alpha tells the shader where the woods are
         fmt = GeomVertexFormat.getV3n3c4()
         data = GeomVertexData("field", fmt, Geom.UH_static)
         data.setNumRows(rows * cols)
@@ -113,7 +143,7 @@ class BattleScene:
             for c in range(cols):
                 vw.addData3(X[r, c], Y[r, c], h[r, c])
                 nw.addData3(*normals[r, c])
-                cw.addData4(*tint[r, c], 1.0)
+                cw.addData4(*tint[r, c], open_ground[r, c])
         tris = GeomTriangles(Geom.UH_static)
         for r in range(rows - 1):
             for c in range(cols - 1):
@@ -128,9 +158,51 @@ class BattleScene:
         self.ground.setShader(Shader.load(Shader.SL_GLSL, str(SHADERS / "field.vert"), str(SHADERS / "field.frag")))
         dy = DEPLOY_DEPTH * UNIT
         # these sit on the battle's root, so that the far country beyond is painted the same way
+        self._ground_textures()
         self.root.setShaderInputs(deploying=1.0, deploy=(0, dy, FIELD_H * UNIT - dy, FIELD_H * UNIT),
                                   field_size=(FIELD_W * UNIT, FIELD_H * UNIT),
                                   our_color=Vec3(*self.colors[0]), their_color=Vec3(*self.colors[1]))
+
+    def _ground_textures(self):
+        """The painted ground if it has been brought in (tools/import_art.py), and the trampled-earth map."""
+        from . import art
+        grass = art.ground("steppe" if self.field.terrain in ("steppe", "desert") else "meadow") or art.ground("meadow")
+        white = art.blank()
+        textures = {name: art.ground(name) for name in ("rock", "forest", "dirt", "mud")}
+        self.root.setShaderInputs(use_tex=1.0 if grass is not None else 0.0, tex_grass=grass or white,
+                                    **{f"tex_{k}": v or grass or white for k, v in textures.items()})
+        rows, cols = self.field.height.shape
+        self.trampled = np.zeros((rows, cols), np.float32)
+        self.trample_tex = Texture("trample")
+        self.trample_tex.setup2dTexture(cols, rows, Texture.T_unsigned_byte, Texture.F_luminance)
+        self.trample_tex.setWrapU(SamplerState.WM_clamp)
+        self.trample_tex.setWrapV(SamplerState.WM_clamp)
+        self._upload_trample()
+        self.root.setShaderInput("trample", self.trample_tex)
+        self.trample_wait = 0.0
+
+    def _upload_trample(self):
+        self.trample_tex.setRamImage(np.ascontiguousarray((np.clip(self.trampled, 0, 1) * 255).astype(np.uint8)).tobytes())
+
+    def _trample(self, dt):
+        """Where regiments fight, or run, the ground turns to mud."""
+        self.trample_wait -= dt
+        if self.trample_wait > 0:
+            return
+        self.trample_wait = 1.0
+        rows, cols = self.trampled.shape
+        changed = False
+        for u in self.battle.units:
+            if not u.alive or u.state not in ("fighting", "routing"):
+                continue
+            c, r = int(u.x / Field.CELL), int(u.y / Field.CELL)
+            k = max(1, int(u.frontage / Field.CELL / 2))
+            r0, r1, c0, c1 = max(0, r - 1), min(rows, r + 2), max(0, c - k), min(cols, c + k + 1)
+            if r0 < r1 and c0 < c1:
+                self.trampled[r0:r1, c0:c1] += 0.06 if u.state == "fighting" else 0.02
+                changed = True
+        if changed:
+            self._upload_trample()
 
     def _build_far_country(self):
         """Flat land from the edge of the drawn country out to the horizon, lost in the haze."""
@@ -147,6 +219,8 @@ class BattleScene:
         far_np.hide(SHADOW_CASTERS)
 
     def _build_woods(self):
+        if self._build_painted_plants():
+            return
         f = self.field
         b = Builder()
         rng = np.random.default_rng(2)
@@ -172,6 +246,55 @@ class BattleScene:
         ink.setShaderInput("outline", 0.05)
         ink.hide(SHADOW_CASTERS)
         ink.setAttrib(CullFaceAttrib.make(CullFaceAttrib.MCullCounterClockwise), 1)
+
+    def _build_painted_plants(self):
+        """Trees, bushes, grass and reeds from the painted pictures, each two crossed cards standing on the
+        field. False if the pictures have not been brought in."""
+        from . import art
+        trees = [(n, art.plant(n)) for n in art.TREES]
+        trees = [(n, t) for n, t in trees if t is not None]
+        if not trees:
+            return False
+        small = [(n, art.plant(n)) for n in art.BUSHES]
+        small = [(n, t) for n, t in small if t is not None]
+        reeds = art.plant("reeds")
+        f = self.field
+        rng = np.random.default_rng(2)
+        rows, cols = f.woods.shape
+        spots = {}                                   # texture -> [(x, y, height, aspect)]
+
+        def put(tex, x, y, height):
+            img = tex.getXSize() / max(1, tex.getYSize())
+            spots.setdefault(tex, []).append((x, y, self.height(x, y), height, img))
+        if f.terrain in ("mountains",):
+            trees = [t for t in trees if "pine" in t[0]] or trees
+        for r in range(0, rows, 2):
+            for c in range(0, cols, 2):
+                x = (c + rng.uniform(-0.8, 0.8)) * Field.CELL * UNIT
+                y = (r + rng.uniform(-0.8, 0.8)) * Field.CELL * UNIT
+                if f.woods[r, c]:
+                    name, tex = trees[rng.integers(len(trees))]
+                    put(tex, x, y, rng.uniform(4.0, 6.5) * (1.3 if "poplar" in name else 1.0))
+                    if small and rng.random() < 0.5:
+                        put(small[rng.integers(len(small))][1], x + rng.uniform(-1, 1), y + rng.uniform(-1, 1),
+                            rng.uniform(0.8, 1.4))
+                elif small and rng.random() < 0.05:   # bushes and tufts about the open field
+                    name, tex = small[rng.integers(len(small))]
+                    put(tex, x, y, rng.uniform(0.5, 0.9) if name == "grass_tuft" else rng.uniform(0.9, 1.6))
+                elif rng.random() < 0.004:            # a lone tree in the open
+                    put(trees[rng.integers(len(trees))][1], x, y, rng.uniform(4.0, 6.0))
+        if f.river and reeds is not None:
+            for rx, ry in f.river:
+                for _ in range(2):
+                    put(reeds, rx * UNIT + rng.uniform(-2.5, 2.5), ry * UNIT + rng.uniform(-2.5, 2.5),
+                        rng.uniform(0.8, 1.3))
+        plants = self.root.attachNewNode("plants")
+        plants.setShader(Shader.load(Shader.SL_GLSL, str(SHADERS / "plant.vert"), str(SHADERS / "plant.frag")))
+        plants.setTwoSided(True)
+        for tex, items in spots.items():
+            node = plants.attachNewNode(_cards(items, rng))
+            node.setTexture(tex)
+        return True
 
     def _build_river(self):
         river = self.field.river
@@ -314,6 +437,15 @@ class BattleScene:
         if u.general:
             banner.cylinder((0, -d / 2 - 0.2, 3.2), 0.18, 0.3, (0.85, 0.7, 0.25), sides=6, top=0.0)
         flag = node.attachNewNode(banner.node("banner"))
+        if self.arms[u.side] is not None:              # the realm's arms painted on the banner
+            from panda3d.core import CardMaker
+            cm = CardMaker("arms")
+            cm.setFrame(0.0, 1.45, 2.15, 3.15)
+            card = flag.attachNewNode(cm.generate())
+            card.setY(-d / 2 - 0.23)
+            card.setTexture(self.arms[u.side])
+            card.setTwoSided(True)
+            _flat(card)
         ring = LineSegs()
         ring.setThickness(3)
         ring.setColor(0.95, 0.75, 0.2, 1)
@@ -352,6 +484,8 @@ class BattleScene:
 
     def update(self, dt, time):
         b = self.battle
+        if b.started:
+            self._trample(dt)
         self.ground.setShaderInput("deploying", 0.0 if b.started else 1.0)
         for u in b.units:
             self._place(u, time, dt)

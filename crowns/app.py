@@ -515,7 +515,7 @@ class MapApp(BattleControls, MenuControls, _showbase()):
         self.ledger.close()
         self.alerts.clear()
         self.battle_scene = BattleScene(self.render, self.battle, colors, accents, eastern, SUN, camera=self.camera,
-                                        shadow_size=4096 if self.quality == "high" else 2048)
+                                        shadow_size=4096 if self.quality == "high" else 2048, realms=sides)
         self.battle_scene.viewer = self.battle_side
         self.battle_cam = StrategyCamera(self.camera, self.camLens, self.battle_scene.height,
                                          limits=(22.0, 260.0), bounds=(FIELD_W * UNIT, FIELD_H * UNIT), near=0.5,

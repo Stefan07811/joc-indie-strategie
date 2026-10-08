@@ -9,6 +9,14 @@ uniform vec3 their_color;
 uniform vec2 field_size;      // where the regiments may go; the country beyond is drawn faded
 uniform vec3 haze;
 uniform float fog;
+// painted ground (art/GEMINI.md): grass of the field's kind, rock, forest floor, bare earth, trampled mud
+uniform float use_tex;
+uniform sampler2D tex_grass;
+uniform sampler2D tex_rock;
+uniform sampler2D tex_forest;
+uniform sampler2D tex_dirt;
+uniform sampler2D tex_mud;
+uniform sampler2D trample;          // 0..1 over the field: where men have fought and churned the ground
 uniform struct p3d_LightSourceParameters {
     sampler2DShadow shadowMap;
     mat4 shadowViewMatrix;
@@ -45,6 +53,22 @@ void main() {
     float light = clamp(0.3 + 0.9 * max(dot(n, sun_dir), 0.0) * (0.35 + 0.65 * sunlit()), 0.0, 1.0);
     float grain = noise(wpos.xy * 0.15) * 0.6 + noise(wpos.xy * 1.1) * 0.4;
     vec3 col = color.rgb * (0.88 + 0.2 * grain);
+    if (use_tex > 0.5) {
+        vec2 uv = wpos.xy / 7.0;
+        vec2 uv2 = mat2(0.8, -0.6, 0.6, 0.8) * wpos.xy / 16.0;      // a second, larger, turned layer
+        vec3 grass = mix(texture(tex_grass, uv).rgb, texture(tex_grass, uv2).rgb, 0.35);
+        vec3 ground = grass;
+        float dirt = smoothstep(0.64, 0.78, noise(wpos.xy * 0.035) * 0.7 + noise(wpos.xy * 0.2) * 0.3) * 0.7;
+        ground = mix(ground, texture(tex_dirt, uv).rgb, dirt);
+        float rock = smoothstep(0.88, 0.72, n.z);
+        ground = mix(ground, texture(tex_rock, uv).rgb, rock);
+        ground = mix(ground, texture(tex_forest, uv).rgb, 1.0 - color.a);
+        float churned = texture(trample, wpos.xy / field_size).r;
+        ground = mix(ground, texture(tex_mud, uv).rgb, clamp(churned, 0.0, 0.9));
+        // the painted ground keeps a little of the field's own tint, and its grain
+        col = ground * mix(vec3(1.0), color.rgb / max(vec3(0.2), vec3(dot(color.rgb, vec3(0.33)))), 0.15)
+              * (0.92 + 0.12 * grain);
+    }
     // ink hatching in the shadows, as on the map
     float shade = 1.0 - light;
     float v = dot(wpos.xy, vec2(0.6, 0.8)) / 0.9 + (noise(wpos.xy * 0.4) - 0.5) * 0.4;
